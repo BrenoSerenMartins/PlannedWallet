@@ -8,3 +8,9 @@
 - Migrations validadas em PGlite com papel restrito. PostgreSQL com conexões concorrentes e ambiente publicado não foram validados aqui.
 
 Antes de publicar: aplicar `npm run db:migrate` no ambiente com conectividade ao banco. As novas migrations vão de `202611060002_account_category_defaults.sql` até `202611060009_manual_category_choice.sql`. Aplicar somente as migrations sem publicar mantém a versão anterior compatível.
+
+## Correção de consultas em 2026-11-08
+
+Reproduzida falha `25006` (`cannot execute SELECT FOR UPDATE in a read-only transaction`) nos caminhos de leitura da visão geral e da lista de contas. Ambos ainda chamavam `upgradeLegacyReferences`, cuja seleção usa locks e pode atualizar referências de saldo. As consultas agora são explicitamente somente leitura e não executam essa manutenção. A ação POST de atualização de referência na conta continua disponível; importar ou corrigir saldos mantém seus fluxos de escrita existentes.
+
+O teste de regressão falhou antes da correção e passou depois, cobrindo as duas consultas dentro de transação somente leitura, preservando contas e histórico de referências. As suítes focadas de saldo e planejamento passaram com 40 testes. A suíte completa passou com 264 testes. A correção não exige migration.

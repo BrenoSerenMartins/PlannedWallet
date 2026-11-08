@@ -802,3 +802,41 @@ it('preserves legacy institutions restored from backups and prevents changing to
     ),
   ).rejects.toThrow('Mercado Pago ou Alelo');
 });
+
+it('serves dashboard and account reads in a read-only request without upgrading or locking balance references', async () => {
+  const { DashboardService } = await import('../../dashboard/services/dashboard.service.js');
+  const { DashboardController } =
+    await import('../../dashboard/controllers/dashboard.controller.js');
+  const { AccountsController } = await import('../controllers/accounts.controller.js');
+  const dashboard = new DashboardController(db.service, new DashboardService(accounts, ledger));
+  const controller = new AccountsController(db.service, accounts);
+  const a = await account('Read-only dashboard regression');
+  await run(() => ledger.create(movement(a.id, 12500, '2026-11-01')));
+  const request = { identity: { id: db.user } } as never;
+  const [workspace] = (
+    await db.engine.query<{ id: string }>(
+      'SELECT id FROM wallet.workspaces WHERE user_id=$1 AND is_default',
+      [db.user],
+    )
+  ).rows;
+  await db.forUser(
+    db.user,
+    async () => {
+      const before = await accounts.list();
+      const history = await db.service.query(
+        'SELECT id FROM wallet.account_balance_history ORDER BY id',
+      );
+      const result = await dashboard.summary(request, '2026-11-01', '2026-12-01');
+      expect(result.accounts.length).toBeGreaterThan(0);
+      expect(await controller.list(request)).toEqual(
+        before.filter((a) => !['credit_card', 'investment'].includes(a.type)),
+      );
+      expect(await accounts.list()).toEqual(before);
+      expect(
+        await db.service.query('SELECT id FROM wallet.account_balance_history ORDER BY id'),
+      ).toEqual(history);
+    },
+    true,
+    workspace.id,
+  );
+});

@@ -6,6 +6,7 @@ import { dateToday } from '../../formatting/money';
 
 export interface MonthPickerProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
   clearable?: boolean;
+  compactLabel?: boolean;
 }
 export function MonthPicker({
   value,
@@ -19,6 +20,7 @@ export function MonthPicker({
   onChange,
   onInvalid,
   clearable = !required,
+  compactLabel = false,
   ...props
 }: MonthPickerProps) {
   const generated = useId(),
@@ -113,7 +115,7 @@ export function MonthPicker({
       >
         <span>
           {selected
-            ? `${monthNames[Number(selected.slice(5)) - 1]} ${selected.slice(0, 4)}`
+            ? `${compactLabel ? monthNames[Number(selected.slice(5)) - 1].slice(0, 3) : monthNames[Number(selected.slice(5)) - 1]} ${selected.slice(0, 4)}`
             : 'Escolher mês'}
         </span>
         <CalendarDays size={16} aria-hidden="true" />

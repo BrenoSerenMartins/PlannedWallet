@@ -68,6 +68,7 @@ export function PlanningSummary({
                   <span className="sr-only">Mês do plano</span>
                   <MonthPicker
                     clearable={false}
+                    compactLabel
                     aria-label="Mês do planejamento"
                     min="1900-01"
                     max="9998-12"

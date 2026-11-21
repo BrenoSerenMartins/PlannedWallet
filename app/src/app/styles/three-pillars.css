@@ -1398,15 +1398,6 @@
   min-width: 28px;
   min-height: 32px;
 }
-:root[data-ui='bento']
-  body
-  .page-content
-  .planning-page
-  .planning-hero-controls
-  .period-picker
-  > span {
-  display: none;
-}
 :root[data-ui='bento'] body .page-content .planning-page .planning-hero-controls .month-trigger {
   min-height: 32px;
   padding: 4px 9px;
@@ -1454,10 +1445,15 @@
 }
 :root[data-ui='bento'] body .page-content .planning-page .planning-result-footer-row {
   display: flex;
+  width: 100%;
   align-items: center;
   justify-content: space-between;
   min-width: 0;
-  gap: 8px;
+  gap: 12px;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-result-footer-row > span {
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 :root[data-ui='bento'] body .page-content .planning-page .period-budget-hero {
   display: flex;
@@ -1858,6 +1854,7 @@
 }
 :root[data-ui='bento'] body .page-content .planning-page .planning-included {
   display: flex;
+  width: 100%;
   align-items: center;
   justify-content: space-between;
   gap: 8px;

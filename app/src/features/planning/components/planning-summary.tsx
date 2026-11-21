@@ -1,14 +1,7 @@
 import { PeriodBudget } from '../../../shared/ui/period-budget';
 import type { ReactNode } from 'react';
 import { HelpTip } from '../../../shared/ui/tooltip';
-import {
-  ArrowDownLeft,
-  ArrowUpRight,
-  ChevronLeft,
-  ChevronRight,
-  PiggyBank,
-  Scale,
-} from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { MonthlyPlan } from '../../../shared/api/resources';
 import { money } from '../../../shared/formatting/money';
 import { MonthPicker } from '../../../shared/ui/controls/month-picker';
@@ -50,9 +43,7 @@ export function PlanningSummary({
           aria-label="Resultado projetado"
         >
           <div className="planning-result-topline">
-            <span>
-              <Scale size={18} /> Resultado projetado
-            </span>
+            <span>Resultado projetado</span>
             <div className="planning-hero-controls">
               <div className="future-month-navigation" aria-label="Navegar entre meses">
                 <button
@@ -89,15 +80,17 @@ export function PlanningSummary({
               {periodActions}
             </div>
           </div>
-          <strong className="planning-result-value">{money(t.actualResult)}</strong>
-          {t.resultDifference !== null && (
-            <span
-              className={`planning-result-difference ${t.resultDifference >= 0 ? 'positive-text' : 'negative-text'}`}
-            >
-              {t.resultDifference > 0 ? '+' : ''}
-              {money(t.resultDifference)} vs. previsto
-            </span>
-          )}
+          <div className="planning-result-mainline">
+            <strong className="planning-result-value">{money(t.actualResult)}</strong>
+            {t.resultDifference !== null && (
+              <span
+                className={`planning-result-difference ${t.resultDifference >= 0 ? 'positive-text' : 'negative-text'}`}
+              >
+                {t.resultDifference > 0 ? '+' : ''}
+                {money(t.resultDifference)} vs. previsto
+              </span>
+            )}
+          </div>
           <div className="planning-result-footer">
             <div className="planning-result-footer-row">
               <span>Previsto: {display(t.plannedResult)}</span>
@@ -119,8 +112,11 @@ export function PlanningSummary({
         <div className="planning-monthly-pair">
           <article className="planning-metric metric-income bento-soft-card" aria-label="Receitas">
             <div className="planning-small-metric-title">
-              <span>
-                <ArrowDownLeft size={17} /> Receitas
+              <span className="planning-title-copy">
+                <span className="planning-icon-badge income">
+                  <ArrowDownLeft size={18} aria-hidden="true" />
+                </span>
+                Receitas
               </span>
               <HelpTip
                 label="Receitas"
@@ -139,8 +135,11 @@ export function PlanningSummary({
           </article>
           <article className="planning-metric metric-expense bento-soft-card" aria-label="Despesas">
             <div className="planning-small-metric-title">
-              <span>
-                <ArrowUpRight size={17} /> Despesas
+              <span className="planning-title-copy">
+                <span className="planning-icon-badge expense">
+                  <ArrowUpRight size={18} aria-hidden="true" />
+                </span>
+                Despesas
               </span>
               <HelpTip
                 label="Despesas"
@@ -171,9 +170,7 @@ export function PlanningSummary({
           aria-label="Aporte planejado"
         >
           <div className="planning-contribution-heading">
-            <span>
-              <PiggyBank size={18} /> Aporte planejado
-            </span>
+            <span>Aporte planejado</span>
             {onEditPlan && (
               <button type="button" className="text-button" onClick={onEditPlan}>
                 {plan.contribution === null ? 'Definir meta' : 'Editar meta'}

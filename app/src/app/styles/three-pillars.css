@@ -2022,3 +2022,110 @@
     font-size: clamp(12px, 3.8vw, 14px);
   }
 }
+
+/* Flat planning surfaces and Home-aligned metric icons. */
+:root[data-ui='bento'] body .page-content .planning-page .planning-metrics {
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+:root[data-ui='bento'] body .page-content .planning-page .budget-section {
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-sections {
+  gap: 12px;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-result-mainline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-page
+  .planning-result-mainline
+  .planning-result-value {
+  margin: 4px 0 0;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-page
+  .planning-result-mainline
+  .planning-result-difference {
+  align-self: center;
+  width: fit-content;
+  margin: 0;
+  padding: 4px 8px;
+  font-size: 10px;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-small-metric-title {
+  justify-content: space-between;
+  gap: 8px;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-title-copy {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-icon-badge {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  place-items: center;
+  border-radius: 10px;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-icon-badge.income {
+  background: var(--success-bg);
+  color: var(--success);
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-icon-badge.expense {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-icon-badge.income svg {
+  color: var(--success);
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-icon-badge.expense svg {
+  color: var(--danger);
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-small-metric-title > .help-tip {
+  width: 24px;
+  height: 24px;
+  min-height: 24px;
+  flex: 0 0 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-tertiary);
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-page
+  .planning-small-metric-title
+  > .help-tip
+  svg {
+  color: var(--text-tertiary);
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-included {
+  display: flex;
+  width: 100%;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+}

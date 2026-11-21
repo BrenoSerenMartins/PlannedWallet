@@ -20,7 +20,7 @@ export function BudgetSection({
       (line.planned !== null && line.planned !== 0),
   );
   return (
-    <section className={`panel budget-section budget-${type}`}>
+    <section className={`budget-section budget-${type}`}>
       <div className="section-heading">
         <div>
           <h2>{type === 'income' ? 'Receitas previstas' : 'Orçamento de despesas'}</h2>

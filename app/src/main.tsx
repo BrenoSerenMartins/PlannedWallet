@@ -24,6 +24,7 @@ import './shared/ui/controls/controls.css';
 import './app/styles/mobile.css';
 import './app/styles/disclosures.css';
 import './app/styles/premium.css';
+import './app/styles/three-pillars.css';
 document.documentElement.dataset.ui = 'bento';
 // Installed workers can lag one version behind the newly loaded application bundle.
 try {

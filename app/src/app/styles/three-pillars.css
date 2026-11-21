@@ -1,0 +1,377 @@
+/* Final Bento refinements for the ledger, future planning and credit-card HUD. */
+:root[data-ui='bento'] body .page-content .transactions-page .movement-typebar {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 4px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--bg-surface);
+}
+:root[data-ui='bento'] body .page-content .transactions-page .movement-typebar .view-switcher {
+  display: flex;
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  padding: 4px 16px 4px 4px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-pill);
+  background: #121215;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+:root[data-ui='bento'] body .page-content .transactions-page .movement-typebar .view-switcher::-webkit-scrollbar {
+  display: none;
+}
+:root[data-ui='bento'] body .page-content .transactions-page .movement-typebar .view-switcher > button {
+  flex: 0 0 auto;
+  height: 36px;
+  min-height: 36px;
+  padding: 8px 16px;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  border-bottom: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-secondary);
+}
+:root[data-ui='bento'] body .page-content .transactions-page .movement-typebar .view-switcher > button[aria-pressed='true'] {
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.35);
+  background: rgba(212, 175, 55, 0.16);
+  color: var(--gold-soft);
+  font-weight: 600;
+}
+:root[data-ui='bento'] body .page-content .transactions-page .movement-typebar .movement-results {
+  display: none;
+}
+
+:root[data-ui='bento'] body .page-content .planning-page {
+  gap: 14px;
+}
+:root[data-ui='bento'] body .page-content .future-page-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0;
+}
+:root[data-ui='bento'] body .page-content .future-page-heading h1 {
+  margin: 0;
+  font-size: clamp(24px, 3vw, 32px);
+  letter-spacing: -0.04em;
+}
+:root[data-ui='bento'] body .page-content .future-page-heading p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 14px;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-metrics > .planning-metric {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 20px;
+  border: var(--border-subtle);
+  border-radius: var(--radius-bento);
+  background: var(--grad-card);
+  box-shadow: var(--shadow-soft);
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-metrics > .metric-result,
+:root[data-ui='bento'] body .page-content .planning-page .planning-metrics > .metric-contribution,
+:root[data-ui='bento'] body .page-content .planning-page .planning-metrics > .summary-action-bar,
+:root[data-ui='bento'] body .page-content .planning-page .planning-metrics > .summary-navigation {
+  grid-column: 1 / -1;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-metrics > .metric-result {
+  border: var(--border-gold);
+  background: var(--grad-hero);
+  box-shadow: var(--shadow-gold);
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-comparison dd,
+:root[data-ui='bento'] body .page-content .planning-page .planning-difference,
+:root[data-ui='bento'] body .page-content .card-projection,
+:root[data-ui='bento'] body .page-content .card-bill-stats strong {
+  font-variant-numeric: tabular-nums;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-sections {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+:root[data-ui='bento'] body .page-content .planning-page .budget-section {
+  min-width: 0;
+  padding: 20px;
+  border: var(--border-subtle);
+  border-radius: var(--radius-bento);
+  background: var(--grad-card);
+  box-shadow: var(--shadow-soft);
+}
+
+:root[data-ui='bento'] body .page-content .cards-page .credit-selector {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding: 4px 4px 12px;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+:root[data-ui='bento'] body .page-content .cards-page .credit-selector::-webkit-scrollbar {
+  display: none;
+}
+:root[data-ui='bento'] body .page-content .cards-page .credit-selector-item,
+:root[data-ui='bento'] body .page-content .cards-page .credit-selector-item.selected {
+  position: relative;
+  flex: 0 0 clamp(280px, 32vw, 370px);
+  min-width: 280px;
+  aspect-ratio: 1.586 / 1;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 20px;
+  overflow: hidden;
+  text-align: left;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  box-shadow: var(--shadow-soft);
+  background-image: radial-gradient(circle at 88% 12%, rgba(212, 175, 55, 0.12), transparent 40%), linear-gradient(135deg, #1e1e24 0%, #0d0d10 100%);
+}
+:root[data-ui='bento'] body .page-content .cards-page .credit-selector-item.selected {
+  border-color: rgba(212, 175, 55, 0.45);
+  box-shadow: var(--shadow-gold);
+}
+:root[data-ui='bento'] body .page-content .cards-page .credit-selector-item.selected::before {
+  content: '';
+  position: absolute;
+  inset: 20px auto auto 20px;
+  width: 34px;
+  height: 22px;
+  border: 1px solid rgba(243, 229, 171, 0.56);
+  border-radius: 6px;
+  background: linear-gradient(135deg, rgba(243, 229, 171, 0.3), rgba(212, 175, 55, 0.08));
+}
+:root[data-ui='bento'] body .page-content .cards-page .credit-selector-item > span {
+  justify-content: space-between;
+  flex-wrap: nowrap;
+}
+:root[data-ui='bento'] body .page-content .cards-page .credit-selector-item > span:first-child {
+  justify-content: flex-end;
+  padding-left: 48px;
+}
+:root[data-ui='bento'] body .page-content .cards-page .credit-selector-item > span:first-child svg {
+  color: var(--gold-soft);
+}
+:root[data-ui='bento'] body .page-content .cards-page .credit-selector-item > span:nth-child(2) {
+  align-items: end;
+}
+:root[data-ui='bento'] body .page-content .cards-page .credit-selector-item > span:nth-child(2) > strong {
+  font-size: 26px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+:root[data-ui='bento'] body .page-content .cards-page .credit-selector-item.selected::after {
+  content: 'Fatura e limite';
+  color: var(--text-secondary);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+:root[data-ui='bento'] body .page-content .cards-page .card-detail {
+  min-width: 0;
+  padding: 20px;
+  border: var(--border-subtle);
+  border-radius: var(--radius-bento);
+  background: var(--grad-card);
+  box-shadow: var(--shadow-soft);
+}
+:root[data-ui='bento'] body .page-content .cards-page .card-projection {
+  display: grid;
+  gap: 18px;
+  margin: 18px 0;
+  padding: 18px;
+  border: var(--border-subtle);
+  border-radius: var(--radius-bento);
+  background: var(--grad-card);
+  box-shadow: var(--shadow-soft);
+}
+:root[data-ui='bento'] body .page-content .card-projection-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+:root[data-ui='bento'] body .page-content .card-projection-heading h3 {
+  margin: 0;
+  font-size: 14px;
+}
+:root[data-ui='bento'] body .page-content .card-projection-heading p,
+:root[data-ui='bento'] body .page-content .card-projection-empty {
+  margin: 5px 0 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+:root[data-ui='bento'] body .page-content .card-limit-caption {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+:root[data-ui='bento'] body .page-content .card-limit-bar {
+  display: flex;
+  height: 8px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--bg-elevated);
+}
+:root[data-ui='bento'] body .page-content .card-limit-bar > span:first-child { background: var(--gold-primary); }
+:root[data-ui='bento'] body .page-content .card-limit-bar > span:nth-child(2) { background: rgba(243, 229, 171, 0.42); }
+:root[data-ui='bento'] body .page-content .card-limit-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 14px;
+  margin-top: 10px;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+:root[data-ui='bento'] body .page-content .card-limit-legend span { display: inline-flex; align-items: center; gap: 6px; }
+:root[data-ui='bento'] body .page-content .card-limit-legend i { width: 7px; height: 7px; border-radius: 50%; background: var(--bg-elevated); }
+:root[data-ui='bento'] body .page-content .card-limit-legend i.current { background: var(--gold-primary); }
+:root[data-ui='bento'] body .page-content .card-limit-legend i.future { background: rgba(243, 229, 171, 0.65); }
+:root[data-ui='bento'] body .page-content .card-hud-tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+:root[data-ui='bento'] body .page-content .card-hud-tiles article {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding: 14px;
+  border: var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+}
+:root[data-ui='bento'] body .page-content .card-hud-tiles article > span,
+:root[data-ui='bento'] body .page-content .card-hud-tiles article > small {
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+:root[data-ui='bento'] body .page-content .card-hud-tiles article > strong {
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+:root[data-ui='bento'] body .page-content .card-projection-chart {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+  min-height: 150px;
+}
+:root[data-ui='bento'] body .page-content .card-projection-month {
+  display: grid;
+  grid-template-rows: 18px minmax(60px, 1fr) 18px;
+  justify-items: center;
+  align-items: end;
+  gap: 6px;
+  min-width: 0;
+  padding: 0 2px;
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 11px;
+  cursor: pointer;
+}
+:root[data-ui='bento'] body .page-content .card-projection-month > strong {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+:root[data-ui='bento'] body .page-content .card-projection-track {
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  width: min(100%, 34px);
+  height: 100%;
+  overflow: hidden;
+  border-radius: 8px 8px 4px 4px;
+  background: rgba(255, 255, 255, 0.035);
+}
+:root[data-ui='bento'] body .page-content .card-projection-track i {
+  width: 100%;
+  min-height: 4px;
+  border-radius: 8px 8px 0 0;
+  background: #27272f;
+}
+:root[data-ui='bento'] body .page-content .card-projection-month.selected,
+:root[data-ui='bento'] body .page-content .card-projection-month.selected > strong { color: var(--gold-soft); }
+:root[data-ui='bento'] body .page-content .card-projection-month.selected .card-projection-track i { background: var(--gold-primary); }
+:root[data-ui='bento'] body .page-content .card-projection-month:focus-visible { outline: 2px solid var(--gold-primary); outline-offset: 3px; }
+
+@media (max-width: 760px) {
+  :root[data-ui='bento'] body .page-content { padding-bottom: calc(112px + env(safe-area-inset-bottom)); }
+  :root[data-ui='bento'] body .page-content .planning-page .planning-metrics { grid-template-columns: minmax(0, 1fr); }
+  :root[data-ui='bento'] body .page-content .planning-page .planning-metrics > .planning-metric { padding: 16px; }
+  :root[data-ui='bento'] body .page-content .planning-page .planning-sections { grid-template-columns: minmax(0, 1fr); }
+  :root[data-ui='bento'] body .page-content .future-page-heading { display: grid; gap: 4px; }
+  :root[data-ui='bento'] body .page-content .card-projection { padding: 14px; }
+  :root[data-ui='bento'] body .page-content .card-hud-tiles article { padding: 12px; }
+  :root[data-ui='bento'] body .page-content .card-projection-chart { gap: 4px; }
+  :root[data-ui='bento'] body .page-content .card-projection-month > strong { font-size: 9px; }
+  :root[data-ui='bento'] body .bottom-nav {
+    left: 12px;
+    right: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    height: 64px;
+    padding: 4px;
+    border: var(--border-subtle);
+    border-radius: 24px;
+    background: rgba(18, 18, 21, 0.85);
+    box-shadow: var(--shadow-soft);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+  :root[data-ui='bento'] body .bottom-nav a {
+    flex: 1 1 16.666%;
+    min-width: 0;
+    min-height: 54px;
+    gap: 3px;
+    border: 1px solid transparent;
+    border-radius: 18px;
+    font-size: 9px;
+  }
+  :root[data-ui='bento'] body .bottom-nav a.active {
+    border-color: rgba(212, 175, 55, 0.35);
+    background: var(--gold-muted);
+    color: var(--gold-primary);
+    filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.22));
+  }
+  :root[data-ui='bento'] body .bottom-nav > button {
+    flex: 1 1 16.666%;
+    min-width: 0;
+    min-height: 54px;
+    gap: 3px;
+    border: 1px solid transparent;
+    border-radius: 18px;
+    font-size: 9px;
+    color: var(--text-tertiary);
+  }
+  :root[data-ui='bento'] body .cards-page .card-detail { padding: 16px; }
+}

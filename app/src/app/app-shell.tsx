@@ -23,6 +23,7 @@ import {
   House,
   Landmark,
   Settings2,
+  Ellipsis,
   Upload,
   WifiOff,
   Eye,
@@ -34,11 +35,11 @@ import { useAuth } from '../features/auth/auth-provider';
 import { Logo, Modal } from '../shared/ui/primitives';
 const navigation = [
   { to: '/', label: 'Visão geral', mobile: 'Início', Icon: House },
-  { to: '/analytics', label: 'Métricas', mobile: 'Métricas', Icon: ChartNoAxesCombined },
-  { to: '/transactions', label: 'Movimentações', mobile: 'Movimentos', Icon: ArrowDownUp },
-  { to: '/accounts', label: 'Contas', mobile: 'Contas', Icon: Landmark },
   { to: '/planning', label: 'Planejamento', mobile: 'Planejar', Icon: CalendarDays },
   { to: '/cards', label: 'Cartões e faturas', mobile: 'Cartões', Icon: CreditCard },
+  { to: '/transactions', label: 'Movimentações', mobile: 'Movimentos', Icon: ArrowDownUp },
+  { to: '/accounts', label: 'Contas', mobile: 'Contas', Icon: Landmark },
+  { to: '/analytics', label: 'Métricas', mobile: 'Métricas', Icon: ChartNoAxesCombined },
   {
     to: '/wealth',
     label: 'Investimentos e patrimônio',
@@ -57,7 +58,7 @@ const navigation = [
   },
   { to: '/settings', label: 'Preferências', mobile: 'Mais', Icon: Settings2 },
 ];
-const primaryPaths = ['/', '/analytics', '/transactions', '/accounts', '/planning'];
+const primaryPaths = ['/', '/planning', '/cards', '/transactions', '/settings'];
 export function AppShell() {
   return (
     <FinancialVisibilityProvider>
@@ -239,7 +240,8 @@ function ShellContent() {
         <nav className="bottom-nav" aria-label="Navegação móvel">
           {[
             { to: '/', label: 'Início', Icon: House },
-            { to: '/analytics', label: 'Métricas', Icon: ChartNoAxesCombined },
+            { to: '/planning', label: 'Planejar', Icon: CalendarDays },
+            { to: '/cards', label: 'Cartões', Icon: CreditCard },
             { to: '/transactions', label: 'Extrato', Icon: ArrowDownUp },
             { to: '/settings', label: 'Ajustes', Icon: Settings2 },
           ].map(({ to, label, Icon }) => (
@@ -248,6 +250,10 @@ function ShellContent() {
               <span>{label}</span>
             </NavLink>
           ))}
+          <button type="button" onClick={() => setMore(true)} aria-label="Abrir mais funções">
+            <Ellipsis size={21} strokeWidth={1.7} aria-hidden="true" />
+            <span>Mais</span>
+          </button>
         </nav>,
         document.body,
       )}

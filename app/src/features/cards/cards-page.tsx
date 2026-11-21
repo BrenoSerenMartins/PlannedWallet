@@ -43,6 +43,10 @@ type Dialog =
   | { kind: 'undoPayment'; payment: CardPayment }
   | { kind: 'category' | 'cancelPurchase'; purchase: CardPurchase };
 const states = { open: 'Em aberto', closed: 'Fechada', overdue: 'Vencida', paid: 'Sem pendência' };
+const monthLabel = (month: string) =>
+  new Intl.DateTimeFormat('pt-BR', { month: 'short' })
+    .format(new Date(`${month}-01T12:00:00`))
+    .replace('.', '');
 export function CardsPage() {
   const [params, setParams] = useSearchParams();
   const month = validMonth(params.get('month')) ? params.get('month')! : dateToday().slice(0, 7);
@@ -254,6 +258,102 @@ export function CardsPage() {
                         </button>
                       </div>
                     </div>
+                    <section className="card-projection bento-soft-card" aria-label="Projeção de faturas">
+                      <div className="card-projection-heading">
+                        <div>
+                          <h3>Projeção de faturas</h3>
+                          <p>Valores previstos pelas compras já lançadas</p>
+                        </div>
+                        {card.limit > 0 && (
+                          <span className="card-limit-caption">Limite {value(card.limit)}</span>
+                        )}
+                      </div>
+                      {card.limit > 0 && (() => {
+                        const current = Math.max(0, bill?.remaining ?? 0);
+                        const future = card.bills
+                          .filter((item) => item.month > month)
+                          .reduce((total, item) => total + Math.max(0, item.remaining), 0);
+                        const total = Math.max(1, card.limit);
+                        const currentWidth = Math.min(100, (current / total) * 100);
+                        const futureWidth = Math.min(100 - currentWidth, (future / total) * 100);
+                        return (
+                          <div className="card-limit-overview">
+                            <div className="card-limit-bar" role="img" aria-label={`Fatura do mês ${value(current)}, faturas futuras ${value(future)}, disponível ${value(card.availableLimit)}`}>
+                              <span style={{ width: `${currentWidth}%` }} />
+                              <span style={{ width: `${futureWidth}%` }} />
+                            </div>
+                            <div className="card-limit-legend">
+                              <span><i className="current" /> Mês: {value(current)}</span>
+                              <span><i className="future" /> Futuras: {value(future)}</span>
+                              <span><i className="available" /> Disponível: {value(card.availableLimit)}</span>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                      {(() => {
+                        const sixMonths = Array.from({ length: 6 }, (_, index) =>
+                          shiftMonth(month, index - 5),
+                        );
+                        const average = card.bills
+                          .filter((item) => sixMonths.includes(item.month))
+                          .reduce((total, item) => total + item.total, 0) / 6;
+                        const percent = card.limit > 0
+                          ? Math.min(100, Math.round((card.debt / card.limit) * 100))
+                          : null;
+                        const nextDay = bill?.closingDate
+                          ? new Date(`${bill.closingDate}T12:00:00`)
+                          : null;
+                        nextDay?.setDate(nextDay.getDate() + 1);
+                        return (
+                          <div className="card-hud-tiles">
+                            <article>
+                              <span>Melhor dia para comprar</span>
+                              <strong>{nextDay ? nextDay.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : 'Após o fechamento'}</strong>
+                              <small>Dia seguinte ao fechamento da fatura</small>
+                            </article>
+                            <article>
+                              <span>Média mensal · 6 meses</span>
+                              <strong>{value(average)}</strong>
+                              <small>{percent === null ? 'Limite não informado' : `${percent}% do limite comprometido`}</small>
+                            </article>
+                          </div>
+                        );
+                      })()}
+                      {(() => {
+                        const projection = Array.from({ length: 6 }, (_, index) => {
+                          const projectionMonth = shiftMonth(month, index);
+                          return card.bills.find((item) => item.month === projectionMonth) ?? {
+                            month: projectionMonth,
+                            total: 0,
+                          };
+                        });
+                        const max = Math.max(0, ...projection.map((item) => item.total));
+                        return projection.length ? (
+                          <div className="card-projection-chart" aria-label="Faturas dos próximos meses">
+                            {projection.map((item) => {
+                              const active = item.month === month;
+                              const height = max > 0 ? Math.max(8, (item.total / max) * 100) : 8;
+                              return (
+                                <button
+                                  type="button"
+                                  key={item.month}
+                                  className={`card-projection-month${active ? ' selected' : ''}`}
+                                  aria-pressed={active}
+                                  aria-label={`${monthLabel(item.month)} ${item.month.slice(0, 4)}, fatura ${value(item.total)}`}
+                                  onClick={() => update({ month: item.month })}
+                                >
+                                  <strong>{value(item.total)}</strong>
+                                  <span className="card-projection-track"><i style={{ height: `${height}%` }} /></span>
+                                  <span>{monthLabel(item.month)}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <p className="card-projection-empty">As próximas faturas aparecem aqui quando houver compras parceladas lançadas.</p>
+                        );
+                      })()}
+                    </section>
                     {bill ? (
                       <>
                         <div className="card-bill-stats">
@@ -312,7 +412,12 @@ export function CardsPage() {
                                       ? 'Dívida anterior'
                                       : entry.kind === 'refund'
                                         ? 'Estorno'
-                                        : 'Despesa da fatura'}
+                                        : (() => {
+                                            const purchase = card.purchases.find((item) => item.id === entry.purchaseId);
+                                            return purchase && entry.installmentNumber
+                                              ? `Parcela ${entry.installmentNumber}/${purchase.installments}`
+                                              : 'Despesa da fatura';
+                                          })()}
                                 </span>
                               </div>
                               <strong className={entry.amount > 0 ? 'positive' : ''}>

@@ -17,6 +17,7 @@ import { useAuth } from '../auth/auth-provider';
 import { useWorkspace } from '../workspaces/workspace-provider';
 import { useFinancialVisibility } from '../../shared/privacy/financial-visibility';
 import { NotificationCenter } from '../../shared/feedback/notification-center';
+import { BrandSymbol } from '../../shared/ui/brand-symbol';
 import { ErrorState, Loading } from '../../shared/ui/primitives';
 import { MonthPicker } from '../../shared/ui/controls/month-picker';
 import { dateToday, money } from '../../shared/formatting/money';
@@ -40,7 +41,9 @@ export function DashboardPage() {
   const month = validMonth(params.get('month')) ? params.get('month')! : dateToday().slice(0, 7);
   const { snapshot, summary, movements, plan, transactionsLink } = useDashboard(month);
   const name = String(
-    session?.user.user_metadata?.full_name ?? session?.user.email?.split('@')[0] ?? 'você',
+    session?.user.user_metadata?.full_name ??
+      session?.user.email?.split('@')[0]?.split(/[._-]/)[0] ??
+      'você',
   ).split(' ')[0];
   const display = (v: number | undefined) =>
     !visible ? '••••••' : v == null ? 'Não disponível' : money(v);
@@ -70,19 +73,11 @@ export function DashboardPage() {
     <div className="page-enter dashboard-page bento-dashboard">
       <header className="bento-welcome">
         <div className="welcome-person">
-          <Link
-            to="/settings?view=account"
-            className="welcome-avatar"
-            aria-label="Abrir minha conta"
-          >
-            {name.slice(0, 1).toLocaleUpperCase()}
+          <Link to="/" className="welcome-brand-mark" aria-label="PlannedWallet — início">
+            <BrandSymbol />
           </Link>
           <div>
-            <span>{active?.name ?? 'Seu espaço'}</span>
-            <h1 aria-label="Visão geral">
-              Olá, {name}
-              <span className="greeting-dot">.</span>
-            </h1>
+            <h1 aria-label="Visão geral">Olá, {name}</h1>
           </div>
         </div>
         <div className="welcome-controls">
@@ -95,6 +90,14 @@ export function DashboardPage() {
             {visible ? <Eye size={19} /> : <EyeOff size={19} />}
           </button>
           <NotificationCenter />
+          <Link
+            to="/workspaces"
+            className="mobile-workspace-pill"
+            aria-label={`Espaço: ${active?.name ?? 'Seu espaço'}`}
+          >
+            <span>{active?.name.slice(0, 1).toLocaleUpperCase() ?? '·'}</span>
+            <ChevronDown size={14} />
+          </Link>
         </div>
         <Link to="/analytics" className="welcome-overview-link">
           Seu dinheiro, em perspectiva <ArrowUpRight size={15} />
@@ -124,7 +127,6 @@ export function DashboardPage() {
               )}
             </div>
             <strong className="hero-balance tabular-nums">{display(snapshot.data.balance)}</strong>
-            <p className="hero-context">Dinheiro nas contas · benefícios e reservas separados</p>
             <div className="hero-budget">
               <div>
                 <span>

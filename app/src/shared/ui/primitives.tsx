@@ -81,6 +81,17 @@ export function Loading() {
     </div>
   );
 }
+export function StartupScreen() {
+  return (
+    <div aria-label="Carregando PlannedWallet" role="status" className="app-loading">
+      <Logo />
+      <span className="app-loading-orbit" aria-hidden="true">
+        <i />
+      </span>
+      <span className="app-loading-caption">Organizando seu dinheiro</span>
+    </div>
+  );
+}
 export function ThemeSwitcher({ expanded = false }: { expanded?: boolean }) {
   const { mode, setMode } = useTheme();
   return (

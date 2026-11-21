@@ -8,7 +8,7 @@ import { useAuth } from '../features/auth/auth-provider';
 import { LandingPage } from '../features/auth/landing-page';
 import { authReturnError } from '../features/auth/auth-return';
 import { AuthPage } from '../features/auth/auth-page';
-import { Loading } from '../shared/ui/primitives';
+import { Loading, StartupScreen } from '../shared/ui/primitives';
 import { AppShell } from './app-shell';
 const AnalyticsPage = lazy(() =>
   import('../features/dashboard/analytics-page').then((m) => ({ default: m.AnalyticsPage })),
@@ -63,7 +63,7 @@ export function Application() {
   if (loading)
     return (
       <div className="startup">
-        <Loading />
+        <StartupScreen />
       </div>
     );
   return (
@@ -72,7 +72,7 @@ export function Application() {
         Pular para o conteúdo
       </a>
       <WorkspaceSession>
-        <Suspense fallback={<Loading />}>
+        <Suspense fallback={<StartupScreen />}>
           <Routes>
             <Route path="/reset-password" element={<AuthPage />} />
             {!session ? (

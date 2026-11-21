@@ -40,11 +40,7 @@ export function BenefitPlanningNotice({ plan, scope }: { plan: MonthlyPlan; scop
     <section className="benefit-planning-notice" aria-label="Competência do VA/VR">
       <div>
         <strong>VA/VR no realizado</strong>
-        <p className="field-help">
-          Se o benefício cai no fim do mês anterior, considere o crédito no mês seguinte. A regra
-          vale para planejamento, gráficos e filtros por período, inclusive no histórico. A data do
-          extrato e o saldo são preservados.
-        </p>
+        <p className="field-help">Escolha em qual mês considerar os créditos do benefício.</p>
       </div>
       <ul>
         {plan.benefitAccounts.map((a) => (

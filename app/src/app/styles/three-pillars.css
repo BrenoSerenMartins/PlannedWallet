@@ -24,10 +24,21 @@
   scrollbar-width: none;
   overscroll-behavior-x: contain;
 }
-:root[data-ui='bento'] body .page-content .transactions-page .movement-typebar .view-switcher::-webkit-scrollbar {
+:root[data-ui='bento']
+  body
+  .page-content
+  .transactions-page
+  .movement-typebar
+  .view-switcher::-webkit-scrollbar {
   display: none;
 }
-:root[data-ui='bento'] body .page-content .transactions-page .movement-typebar .view-switcher > button {
+:root[data-ui='bento']
+  body
+  .page-content
+  .transactions-page
+  .movement-typebar
+  .view-switcher
+  > button {
   flex: 0 0 auto;
   height: 36px;
   min-height: 36px;
@@ -40,7 +51,13 @@
   box-shadow: none;
   color: var(--text-secondary);
 }
-:root[data-ui='bento'] body .page-content .transactions-page .movement-typebar .view-switcher > button[aria-pressed='true'] {
+:root[data-ui='bento']
+  body
+  .page-content
+  .transactions-page
+  .movement-typebar
+  .view-switcher
+  > button[aria-pressed='true'] {
   border: 1px solid rgba(212, 175, 55, 0.35);
   border-bottom: 1px solid rgba(212, 175, 55, 0.35);
   background: rgba(212, 175, 55, 0.16);
@@ -56,7 +73,7 @@
 }
 :root[data-ui='bento'] body .page-content .future-page-heading {
   display: flex;
-  align-items: end;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
   margin: 0;
@@ -71,11 +88,100 @@
   color: var(--text-secondary);
   font-size: 13px;
 }
+:root[data-ui='bento'] body .page-content .future-page-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+:root[data-ui='bento'] body .page-content .future-month-navigation {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  min-width: max-content;
+}
+:root[data-ui='bento'] body .page-content .future-month-navigation > .icon-button {
+  width: 32px;
+  height: 36px;
+  min-height: 36px;
+  flex: 0 0 32px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+}
+:root[data-ui='bento'] body .page-content .future-month-navigation .period-picker {
+  width: max-content;
+  max-width: none;
+  flex: 0 0 max-content;
+}
+:root[data-ui='bento'] body .page-content .future-month-navigation .month-trigger {
+  width: max-content;
+  min-width: max-content;
+  min-height: 36px;
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+}
+:root[data-ui='bento'] body .page-content .future-month-navigation .month-trigger > span {
+  min-width: max-content;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+:root[data-ui='bento'] body .page-content .future-page-controls > .action-menu > summary {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  place-items: center;
+  padding: 0;
+  border-radius: var(--radius-pill);
+}
+:root[data-ui='bento'] body .page-content .planning-page .period-budget {
+  display: flex;
+  align-items: center;
+  gap: 8px 16px;
+  min-width: 0;
+  padding: 2px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+:root[data-ui='bento'] body .page-content .planning-page .period-budget-head {
+  flex: 0 1 auto;
+  gap: 8px 16px;
+}
+:root[data-ui='bento'] body .page-content .planning-page .period-budget-head > div {
+  gap: 6px;
+}
+:root[data-ui='bento'] body .page-content .planning-page .period-budget-head strong {
+  font-size: 12px;
+}
+:root[data-ui='bento'] body .page-content .planning-page .period-budget-details {
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+:root[data-ui='bento'] body .page-content .planning-page .period-budget-details > summary {
+  min-height: 32px;
+  padding: 4px 0;
+  white-space: nowrap;
+  font-size: 11px;
+}
 :root[data-ui='bento'] body .page-content .planning-page .planning-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  min-width: 0;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-monthly-pair {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-items: stretch;
-  gap: 14px;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
 }
 :root[data-ui='bento'] body .page-content .planning-page .planning-metrics > .planning-metric {
   display: flex;
@@ -90,15 +196,170 @@
   box-shadow: var(--shadow-soft);
 }
 :root[data-ui='bento'] body .page-content .planning-page .planning-metrics > .metric-result,
-:root[data-ui='bento'] body .page-content .planning-page .planning-metrics > .metric-contribution,
-:root[data-ui='bento'] body .page-content .planning-page .planning-metrics > .summary-action-bar,
 :root[data-ui='bento'] body .page-content .planning-page .planning-metrics > .summary-navigation {
-  grid-column: 1 / -1;
+  width: 100%;
 }
 :root[data-ui='bento'] body .page-content .planning-page .planning-metrics > .metric-result {
   border: var(--border-gold);
   background: var(--grad-hero);
   box-shadow: var(--shadow-gold);
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-result-topline,
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-page
+  .planning-result-topline
+  > span:first-child,
+:root[data-ui='bento'] body .page-content .planning-page .planning-small-metric-title,
+:root[data-ui='bento'] body .page-content .planning-page .planning-small-metric-title > span,
+:root[data-ui='bento'] body .page-content .planning-page .planning-contribution-heading,
+:root[data-ui='bento'] body .page-content .planning-page .planning-contribution-heading > span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-result-topline,
+:root[data-ui='bento'] body .page-content .planning-page .planning-contribution-heading {
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-page
+  .planning-result-topline
+  > span:first-child,
+:root[data-ui='bento'] body .page-content .planning-page .planning-small-metric-title > span,
+:root[data-ui='bento'] body .page-content .planning-page .planning-contribution-heading > span {
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-result-topline svg,
+:root[data-ui='bento'] body .page-content .planning-page .planning-small-metric-title svg,
+:root[data-ui='bento'] body .page-content .planning-page .planning-contribution-heading svg {
+  color: var(--gold-primary);
+  flex: 0 0 auto;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-result-difference {
+  padding: 5px 9px;
+  border-radius: var(--radius-pill);
+  background: var(--success-bg);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-result-value {
+  display: block;
+  margin: 12px 0 8px;
+  color: var(--text-primary);
+  font-size: clamp(28px, 5vw, 36px);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-result-footer {
+  display: grid;
+  gap: 9px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-result-meter,
+:root[data-ui='bento'] body .page-content .planning-page .planning-meter {
+  height: 5px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--bg-elevated);
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-result-meter > span,
+:root[data-ui='bento'] body .page-content .planning-page .planning-meter > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--gold-primary);
+}
+:root[data-ui='bento'] body .page-content .planning-page .metric-income .planning-meter > span {
+  background: var(--success);
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-small-metric-title {
+  justify-content: space-between;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-small-metric-value {
+  display: block;
+  margin: 10px 0 0;
+  color: var(--text-primary);
+  font-size: clamp(14px, 2vw, 20px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-small-metric-foot {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+:root[data-ui='bento'] body .page-content .planning-page .metric-contribution {
+  display: grid;
+  gap: 9px;
+}
+:root[data-ui='bento'] body .page-content .planning-page .metric-contribution > strong {
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+:root[data-ui='bento'] body .page-content .planning-page .metric-contribution > small {
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-future-commitments {
+  display: grid;
+  gap: 6px;
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: var(--border-subtle);
+}
+:root[data-ui='bento'] body .page-content .planning-future-commitments-heading,
+:root[data-ui='bento'] body .page-content .planning-future-commitments li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+:root[data-ui='bento'] body .page-content .planning-future-commitments-heading h3 {
+  margin: 0;
+  font-size: 12px;
+}
+:root[data-ui='bento'] body .page-content .planning-future-commitments-heading > span,
+:root[data-ui='bento'] body .page-content .planning-future-commitments li small {
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+:root[data-ui='bento'] body .page-content .planning-future-commitments ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+:root[data-ui='bento'] body .page-content .planning-future-commitments li > div {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+:root[data-ui='bento'] body .page-content .planning-future-commitments li > strong {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+:root[data-ui='bento'] body .page-content .planning-future-commitments li > .text-button {
+  min-height: 32px;
+  padding: 4px 8px;
 }
 :root[data-ui='bento'] body .page-content .planning-page .planning-comparison dd,
 :root[data-ui='bento'] body .page-content .planning-page .planning-difference,
@@ -156,7 +417,9 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 20px;
   box-shadow: var(--shadow-soft);
-  background-image: radial-gradient(circle at 88% 12%, rgba(212, 175, 55, 0.12), transparent 40%), linear-gradient(135deg, #1e1e24 0%, #0d0d10 100%);
+  background-image:
+    radial-gradient(circle at 88% 12%, rgba(212, 175, 55, 0.12), transparent 40%),
+    linear-gradient(135deg, #1e1e24 0%, #0d0d10 100%);
 }
 :root[data-ui='bento'] body .page-content .cards-page .credit-selector-item.selected {
   border-color: rgba(212, 175, 55, 0.45);
@@ -186,7 +449,13 @@
 :root[data-ui='bento'] body .page-content .cards-page .credit-selector-item > span:nth-child(2) {
   align-items: end;
 }
-:root[data-ui='bento'] body .page-content .cards-page .credit-selector-item > span:nth-child(2) > strong {
+:root[data-ui='bento']
+  body
+  .page-content
+  .cards-page
+  .credit-selector-item
+  > span:nth-child(2)
+  > strong {
   font-size: 26px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -325,8 +594,12 @@
   color: var(--text-primary);
   font-variant-numeric: tabular-nums;
 }
-:root[data-ui='bento'] body .page-content .card-limit-bar > span:first-child { background: var(--gold-primary); }
-:root[data-ui='bento'] body .page-content .card-limit-bar > span:nth-child(2) { background: rgba(243, 229, 171, 0.42); }
+:root[data-ui='bento'] body .page-content .card-limit-bar > span:first-child {
+  background: var(--gold-primary);
+}
+:root[data-ui='bento'] body .page-content .card-limit-bar > span:nth-child(2) {
+  background: rgba(243, 229, 171, 0.42);
+}
 :root[data-ui='bento'] body .page-content .card-limit-legend {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -336,12 +609,35 @@
   font-size: 11px;
   font-variant-numeric: tabular-nums;
 }
-:root[data-ui='bento'] body .page-content .card-limit-legend > span { display: flex; min-width: 0; align-items: start; gap: 5px; }
-:root[data-ui='bento'] body .page-content .card-limit-legend > span > span { display: grid; gap: 3px; min-width: 0; }
-:root[data-ui='bento'] body .page-content .card-limit-legend strong { color: var(--text-primary); font-size: 10px; font-weight: 600; white-space: nowrap; }
-:root[data-ui='bento'] body .page-content .card-limit-legend i { width: 7px; height: 7px; border-radius: 50%; background: var(--bg-elevated); }
-:root[data-ui='bento'] body .page-content .card-limit-legend i.current { background: var(--gold-primary); }
-:root[data-ui='bento'] body .page-content .card-limit-legend i.future { background: rgba(243, 229, 171, 0.65); }
+:root[data-ui='bento'] body .page-content .card-limit-legend > span {
+  display: flex;
+  min-width: 0;
+  align-items: start;
+  gap: 5px;
+}
+:root[data-ui='bento'] body .page-content .card-limit-legend > span > span {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+:root[data-ui='bento'] body .page-content .card-limit-legend strong {
+  color: var(--text-primary);
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+:root[data-ui='bento'] body .page-content .card-limit-legend i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--bg-elevated);
+}
+:root[data-ui='bento'] body .page-content .card-limit-legend i.current {
+  background: var(--gold-primary);
+}
+:root[data-ui='bento'] body .page-content .card-limit-legend i.future {
+  background: rgba(243, 229, 171, 0.65);
+}
 :root[data-ui='bento'] body .page-content .card-hud-tiles {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -417,11 +713,26 @@
   background: #27272f;
 }
 :root[data-ui='bento'] body .page-content .card-projection-month.selected,
-:root[data-ui='bento'] body .page-content .card-projection-month.selected > strong { color: var(--gold-soft); }
-:root[data-ui='bento'] body .page-content .card-projection-month.selected .card-projection-track i { background: var(--gold-primary); }
-:root[data-ui='bento'] body .page-content .card-projection-month:focus-visible { outline: 2px solid var(--gold-primary); outline-offset: 3px; }
-:root[data-ui='bento'] body .page-content .card-entries-heading { margin: 16px 0 8px; font-size: 13px; font-weight: 600; }
-:root[data-ui='bento'] body .page-content .card-empty-line { margin: 12px 0; color: var(--text-secondary); font-size: 13px; }
+:root[data-ui='bento'] body .page-content .card-projection-month.selected > strong {
+  color: var(--gold-soft);
+}
+:root[data-ui='bento'] body .page-content .card-projection-month.selected .card-projection-track i {
+  background: var(--gold-primary);
+}
+:root[data-ui='bento'] body .page-content .card-projection-month:focus-visible {
+  outline: 2px solid var(--gold-primary);
+  outline-offset: 3px;
+}
+:root[data-ui='bento'] body .page-content .card-entries-heading {
+  margin: 16px 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+:root[data-ui='bento'] body .page-content .card-empty-line {
+  margin: 12px 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
 :root[data-ui='bento'] body .page-content .card-recurring-section {
   padding: 16px;
   border: var(--border-subtle);
@@ -429,9 +740,16 @@
   background: var(--grad-card);
   box-shadow: var(--shadow-soft);
 }
-:root[data-ui='bento'] body .page-content .card-recurring-section .section-heading { padding: 0 0 10px; }
-:root[data-ui='bento'] body .page-content .card-recurring-section h2 { margin: 0; font-size: 14px; }
-:root[data-ui='bento'] body .page-content .card-recurring-section .goal-account { padding-block: 12px; }
+:root[data-ui='bento'] body .page-content .card-recurring-section .section-heading {
+  padding: 0 0 10px;
+}
+:root[data-ui='bento'] body .page-content .card-recurring-section h2 {
+  margin: 0;
+  font-size: 14px;
+}
+:root[data-ui='bento'] body .page-content .card-recurring-section .goal-account {
+  padding-block: 12px;
+}
 :root[data-ui='bento'] body .page-content .card-entry-list > li {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
@@ -469,22 +787,358 @@
   white-space: nowrap;
 }
 
+/* Card purchase rows use two stable lines so actions never compete with the amount. */
+:root[data-ui='bento'] body .page-content .cards-page .card-bill-toolbar {
+  min-width: 0;
+}
+:root[data-ui='bento'] body .page-content .cards-page .card-bill-toolbar .selected-card-metadata {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  white-space: nowrap;
+}
+:root[data-ui='bento'] body .page-content .cards-page .card-bill-toolbar > .inline-actions .button {
+  min-height: 36px;
+  height: 36px;
+  padding: 0 12px;
+  font-size: 12px;
+}
+:root[data-ui='bento'] body .page-content .cards-page .card-projection-heading {
+  align-items: center;
+  flex-wrap: wrap;
+}
+:root[data-ui='bento'] body .page-content .cards-page .card-projection-month-nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  width: auto;
+  margin-left: auto;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .cards-page
+  .card-projection-month-nav
+  .period-picker
+  > span {
+  display: none;
+}
+:root[data-ui='bento'] body .page-content .cards-page .card-projection-month-nav .month-trigger {
+  white-space: nowrap;
+}
+:root[data-ui='bento'] body .page-content .cards-page .card-purchase-list > li {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  gap: 8px 12px;
+  margin: 0 0 8px;
+  padding: 14px;
+  border: var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: #141418;
+}
+:root[data-ui='bento'] body .page-content .cards-page .card-purchase-list .purchase-mainline {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 8px;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .cards-page
+  .card-purchase-list
+  .purchase-mainline
+  > strong {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+:root[data-ui='bento'] body .page-content .cards-page .purchase-installment {
+  flex: 0 0 auto;
+  padding: 3px 7px;
+  border-radius: var(--radius-pill);
+  background: var(--gold-muted);
+  color: var(--gold-soft);
+  font-size: 10px;
+  white-space: nowrap;
+}
+:root[data-ui='bento'] body .page-content .cards-page .card-purchase-list .purchase-amount {
+  align-self: start;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  white-space: nowrap;
+}
+:root[data-ui='bento'] body .page-content .cards-page .card-purchase-list .purchase-subline {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  gap: 10px;
+}
+:root[data-ui='bento'] body .page-content .cards-page .card-purchase-list .purchase-subline > span {
+  min-width: 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  white-space: nowrap;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .cards-page
+  .card-purchase-list
+  .purchase-subline
+  .inline-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 12px;
+}
+:root[data-ui='bento'] body .page-content .cards-page .card-purchase-list .purchase-cancel-button {
+  width: 30px;
+  height: 30px;
+  min-height: 30px;
+  color: var(--danger);
+}
+:root[data-ui='bento'] body .page-content .cards-page .card-hud-tiles article:first-child > strong {
+  font-size: 24px;
+  letter-spacing: -0.03em;
+}
+:root[data-ui='bento'] body .page-content .card-recurring-section .section-heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+:root[data-ui='bento'] body .page-content .card-recurring-section .section-heading h2 {
+  margin-right: auto;
+}
+:root[data-ui='bento'] body .page-content .card-recurring-total,
+:root[data-ui='bento'] body .page-content .card-recurring-amount {
+  color: var(--text-primary);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+:root[data-ui='bento'] body .page-content .card-recurring-list {
+  display: grid;
+  gap: 4px;
+}
+:root[data-ui='bento'] body .page-content .card-recurring-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 12px 0;
+  border-top: var(--border-subtle);
+}
+:root[data-ui='bento'] body .page-content .card-recurring-identity {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 10px;
+}
+:root[data-ui='bento'] body .page-content .card-recurring-identity > svg {
+  flex: 0 0 auto;
+  color: var(--gold-primary);
+}
+:root[data-ui='bento'] body .page-content .card-recurring-identity > div {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+:root[data-ui='bento'] body .page-content .card-recurring-identity strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+:root[data-ui='bento'] body .page-content .card-recurring-identity span,
+:root[data-ui='bento'] body .page-content .card-recurring-empty {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+:root[data-ui='bento'] body .page-content .card-recurring-row > .inline-actions {
+  grid-column: 1 / -1;
+  justify-content: flex-end;
+  gap: 12px;
+}
+:root[data-ui='bento'] body .page-content .card-recurring-empty {
+  margin: 8px 0 2px;
+}
+
 @media (max-width: 760px) {
-  :root[data-ui='bento'] body .page-content { padding-bottom: calc(112px + env(safe-area-inset-bottom)); }
-  :root[data-ui='bento'] body .page-content .planning-page .planning-metrics { grid-template-columns: minmax(0, 1fr); }
-  :root[data-ui='bento'] body .page-content .planning-page .planning-metrics > .planning-metric { padding: 16px; }
-  :root[data-ui='bento'] body .page-content .planning-page .planning-sections { grid-template-columns: minmax(0, 1fr); }
-  :root[data-ui='bento'] body .page-content .future-page-heading { display: grid; gap: 4px; }
-  :root[data-ui='bento'] body .page-content .card-projection { padding: 14px; }
-  :root[data-ui='bento'] body .page-content .card-hud-tiles article { padding: 12px; }
-  :root[data-ui='bento'] body .page-content .cards-page .credit-selector { padding-inline: 8%; }
-  :root[data-ui='bento'] body .page-content .cards-page .credit-card-frame { flex-basis: 84vw; min-width: 0; }
-  :root[data-ui='bento'] body .page-content .cards-page .card-bill-toolbar { align-items: center; flex-wrap: wrap; }
-  :root[data-ui='bento'] body .page-content .cards-page .card-bill-toolbar > .inline-actions { margin-left: auto; }
-  :root[data-ui='bento'] body .page-content .cards-page .finance-month-navigation > .icon-button { display: none; }
-  :root[data-ui='bento'] body .page-content .cards-page .card-bill-toolbar > .inline-actions .button { padding-inline: 9px; font-size: 11px; }
-  :root[data-ui='bento'] body .page-content .card-limit-overview { padding: 12px; }
-  :root[data-ui='bento'] body .page-content .card-projection-month > strong { font-size: 9px; }
+  :root[data-ui='bento'] body .page-content {
+    padding-bottom: calc(112px + env(safe-area-inset-bottom));
+  }
+  :root[data-ui='bento'] body .page-content .planning-page .planning-metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+  }
+  :root[data-ui='bento'] body .page-content .planning-page .planning-metrics > .planning-metric {
+    min-width: 0;
+    padding: 14px 12px;
+  }
+  :root[data-ui='bento'] body .page-content .planning-page .planning-monthly-pair {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  :root[data-ui='bento'] body .page-content .planning-page .planning-sections {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  :root[data-ui='bento'] body .page-content .future-page-heading {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  :root[data-ui='bento'] body .page-content .future-page-heading h1 {
+    flex: 0 0 auto;
+    font-size: clamp(16px, 5vw, 20px);
+    white-space: nowrap;
+  }
+  :root[data-ui='bento'] body .page-content .future-page-controls {
+    gap: 2px;
+  }
+  :root[data-ui='bento'] body .page-content .future-month-navigation {
+    gap: 0;
+  }
+  :root[data-ui='bento'] body .page-content .future-month-navigation > .icon-button {
+    width: 24px;
+    flex-basis: 24px;
+  }
+  :root[data-ui='bento'] body .page-content .future-month-navigation .month-trigger {
+    padding-inline: 8px;
+    font-size: 12px;
+  }
+  :root[data-ui='bento'] body .page-content .future-page-controls > .action-menu > summary {
+    width: 30px;
+    height: 32px;
+    min-height: 32px;
+  }
+  :root[data-ui='bento'] body .page-content .planning-page .period-budget {
+    gap: 4px 8px;
+  }
+  :root[data-ui='bento'] body .page-content .planning-page .period-budget-head {
+    gap: 6px 10px;
+  }
+  :root[data-ui='bento'] body .page-content .planning-page .period-budget-head span {
+    font-size: 11px;
+  }
+  :root[data-ui='bento'] body .page-content .planning-page .period-budget-details > summary {
+    font-size: 10px;
+  }
+  :root[data-ui='bento'] body .page-content .planning-page .planning-result-topline {
+    align-items: flex-start;
+  }
+  :root[data-ui='bento'] body .page-content .planning-page .planning-result-difference {
+    max-width: 100%;
+    white-space: normal;
+  }
+  :root[data-ui='bento'] body .page-content .planning-page .planning-small-metric-title > span {
+    gap: 5px;
+    font-size: 12px;
+  }
+  :root[data-ui='bento'] body .page-content .planning-page .planning-small-metric-value {
+    font-size: clamp(13px, 4.1vw, 17px);
+  }
+  :root[data-ui='bento'] body .page-content .planning-page .planning-small-metric-foot {
+    font-size: 10px;
+  }
+  :root[data-ui='bento'] body .page-content .card-projection {
+    padding: 14px;
+  }
+  :root[data-ui='bento'] body .page-content .card-hud-tiles article {
+    padding: 12px;
+  }
+  :root[data-ui='bento'] body .page-content .cards-page .credit-selector {
+    padding-inline: 8%;
+  }
+  :root[data-ui='bento'] body .page-content .cards-page .credit-card-frame {
+    flex-basis: 84vw;
+    min-width: 0;
+  }
+  :root[data-ui='bento'] body .page-content .cards-page .card-bill-toolbar {
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
+  :root[data-ui='bento'] body .page-content .cards-page .card-bill-toolbar > .inline-actions {
+    margin-left: auto;
+  }
+  :root[data-ui='bento'] body .page-content .cards-page .card-bill-toolbar .selected-card-metadata {
+    font-size: 10px;
+  }
+  :root[data-ui='bento'] body .page-content .cards-page .card-bill-toolbar > .inline-actions {
+    gap: 4px;
+  }
+  :root[data-ui='bento']
+    body
+    .page-content
+    .cards-page
+    .card-bill-toolbar
+    > .inline-actions
+    .button {
+    padding-inline: 8px;
+    font-size: 10px;
+  }
+  :root[data-ui='bento']
+    body
+    .page-content
+    .cards-page
+    .card-bill-toolbar
+    > .inline-actions
+    .button.secondary {
+    font-size: 0;
+  }
+  :root[data-ui='bento']
+    body
+    .page-content
+    .cards-page
+    .card-bill-toolbar
+    > .inline-actions
+    .button.secondary::after {
+    content: 'Dívida';
+    font-size: 10px;
+  }
+  :root[data-ui='bento'] body .page-content .cards-page .card-projection-heading {
+    align-items: flex-start;
+  }
+  :root[data-ui='bento'] body .page-content .cards-page .card-projection-month-nav {
+    margin-left: auto;
+  }
+  :root[data-ui='bento'] body .page-content .cards-page .card-projection-month-nav > .icon-button {
+    display: none;
+  }
+  :root[data-ui='bento'] body .page-content .cards-page .card-purchase-list > li {
+    padding: 12px;
+  }
+  :root[data-ui='bento'] body .page-content .cards-page .card-purchase-list .purchase-amount {
+    font-size: 12px;
+  }
+  :root[data-ui='bento'] body .page-content .cards-page .card-purchase-list .purchase-subline {
+    gap: 6px;
+  }
+  :root[data-ui='bento']
+    body
+    .page-content
+    .cards-page
+    .card-purchase-list
+    .purchase-subline
+    .inline-actions {
+    gap: 8px;
+  }
+  :root[data-ui='bento'] body .page-content .card-recurring-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  :root[data-ui='bento'] body .page-content .card-limit-overview {
+    padding: 12px;
+  }
+  :root[data-ui='bento'] body .page-content .card-projection-month > strong {
+    font-size: 9px;
+  }
   :root[data-ui='bento'] body .bottom-nav {
     left: 12px;
     right: 12px;
@@ -523,5 +1177,436 @@
     font-size: 9px;
     color: var(--text-tertiary);
   }
-  :root[data-ui='bento'] body .cards-page .card-detail { padding: 16px; }
+  :root[data-ui='bento'] body .cards-page .card-detail {
+    padding: 16px;
+  }
+}
+
+/* Shared compact mobile header and planning layout safeguards. */
+.mobile-header-title {
+  display: none;
+}
+@media (max-width: 1050px) {
+  :root[data-ui='bento'] body .premium-app .app-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    min-height: 56px;
+    padding: 8px max(12px, env(safe-area-inset-right)) 8px max(12px, env(safe-area-inset-left));
+    border-bottom: 0;
+    background: var(--bg-base);
+  }
+  :root[data-ui='bento'] body .premium-app .app-header > .header-brand,
+  :root[data-ui='bento'] body .premium-app .app-header > .desktop-navigation {
+    display: none;
+  }
+  :root[data-ui='bento'] body .premium-app .app-header > .mobile-header-title {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    min-width: 0;
+    gap: 8px;
+  }
+  :root[data-ui='bento'] body .mobile-header-mark {
+    display: grid;
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    place-items: center;
+    border-radius: 12px;
+    background: var(--bg-elevated);
+    color: var(--gold-primary);
+  }
+  :root[data-ui='bento'] body .mobile-header-mark .logo-symbol {
+    width: 21px;
+    height: 21px;
+  }
+  :root[data-ui='bento'] body .mobile-header-title > strong {
+    overflow: hidden;
+    color: var(--text-primary);
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  :root[data-ui='bento'] body .premium-app .app-header > .header-actions {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 8px;
+  }
+  :root[data-ui='bento'] body .premium-app .app-header .header-actions .visibility-button,
+  :root[data-ui='bento'] body .premium-app .app-header .header-actions .header-notifications {
+    display: grid;
+  }
+  :root[data-ui='bento'] body .premium-app .app-header .header-actions .visibility-button,
+  :root[data-ui='bento'] body .premium-app .app-header .header-notifications .notification-trigger {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    padding: 0;
+    border-radius: 50%;
+  }
+  :root[data-ui='bento'] body .premium-app .app-header .header-space-menu {
+    display: flex;
+    min-width: 44px;
+    min-height: 36px;
+    height: 36px;
+    justify-content: center;
+    gap: 4px;
+    padding: 0 7px;
+  }
+  :root[data-ui='bento'] body .premium-app .app-header .header-space-menu > span:nth-child(2) {
+    display: none;
+  }
+  :root[data-ui='bento'] body:has(.bento-dashboard) .app-header {
+    display: flex;
+  }
+  :root[data-ui='bento'] body .page-content:has(.bento-dashboard) {
+    padding-top: 8px;
+  }
+  :root[data-ui='bento'] body .page-content .bento-dashboard > .bento-welcome {
+    display: none;
+  }
+
+  :root[data-ui='bento'] body .page-content .planning-page > .future-page-heading {
+    display: flex;
+    width: 100%;
+    justify-content: flex-end;
+    gap: 0;
+    margin: 0 0 12px;
+    padding: 0;
+  }
+  :root[data-ui='bento'] body .page-content .planning-page > .future-page-heading > h1 {
+    display: none;
+  }
+  :root[data-ui='bento'] body .page-content .planning-page .future-page-controls {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 0;
+    width: 100%;
+    gap: 8px;
+  }
+  :root[data-ui='bento'] body .page-content .planning-page .future-month-navigation {
+    display: flex;
+    flex: 0 1 auto;
+    align-items: center;
+    min-width: 0;
+    white-space: nowrap;
+  }
+  :root[data-ui='bento'] body .page-content .planning-page .future-month-navigation .month-trigger {
+    white-space: nowrap;
+  }
+  :root[data-ui='bento'] body .page-content .planning-page .future-page-controls > .action-menu {
+    flex: 0 0 auto;
+  }
+  :root[data-ui='bento'] body .page-content .planning-page .period-budget {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    padding-right: 0;
+  }
+  :root[data-ui='bento'] body .page-content .planning-page .period-budget-head {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  :root[data-ui='bento'] body .page-content .planning-page .period-budget-unavailable {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  :root[data-ui='bento'] body .page-content .planning-page .period-budget-details {
+    flex: 0 0 auto;
+    margin-right: 0;
+  }
+  :root[data-ui='bento'] body .page-content .planning-page .period-budget-details > summary {
+    padding-right: 0;
+    text-decoration: none;
+  }
+  :root[data-ui='bento']
+    body
+    .page-content
+    .planning-page
+    .planning-monthly-pair
+    > .planning-metric {
+    min-width: 0;
+    padding: 14px;
+  }
+  :root[data-ui='bento'] body .page-content .planning-page .planning-small-metric-title > span {
+    min-width: 0;
+    gap: 5px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+}
+
+/* Planning category rows: amount stays intact, while progress replaces cramped metric columns. */
+:root[data-ui='bento'] body .page-content .planning-page .budget-section .section-heading {
+  padding: 0 0 12px;
+}
+:root[data-ui='bento'] body .page-content .planning-page .budget-section .section-heading h2 {
+  margin: 0;
+  font-size: 15px;
+}
+:root[data-ui='bento'] body .page-content .planning-page .budget-lines {
+  display: grid;
+  gap: 8px;
+}
+:root[data-ui='bento'] body .page-content .planning-page .budget-group {
+  min-width: 0;
+  padding: 12px 14px;
+  border: var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: rgba(10, 10, 12, 0.5);
+}
+:root[data-ui='bento'] body .page-content .planning-page .budget-group > summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 16px;
+  align-items: center;
+  gap: 8px 10px;
+  padding: 0;
+}
+:root[data-ui='bento'] body .page-content .planning-page .budget-group > summary::after {
+  grid-column: 3;
+  grid-row: 1;
+  align-self: center;
+  justify-self: end;
+}
+:root[data-ui='bento'] body .page-content .planning-page .budget-group-identity {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+:root[data-ui='bento'] body .page-content .planning-page .budget-group-identity strong {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+:root[data-ui='bento'] body .page-content .planning-page .budget-group-identity small {
+  flex: 0 0 auto;
+  color: var(--text-secondary);
+  font-size: 10px;
+  white-space: nowrap;
+}
+:root[data-ui='bento'] body .page-content .planning-page .budget-group-actual,
+:root[data-ui='bento'] body .page-content .planning-page .budget-line-actual {
+  color: var(--text-primary);
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+:root[data-ui='bento'] body .page-content .planning-page .budget-group > summary > .budget-progress,
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-page
+  .budget-group
+  > summary
+  > .budget-progress-footer {
+  grid-column: 1 / -1;
+}
+:root[data-ui='bento'] body .page-content .planning-page .budget-progress {
+  display: block;
+  height: 5px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--bg-elevated);
+}
+:root[data-ui='bento'] body .page-content .planning-page .budget-progress > i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--gold-primary);
+}
+:root[data-ui='bento'] body .page-content .planning-page .budget-expense .budget-progress > i {
+  background: var(--success);
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-page
+  .budget-expense
+  .budget-progress.is-exceeded
+  > i,
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-page
+  .budget-line.is-exceeded
+  .budget-progress
+  > i {
+  background: var(--danger);
+}
+:root[data-ui='bento'] body .page-content .planning-page .budget-progress-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+:root[data-ui='bento'] body .page-content .planning-page .budget-progress-footer > span,
+:root[data-ui='bento'] body .page-content .planning-page .budget-progress-footer > strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+:root[data-ui='bento'] body .page-content .planning-page .budget-progress-footer > strong {
+  text-align: right;
+}
+:root[data-ui='bento'] body .page-content .planning-page .budget-group-content {
+  display: grid;
+  gap: 6px;
+  padding-top: 10px;
+}
+:root[data-ui='bento'] body .page-content .planning-page .budget-group-content .budget-line {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px 0;
+  border-top: var(--border-subtle);
+}
+:root[data-ui='bento'] body .page-content .planning-page .budget-line-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  gap: 10px;
+}
+:root[data-ui='bento'] body .page-content .planning-page .budget-line .budget-identity {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 8px;
+}
+:root[data-ui='bento'] body .page-content .planning-page .budget-line .budget-identity > span {
+  flex: 0 0 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+:root[data-ui='bento'] body .page-content .planning-page .budget-line .budget-identity > strong {
+  overflow: hidden;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+:root[data-ui='bento'] body .page-content .planning-page .budget-line .budget-progress-footer {
+  font-size: 10px;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-future-commitments li {
+  min-width: 0;
+  gap: 10px;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-future-commitments li > div {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-page
+  .planning-future-commitments
+  li
+  > div
+  > strong {
+  overflow: hidden;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-future-commitments li > strong {
+  flex: 0 0 auto;
+  font-size: 13px;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-page
+  .planning-future-commitments
+  li
+  > .planning-bill-link {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  padding: 4px 9px;
+  border-radius: var(--radius-pill);
+  color: var(--gold-primary);
+  text-decoration: none;
+  white-space: nowrap;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-contribution-empty {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-included {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid rgba(212, 175, 55, 0.12);
+  border-radius: 14px;
+  background: rgba(212, 175, 55, 0.08);
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-included > strong {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-included > a,
+:root[data-ui='bento'] body .page-content .planning-page .planning-category-management > a {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 4px;
+  color: var(--gold-primary);
+  font-size: 12px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-category-management {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -4px;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-benefit-settings {
+  margin: 0;
+}
+@media (max-width: 1050px) {
+  :root[data-ui='bento'] body .page-content .planning-page .budget-group > summary {
+    grid-template-columns: minmax(0, 1fr) auto 16px;
+    gap: 8px 10px;
+  }
+  :root[data-ui='bento'] body .page-content .planning-page .budget-group > summary::after {
+    grid-column: 3;
+    grid-row: 1;
+  }
+  :root[data-ui='bento'] body .page-content .planning-page .budget-group-identity strong {
+    font-size: 13px;
+  }
+  :root[data-ui='bento'] body .page-content .planning-page .budget-group-actual,
+  :root[data-ui='bento'] body .page-content .planning-page .budget-line-actual {
+    font-size: 13px;
+  }
 }

@@ -2,38 +2,41 @@ import type { PlanningLine } from '../../../shared/api/resources';
 import { money } from '../../../shared/formatting/money';
 export function BudgetLine({ line, type }: { line: PlanningLine; type: 'income' | 'expense' }) {
   const difference = line.difference;
+  const progress =
+    line.planned && line.planned > 0
+      ? Math.min(100, Math.max(0, (line.actual / line.planned) * 100))
+      : 0;
+  const exceeded = type === 'expense' && difference !== null && difference < 0;
   return (
-    <article className="budget-line" role="listitem" key={line.categoryId ?? 'uncategorized'}>
-      <div className="budget-identity">
-        <span style={{ background: line.color }} />
-        <div>
+    <article className={`budget-line${exceeded ? ' is-exceeded' : ''}`} role="listitem">
+      <div className="budget-line-topline">
+        <div className="budget-identity">
+          <span style={{ background: line.color }} />
           <strong>{line.name}</strong>
-          <small>
-            {line.categoryId === null
-              ? 'Sem categoria · já incluídos · '
-              : line.archived
-                ? 'Arquivada · '
-                : ''}
-            {line.transactionCount} lançamentos
-          </small>
         </div>
+        <strong className="budget-line-actual">{money(line.actual)}</strong>
       </div>
-      <dl>
-        <div>
-          <dt>Previsto</dt>
-          <dd>{line.planned === null ? 'Não definido' : money(line.planned)}</dd>
-        </div>
-        <div>
-          <dt>Realizado</dt>
-          <dd>{money(line.actual)}</dd>
-        </div>
-        <div>
-          <dt>{type === 'income' ? 'Acima / abaixo' : 'Disponível / excedido'}</dt>
-          <dd className={difference !== null && difference < 0 ? 'negative-text' : ''}>
-            {difference === null ? '—' : money(difference)}
-          </dd>
-        </div>
-      </dl>
+      <div className="budget-progress" aria-hidden="true">
+        <i style={{ width: `${progress}%` }} />
+      </div>
+      <div className="budget-progress-footer">
+        <span>Previsto: {line.planned === null ? 'Sem previsão' : money(line.planned)}</span>
+        <strong
+          className={
+            exceeded
+              ? 'negative-text'
+              : difference !== null && difference >= 0
+                ? 'positive-text'
+                : ''
+          }
+        >
+          {difference === null
+            ? 'Sem previsão'
+            : type === 'income'
+              ? `${difference >= 0 ? 'Acima' : 'Abaixo'}: ${money(Math.abs(difference))}`
+              : `${exceeded ? 'Excedido' : 'Livre'}: ${money(Math.abs(difference))}`}
+        </strong>
+      </div>
     </article>
   );
 }

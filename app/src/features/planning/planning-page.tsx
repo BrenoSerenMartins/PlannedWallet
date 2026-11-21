@@ -7,9 +7,9 @@ import { BenefitPlanningNotice } from './components/benefit-planning-notice';
 import { CommitmentsPage } from './commitments-page';
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { validMonth } from '../../shared/formatting/month';
-import { Copy, Pencil, ArrowRight } from 'lucide-react';
-import { dateToday, money } from '../../shared/formatting/money';
+import { validMonth, shiftMonth } from '../../shared/formatting/month';
+import { Copy, Pencil, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { dateToday } from '../../shared/formatting/money';
 import { ErrorState, Loading, Modal } from '../../shared/ui/primitives';
 import { useMonthlyPlan, usePreviousMonthlyPlan } from './hooks/use-monthly-plan';
 import { PlanningSummary } from './components/planning-summary';
@@ -67,13 +67,17 @@ function MonthlyBudgetPage({ navigation }: { navigation?: ReactNode }) {
           <>
             <header className="future-page-heading">
               <h1>Visão futura</h1>
-              <p>Previsões, orçamento e compromissos do mês</p>
-            </header>
-            <PlanningSummary
-              plan={plan}
-              navigation={navigation}
-              actions={
-                <>
+              <div className="future-page-controls">
+                <div className="future-month-navigation" aria-label="Navegar entre meses">
+                  <button
+                    type="button"
+                    className="icon-button"
+                    aria-label="Mês anterior"
+                    disabled={month === '1900-01'}
+                    onClick={() => setMonth(shiftMonth(month, -1))}
+                  >
+                    <ChevronLeft size={17} />
+                  </button>
                   <label className="period-picker">
                     <span className="sr-only">Mês do plano</span>
                     <MonthPicker
@@ -90,62 +94,60 @@ function MonthlyBudgetPage({ navigation }: { navigation?: ReactNode }) {
                       }}
                     />
                   </label>
-                  <ActionMenu label="Mais ações do planejamento">
-                    <Link to={`/planning?view=commitments&month=${month}`}>
-                      Agenda de compromissos
-                    </Link>
+                  <button
+                    type="button"
+                    className="icon-button"
+                    aria-label="Próximo mês"
+                    disabled={month === '9998-12'}
+                    onClick={() => setMonth(shiftMonth(month, 1))}
+                  >
+                    <ChevronRight size={17} />
+                  </button>
+                </div>
+                <ActionMenu label="Mais ações do planejamento">
+                  <Link to={`/planning?view=commitments&month=${month}`}>
+                    Agenda de compromissos
+                  </Link>
+                  <button
+                    type="button"
+                    disabled={!navigator.onLine}
+                    onClick={() => setDialog('edit')}
+                  >
+                    <Pencil size={16} />
+                    {plan.version ? 'Editar planejamento' : 'Preparar meu mês'}
+                  </button>
+                  {canCopyPrevious && (
                     <button
                       type="button"
                       disabled={!navigator.onLine}
-                      onClick={() => setDialog('edit')}
+                      onClick={() => setDialog('copy')}
                     >
-                      <Pencil size={16} />
-                      {plan.version ? 'Editar planejamento' : 'Preparar meu mês'}
+                      <Copy size={16} />
+                      Copiar mês anterior
                     </button>
-                    {canCopyPrevious && (
-                      <button
-                        type="button"
-                        disabled={!navigator.onLine}
-                        onClick={() => setDialog('copy')}
-                      >
-                        <Copy size={16} />
-                        Copiar mês anterior
-                      </button>
-                    )}
-                  </ActionMenu>
-                </>
-              }
+                  )}
+                </ActionMenu>
+              </div>
+            </header>
+            <PlanningSummary
+              plan={plan}
+              navigation={navigation}
+              onEditPlan={() => setDialog('edit')}
+              commitments={<PlanningCardBills plan={plan} />}
             />
-
-            <PlanningCardBills plan={plan} />
             {plan.totals.missingCategoryCount > 0 && (
               <div className="review-banner planning-included">
-                <div>
-                  <strong>Sem categoria também entra na conta</strong>
-                  <p>
-                    {plan.totals.missingCategoryCount} lançamentos estão em Outros e já fazem parte
-                    do realizado de receitas e despesas. Categorizar depois apenas redistribui os
-                    valores; o total não muda.
-                  </p>
-                </div>
+                <strong>{plan.totals.missingCategoryCount} itens em Outros</strong>
                 <Link to="/transactions">
-                  Organizar categorias <ArrowRight size={16} />
+                  Organizar <ArrowRight size={14} />
                 </Link>
               </div>
             )}
             {plan.totals.unclassifiedCount > 0 && (
-              <div className="review-banner">
-                <div>
-                  <strong>Movimentos sem tipo financeiro precisam de revisão</strong>
-                  <p>
-                    {plan.totals.unclassifiedCount} movimentos ainda sem tipo. Entradas:{' '}
-                    {money(plan.totals.unclassifiedInflow)}; saídas:{' '}
-                    {money(plan.totals.unclassifiedOutflow)}. Esses movimentos ainda não entram nos
-                    totais de receita/despesa.
-                  </p>
-                </div>
+              <div className="review-banner planning-included planning-unclassified">
+                <strong>{plan.totals.unclassifiedCount} movimentos para revisar</strong>
                 <Link to="/transactions?type=unclassified">
-                  Revisar movimentos <ArrowRight size={16} />
+                  Revisar <ArrowRight size={14} />
                 </Link>
               </div>
             )}
@@ -156,22 +158,17 @@ function MonthlyBudgetPage({ navigation }: { navigation?: ReactNode }) {
                 lines={plan.lines.filter((l) => l.type === 'expense')}
               />
             </div>
-            <details className="planning-preferences">
-              <summary>Como os valores são calculados e configurações do VA/VR</summary>
-              <BenefitPlanningNotice plan={plan} scope="all" />
-              <p className="field-help">
-                Previsto e realizado consideram todas as contas do espaço. Transferências e estornos
-                ficam fora do resultado. O saldo da conta inclui outros períodos. Benefícios têm uso
-                restrito. Aporte é uma intenção; seu realizado não é identificado automaticamente.
-              </p>
-            </details>
-            <section className="panel planning-note">
-              <h2>Notas e próximos passos</h2>
-              <p>{plan.notes || 'Registre seus compromissos e intenções ao preparar o mês.'}</p>
+            {plan.benefitAccounts?.length ? (
+              <details className="planning-preferences planning-benefit-settings">
+                <summary>Regra de créditos VA/VR</summary>
+                <BenefitPlanningNotice plan={plan} scope="all" />
+              </details>
+            ) : null}
+            <div className="planning-category-management">
               <Link to="/categories">
                 Gerenciar categorias <ArrowRight size={14} />
               </Link>
-            </section>
+            </div>
             <Modal
               open={dialog === 'edit'}
               onOpenChange={(open) => !open && setDialog(null)}

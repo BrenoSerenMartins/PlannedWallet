@@ -10,7 +10,11 @@ export function BalanceReference({
 }) {
   const basis = account.balanceBasis;
   if (!basis || basis.kind === 'unknown' || basis.kind === 'legacy')
-    return <span className="balance-reference muted">Saldo sem referência atual conferida</span>;
+    return (
+      <span className={`balance-reference muted${compact ? ' compact' : ''}`}>
+        {compact ? 'Sem referência conferida' : 'Saldo sem referência atual conferida'}
+      </span>
+    );
   const date = basis.referenceDate
     ? new Intl.DateTimeFormat('pt-BR', {
         day: '2-digit',
@@ -19,6 +23,26 @@ export function BalanceReference({
       }).format(new Date(basis.referenceDate + 'T12:00:00'))
     : '';
   const bank = account.institution === 'mercado_pago' && basis.kind === 'statement';
+  if (compact) {
+    return (
+      <div className="balance-reference compact">
+        <span>
+          {bank ? 'Ref.' : 'Conferido'}
+          {date ? ` ${date}` : ''}
+        </span>
+        {bank && basis.importId && (
+          <Link to={`/imports/${basis.importId}`}>
+            Ver origem <span aria-hidden="true">↗</span>
+          </Link>
+        )}
+        {basis.reviewRequired && (
+          <small role="status">
+            {basis.reviewReason === 'same_day' ? 'Conferir ordem' : 'Conferir saldo'}
+          </small>
+        )}
+      </div>
+    );
+  }
   return (
     <div className={`balance-reference ${compact ? 'compact' : ''}`}>
       {bank ? (

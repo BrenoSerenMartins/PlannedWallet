@@ -9,21 +9,32 @@ import { FinanceForm, useFinanceChoices } from '../../../shared/ui/finance-forms
 import { CategorySelect } from '../../../shared/ui/category-select';
 import { Select } from '../../../shared/ui/controls/select';
 import { MonthPicker } from '../../../shared/ui/controls/month-picker';
-import { Plus } from 'lucide-react';
+import { CalendarDays, Plus } from 'lucide-react';
 import { money, parseMoney, dateToday } from '../../../shared/formatting/money';
+import { useFinancialVisibility } from '../../../shared/privacy/financial-visibility';
 type Rule = components['schemas']['CardRecurringResourceDto'];
 type Card = CardsSummary['cards'][number];
 export function CardRecurring({ card, month }: { card: Card; month: string }) {
+  const { visible } = useFinancialVisibility();
+  const displayMoney = (amount: number) => (visible ? money(amount) : '••••••');
   const query = useQuery({
     queryKey: ['card-recurring', card.id],
     queryFn: () => request<Rule[]>(`/cards/${card.id}/recurring`),
   });
   const [edit, setEdit] = useState<Rule | 'new' | null>(null),
     [confirm, setConfirm] = useState<Rule | null>(null);
+  const activeRules = (query.data ?? []).filter(
+    (rule) =>
+      !rule.archived && month >= rule.startMonth && (!rule.endMonth || month <= rule.endMonth),
+  );
+  const monthlyTotal = activeRules.reduce((total, rule) => total + rule.amount, 0);
   return (
     <section className="card-recurring-section">
       <div className="section-heading">
         <h2>Assinaturas e recorrentes</h2>
+        {!query.isPending && !query.isError && (
+          <strong className="card-recurring-total">{displayMoney(monthlyTotal)}/mês</strong>
+        )}
         <Button className="secondary compact" onClick={() => setEdit('new')}>
           <Plus size={16} /> Nova
         </Button>
@@ -32,37 +43,45 @@ export function CardRecurring({ card, month }: { card: Card; month: string }) {
         <Loading />
       ) : query.isError ? (
         <ErrorState error={query.error} retry={() => void query.refetch()} />
+      ) : query.data.length === 0 ? (
+        <p className="card-recurring-empty">Nenhuma assinatura vinculada</p>
       ) : (
-        query.data.map((r) => (
-          <div className="goal-account" key={r.id}>
-            <div>
-              <strong>
-                {r.name} · {money(r.amount)}
-              </strong>
-              <p className="field-help">
-                Dia {r.chargeDay}
-                {r.archived
-                  ? ' · Pausada'
-                  : r.confirmedMonths.includes(month)
-                    ? ' · Confirmada neste mês'
-                    : ' · Prevista'}
-              </p>
+        <div className="card-recurring-list">
+          {query.data.map((r) => (
+            <div className="card-recurring-row" key={r.id}>
+              <div className="card-recurring-identity">
+                <CalendarDays size={17} aria-hidden="true" />
+                <div>
+                  <strong>{r.name}</strong>
+                  <span>
+                    Dia {r.chargeDay}
+                    {r.archived
+                      ? ' · Pausada'
+                      : r.confirmedMonths.includes(month)
+                        ? ' · Confirmada'
+                        : month < r.startMonth || (r.endMonth && month > r.endMonth)
+                          ? ' · Fora do período'
+                          : ' · Prevista'}
+                  </span>
+                </div>
+              </div>
+              <strong className="card-recurring-amount">{displayMoney(r.amount)}</strong>
+              <div className="inline-actions">
+                <button className="text-button" onClick={() => setEdit(r)}>
+                  Editar
+                </button>
+                {!r.archived &&
+                  !r.confirmedMonths.includes(month) &&
+                  month >= r.startMonth &&
+                  (!r.endMonth || month <= r.endMonth) && (
+                    <button className="text-button" onClick={() => setConfirm(r)}>
+                      Confirmar
+                    </button>
+                  )}
+              </div>
             </div>
-            <div className="inline-actions">
-              <button className="text-button" onClick={() => setEdit(r)}>
-                Editar assinatura
-              </button>
-              {!r.archived &&
-                !r.confirmedMonths.includes(month) &&
-                month >= r.startMonth &&
-                (!r.endMonth || month <= r.endMonth) && (
-                  <button className="text-button" onClick={() => setConfirm(r)}>
-                    Confirmar cobrança
-                  </button>
-                )}
-            </div>
-          </div>
-        ))
+          ))}
+        </div>
       )}
       <Modal
         open={edit !== null}

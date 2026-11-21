@@ -115,16 +115,6 @@ export function DashboardPage() {
                 <Wallet size={16} aria-hidden="true" />
                 {partial ? 'Saldo registrado' : 'Saldo disponível'}
               </span>
-              {totals && (
-                <span
-                  className={`hero-result-badge ${totals.actualResult < 0 ? 'negative-text' : 'positive-text'}`}
-                >
-                  {visible
-                    ? `${totals.actualResult >= 0 ? '+ ' : ''}${money(totals.actualResult)}`
-                    : '••••'}
-                  <span>resultado do mês</span>
-                </span>
-              )}
             </div>
             <strong className="hero-balance tabular-nums">{display(snapshot.data.balance)}</strong>
             <div className="hero-budget">
@@ -187,7 +177,13 @@ export function DashboardPage() {
                 onClick={() => setDetails(!details)}
                 aria-expanded={details}
               >
-                Ver contas <ChevronDown size={15} />
+                {details ? 'Ocultar' : 'Ver contas'}
+                <ChevronDown
+                  className={
+                    details ? 'accounts-toggle-chevron is-open' : 'accounts-toggle-chevron'
+                  }
+                  size={15}
+                />
               </button>
             </div>
             {partial && (

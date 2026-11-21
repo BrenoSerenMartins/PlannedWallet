@@ -8,39 +8,25 @@ const display = (value: number | null) => (value === null ? 'Não definido' : mo
 export function PlanningSummary({
   plan,
   navigation,
-  actions,
+  onEditPlan,
+  commitments,
 }: {
   plan: MonthlyPlan;
   navigation?: ReactNode;
-  actions?: ReactNode;
+  onEditPlan?: () => void;
+  commitments?: ReactNode;
 }) {
   const { totals: t } = plan;
-  const metrics = [
-    {
-      label: 'Receitas do mês',
-      Icon: ArrowDownLeft,
-      planned: t.plannedIncome,
-      actual: t.actualIncome,
-      difference: t.incomeDifference,
-      kind: 'income',
-    },
-    {
-      label: 'Orçamento de despesas',
-      Icon: ArrowUpRight,
-      planned: t.plannedExpense,
-      actual: t.actualExpense,
-      difference: t.expenseDifference,
-      kind: 'expense',
-    },
-    {
-      label: 'Resultado do mês',
-      Icon: Scale,
-      planned: t.plannedResult,
-      actual: t.actualResult,
-      difference: t.resultDifference,
-      kind: 'result',
-    },
-  ];
+  const incomeProgress =
+    t.plannedIncome && t.plannedIncome > 0
+      ? Math.min(100, Math.max(0, (t.actualIncome / t.plannedIncome) * 100))
+      : 0;
+  const expenseProgress =
+    t.plannedExpense && t.plannedExpense > 0
+      ? Math.min(100, Math.max(0, (t.actualExpense / t.plannedExpense) * 100))
+      : 0;
+  const resultProgress =
+    t.actualIncome > 0 ? Math.min(100, Math.max(0, (t.actualExpense / t.actualIncome) * 100)) : 0;
   return (
     <>
       <PeriodBudget
@@ -48,93 +34,108 @@ export function PlanningSummary({
         forecast={{ result: t.plannedResult, contribution: plan.contribution }}
       />
       <section className="planning-metrics" aria-label="Resumo do planejamento">
-        {actions && (
-          <div className="summary-action-bar">
-            <div>{actions}</div>
-          </div>
-        )}
-        {metrics.map(({ label, Icon, planned, actual, difference, kind }) => (
-          <article
-            className={`panel planning-metric comparison-metric metric-${kind}`}
-            key={kind}
-            aria-label={label}
-          >
+        <article
+          className="planning-metric metric-result bento-hero-gold"
+          aria-label="Resultado projetado"
+        >
+          <div className="planning-result-topline">
             <span>
-              <Icon size={17} />
-              <span className="planning-metric-title">
-                <span className="planning-title-full">{label}</span>
-                <span className="planning-title-short">
-                  {kind === 'income' ? 'Receitas' : kind === 'expense' ? 'Despesas' : label}
-                </span>
+              <Scale size={18} /> Resultado projetado
+            </span>
+            {t.resultDifference !== null && (
+              <span
+                className={`planning-result-difference ${t.resultDifference >= 0 ? 'positive-text' : 'negative-text'}`}
+              >
+                {t.resultDifference > 0 ? '+' : ''}
+                {money(t.resultDifference)} vs. previsto
+              </span>
+            )}
+          </div>
+          <strong className="planning-result-value">{money(t.actualResult)}</strong>
+          <div className="planning-result-footer">
+            <span>Previsto: {display(t.plannedResult)}</span>
+            <div
+              className="planning-result-meter"
+              role="img"
+              aria-label={`Despesas realizadas equivalem a ${Math.round(resultProgress)}% das receitas realizadas`}
+            >
+              <span style={{ width: `${resultProgress}%` }} />
+            </div>
+          </div>
+        </article>
+        <div className="planning-monthly-pair">
+          <article className="planning-metric metric-income bento-soft-card" aria-label="Receitas">
+            <div className="planning-small-metric-title">
+              <span>
+                <ArrowDownLeft size={17} /> Receitas
               </span>
               <HelpTip
-                label={label}
-                text={
-                  kind === 'result'
-                    ? 'Receitas menos despesas das contas e pagamentos das faturas selecionadas. Esse resultado não é o saldo atual das contas.'
-                    : kind === 'expense'
-                      ? 'Inclui despesas das contas e pagamentos das faturas selecionadas. As compras detalhadas do cartão não são somadas novamente.'
-                      : 'Compara as receitas previstas com as registradas. O VA/VR segue a configuração de mês de cada conta.'
-                }
+                label="Receitas"
+                text="Receitas realizadas e previstas no mês selecionado."
               />
-            </span>
-            <dl className="planning-comparison">
-              <div>
-                <dt>Previsto</dt>
-                <dd>{display(planned)}</dd>
-              </div>
-              <div>
-                <dt>Realizado</dt>
-                <dd>{money(actual)}</dd>
-              </div>
-            </dl>
-            {kind !== 'result' && planned !== null && planned > 0 && (
-              <div
-                className="planning-meter"
-                role="img"
-                aria-label={`${label}: ${Math.round((actual / planned) * 100)}% do previsto`}
-              >
-                <span
-                  style={{ width: `${Math.min(100, Math.max(0, (actual / planned) * 100))}%` }}
-                />
-              </div>
-            )}
-            <p
-              className={`planning-difference ${difference == null ? '' : difference < 0 ? 'negative-text' : difference > 0 ? 'positive-text' : ''}`}
+            </div>
+            <strong className="planning-small-metric-value">{money(t.actualIncome)}</strong>
+            <div
+              className="planning-meter"
+              role="img"
+              aria-label={`Receitas: ${Math.round(incomeProgress)}% do previsto`}
             >
-              {difference == null
-                ? 'Sem previsão para comparar'
-                : difference === 0
-                  ? 'Dentro do previsto'
-                  : kind === 'expense'
-                    ? `${money(Math.abs(difference))} ${difference < 0 ? 'acima do orçamento' : 'disponíveis no orçamento'}`
-                    : `${money(Math.abs(difference))} ${difference < 0 ? 'abaixo' : 'acima'} do previsto`}
+              <span style={{ width: `${incomeProgress}%` }} />
+            </div>
+            <p className="planning-small-metric-foot">Previsto {display(t.plannedIncome)}</p>
+          </article>
+          <article className="planning-metric metric-expense bento-soft-card" aria-label="Despesas">
+            <div className="planning-small-metric-title">
+              <span>
+                <ArrowUpRight size={17} /> Despesas
+              </span>
+              <HelpTip
+                label="Despesas"
+                text="Despesas realizadas no mês comparadas ao orçamento."
+              />
+            </div>
+            <strong className="planning-small-metric-value">{money(t.actualExpense)}</strong>
+            <div
+              className="planning-meter"
+              role="img"
+              aria-label={`Despesas: ${Math.round(expenseProgress)}% do orçamento`}
+            >
+              <span style={{ width: `${expenseProgress}%` }} />
+            </div>
+            <p
+              className={`planning-small-metric-foot ${t.expenseDifference !== null && t.expenseDifference >= 0 ? 'positive-text' : 'negative-text'}`}
+            >
+              {t.expenseDifference === null
+                ? `Previsto ${display(t.plannedExpense)}`
+                : t.expenseDifference >= 0
+                  ? `Livre ${money(t.expenseDifference)}`
+                  : `Excedido ${money(Math.abs(t.expenseDifference))}`}
             </p>
           </article>
-        ))}
+        </div>
         <article
-          className="panel planning-metric comparison-metric metric-contribution"
+          className="planning-metric metric-contribution bento-soft-card"
           aria-label="Aporte planejado"
         >
-          <span>
-            <PiggyBank size={17} />
-            Aporte planejado
-            <HelpTip
-              label="Aporte planejado"
-              text="É o valor que você pretende reservar ou investir. O realizado ainda não é identificado automaticamente nesta comparação."
-            />
-          </span>
-          <dl className="planning-comparison">
-            <div>
-              <dt>Previsto</dt>
-              <dd>{display(plan.contribution)}</dd>
-            </div>
-            <div>
-              <dt>Realizado</dt>
-              <dd className="planning-unavailable">Não identificado</dd>
-            </div>
-          </dl>
-          <p>Resultado previsto após aporte: {display(t.afterContribution)}</p>
+          <div className="planning-contribution-heading">
+            <span>
+              <PiggyBank size={18} /> Aporte planejado
+            </span>
+            {onEditPlan && (
+              <button type="button" className="text-button" onClick={onEditPlan}>
+                {plan.contribution === null ? 'Definir meta' : 'Editar meta'}
+              </button>
+            )}
+          </div>
+          {plan.contribution === null ? (
+            <p className="planning-contribution-empty">Nenhum aporte definido para este mês</p>
+          ) : (
+            <>
+              <strong>{display(plan.contribution)}</strong>
+              <small>Resultado após aporte: {display(t.afterContribution)}</small>
+            </>
+          )}
+          {commitments}
         </article>
         {navigation && <div className="summary-navigation">{navigation}</div>}
       </section>

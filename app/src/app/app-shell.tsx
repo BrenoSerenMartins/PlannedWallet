@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../features/auth/auth-provider';
 import { Logo, Modal } from '../shared/ui/primitives';
+import { BrandSymbol } from '../shared/ui/brand-symbol';
 const navigation = [
   { to: '/', label: 'Visão geral', mobile: 'Início', Icon: House },
   { to: '/planning', label: 'Planejamento', mobile: 'Planejar', Icon: CalendarDays },
@@ -73,6 +74,23 @@ function ShellContent() {
   const wasOnline = useRef(navigator.onLine);
   const { active } = useWorkspace();
   const location = useLocation();
+  const firstName =
+    session?.user.user_metadata?.full_name?.split(' ')[0] ??
+    session?.user.email?.split('@')[0] ??
+    'Você';
+  const currentNav = [...navigation]
+    .filter((item) => location.pathname.startsWith(item.to))
+    .sort((a, b) => b.to.length - a.to.length)[0];
+  const mobileTitle =
+    location.pathname === '/'
+      ? `Olá, ${firstName}`
+      : location.pathname.startsWith('/planning')
+        ? 'Planejamento'
+        : location.pathname.startsWith('/cards')
+          ? 'Cartões'
+          : location.pathname.startsWith('/transactions')
+            ? 'Extrato'
+            : (currentNav?.mobile ?? 'PlannedWallet');
   const [arriving, setArriving] = useState(() => {
     try {
       return sessionStorage.getItem('plannedwallet:entered') !== 'yes';
@@ -160,6 +178,12 @@ function ShellContent() {
           <NavLink to="/" className="header-brand" aria-label={`${productName} — início`}>
             <Logo />
           </NavLink>
+          <div className="mobile-header-title">
+            <NavLink to="/" className="mobile-header-mark" aria-label="PlannedWallet — início">
+              <BrandSymbol />
+            </NavLink>
+            <strong>{mobileTitle}</strong>
+          </div>
           <nav className="desktop-navigation" aria-label="Navegação principal">
             {navigation
               .filter((n) => primaryPaths.includes(n.to))

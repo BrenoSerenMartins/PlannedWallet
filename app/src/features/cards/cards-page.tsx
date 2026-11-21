@@ -4,14 +4,13 @@ import { MonthPicker } from '../../shared/ui/controls/month-picker';
 import { HelpTip, Tooltip } from '../../shared/ui/tooltip';
 import { useNotifications } from '../../shared/feedback/notification-provider';
 import { useState, useEffect, useRef } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   CreditCard as CreditIcon,
   Plus,
   Pencil,
-  Eye,
-  EyeOff,
+  Trash2,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
@@ -56,7 +55,7 @@ export function CardsPage() {
   });
   const write = useFinanceWrite();
   const [dialog, setDialog] = useState<Dialog | null>(null);
-  const { visible, toggle: toggleVisibility } = useFinancialVisibility();
+  const { visible } = useFinancialVisibility();
   const [showArchived, setShowArchived] = useState(false);
   const selectorRef = useRef<HTMLDivElement>(null);
   const swipeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -81,18 +80,26 @@ export function CardsPage() {
   useEffect(() => {
     const selector = selectorRef.current;
     if (!selector || !card) return;
-    const selected = Array.from(selector.querySelectorAll<HTMLButtonElement>('[data-card-id]'))
-      .find((item) => item.dataset.cardId === card.id);
+    const selected = Array.from(
+      selector.querySelectorAll<HTMLButtonElement>('[data-card-id]'),
+    ).find((item) => item.dataset.cardId === card.id);
     if (selected) {
       selector.scrollTo({
-        left: selector.scrollLeft + selected.getBoundingClientRect().left - selector.getBoundingClientRect().left - (selector.clientWidth - selected.offsetWidth) / 2,
+        left:
+          selector.scrollLeft +
+          selected.getBoundingClientRect().left -
+          selector.getBoundingClientRect().left -
+          (selector.clientWidth - selected.offsetWidth) / 2,
         behavior: 'smooth',
       });
     }
   }, [card?.id, cards.length]);
-  useEffect(() => () => {
-    if (swipeTimer.current) clearTimeout(swipeTimer.current);
-  }, []);
+  useEffect(
+    () => () => {
+      if (swipeTimer.current) clearTimeout(swipeTimer.current);
+    },
+    [],
+  );
   const saved = (newMonth?: string) => {
     setDialog(null);
     setMessage('Registro salvo. Faturas, relatórios e previsão foram atualizados.');
@@ -104,21 +111,6 @@ export function CardsPage() {
         <div className="card-workspace-toolbar">
           <h1 className="contextual-page-title">Cartões e faturas</h1>
           <div className="inline-actions">
-            {cards.length > 0 && (
-              <Tooltip
-                text={visible ? 'Ocultar valores dos cartões' : 'Mostrar valores dos cartões'}
-              >
-                <button
-                  className="icon-button"
-                  aria-label={
-                    visible ? 'Ocultar valores dos cartões' : 'Mostrar valores dos cartões'
-                  }
-                  onClick={toggleVisibility}
-                >
-                  {visible ? <Eye size={18} /> : <EyeOff size={18} />}
-                </button>
-              </Tooltip>
-            )}
             <IconAction
               label="Novo cartão"
               icon={<Plus size={18} />}
@@ -174,13 +166,18 @@ export function CardsPage() {
                     swipeTimer.current = setTimeout(() => {
                       const selector = selectorRef.current;
                       if (!selector) return;
-                      const center = selector.getBoundingClientRect().left + selector.clientWidth / 2;
+                      const center =
+                        selector.getBoundingClientRect().left + selector.clientWidth / 2;
                       const nearest = Array.from(
                         selector.querySelectorAll<HTMLButtonElement>('[data-card-id]'),
                       ).reduce<HTMLButtonElement | null>((closest, item) => {
                         if (!closest) return item;
-                        const distance = Math.abs(item.getBoundingClientRect().left + item.offsetWidth / 2 - center);
-                        const closestDistance = Math.abs(closest.getBoundingClientRect().left + closest.offsetWidth / 2 - center);
+                        const distance = Math.abs(
+                          item.getBoundingClientRect().left + item.offsetWidth / 2 - center,
+                        );
+                        const closestDistance = Math.abs(
+                          closest.getBoundingClientRect().left + closest.offsetWidth / 2 - center,
+                        );
                         return distance < closestDistance ? item : closest;
                       }, null);
                       const id = nearest?.dataset.cardId;
@@ -243,43 +240,11 @@ export function CardsPage() {
                 </div>
                 {card && (
                   <section className="card-detail">
-                    <p className="selected-card-metadata">
-                      Fecha dia {card.closingDay} <span aria-hidden="true">·</span> vence dia {card.dueDay}
-                    </p>
                     <div className="card-bill-toolbar">
-                      <div className="finance-month-navigation">
-                        <Tooltip text="Fatura anterior">
-                          <button
-                            className="icon-button"
-                            aria-label="Fatura anterior"
-                            disabled={month === '1900-01'}
-                            onClick={() => update({ month: shiftMonth(month, -1) })}
-                          >
-                            <ChevronLeft size={18} />
-                          </button>
-                        </Tooltip>
-                        <label className="period-picker">
-                          <span>Mês de vencimento</span>
-                          <MonthPicker
-                            clearable={false}
-                            aria-label="Mês da fatura"
-                            min="1900-01"
-                            max="9998-12"
-                            value={month}
-                            onChange={(e) => e.target.value && update({ month: e.target.value })}
-                          />
-                        </label>
-                        <Tooltip text="Próxima fatura">
-                          <button
-                            className="icon-button"
-                            aria-label="Próxima fatura"
-                            disabled={month === '9998-12'}
-                            onClick={() => update({ month: shiftMonth(month, 1) })}
-                          >
-                            <ChevronRight size={18} />
-                          </button>
-                        </Tooltip>
-                      </div>
+                      <p className="selected-card-metadata">
+                        Fecha dia {card.closingDay} <span aria-hidden="true">·</span> vence dia{' '}
+                        {card.dueDay}
+                      </p>
                       <div className="inline-actions">
                         <Button
                           className="compact"
@@ -297,7 +262,8 @@ export function CardsPage() {
                         </Button>
                       </div>
                     </div>
-                      {card.limit > 0 && (() => {
+                    {card.limit > 0 &&
+                      (() => {
                         const current = Math.max(0, bill?.remaining ?? 0);
                         const future = card.bills
                           .filter((item) => item.month > month)
@@ -311,49 +277,105 @@ export function CardsPage() {
                               <span>Limite comprometido</span>
                               <strong>{value(card.limit)}</strong>
                             </div>
-                            <div className="card-limit-bar" role="img" aria-label={`Fatura do mês ${value(current)}, faturas futuras ${value(future)}, disponível ${value(card.availableLimit)}`}>
+                            <div
+                              className="card-limit-bar"
+                              role="img"
+                              aria-label={`Fatura do mês ${value(current)}, faturas futuras ${value(future)}, disponível ${value(card.availableLimit)}`}
+                            >
                               <span style={{ width: `${currentWidth}%` }} />
                               <span style={{ width: `${futureWidth}%` }} />
                             </div>
                             <div className="card-limit-legend">
-                              <span><i className="current" /><span>Mês<strong>{value(current)}</strong></span></span>
-                              <span><i className="future" /><span>Futuras<strong>{value(future)}</strong></span></span>
-                              <span><i className="available" /><span>Disponível<strong>{value(card.availableLimit)}</strong></span></span>
+                              <span>
+                                <i className="current" />
+                                <span>
+                                  Mês<strong>{value(current)}</strong>
+                                </span>
+                              </span>
+                              <span>
+                                <i className="future" />
+                                <span>
+                                  Futuras<strong>{value(future)}</strong>
+                                </span>
+                              </span>
+                              <span>
+                                <i className="available" />
+                                <span>
+                                  Disponível<strong>{value(card.availableLimit)}</strong>
+                                </span>
+                              </span>
                             </div>
                           </div>
                         );
                       })()}
-                      {(() => {
-                        const sixMonths = Array.from({ length: 6 }, (_, index) =>
-                          shiftMonth(month, index - 5),
-                        );
-                        const average = card.bills
+                    {(() => {
+                      const sixMonths = Array.from({ length: 6 }, (_, index) =>
+                        shiftMonth(month, index - 5),
+                      );
+                      const average =
+                        card.bills
                           .filter((item) => sixMonths.includes(item.month))
                           .reduce((total, item) => total + item.total, 0) / 6;
-                        const percent = card.limit > 0
+                      const percent =
+                        card.limit > 0
                           ? Math.min(100, Math.round((card.debt / card.limit) * 100))
                           : null;
-                        const nextDay = bill?.closingDate
-                          ? new Date(`${bill.closingDate}T12:00:00`)
-                          : null;
-                        nextDay?.setDate(nextDay.getDate() + 1);
-                        return (
-                          <div className="card-hud-tiles">
-                            <article>
-                              <span>Melhor dia</span>
-                              <strong>{nextDay ? `Dia ${nextDay.getDate()}` : 'Pós-fechamento'}</strong>
-                            </article>
-                            <article>
-                              <span>Média mensal · 6 meses</span>
-                              <strong>{value(average)}</strong>
-                              <small>{percent === null ? 'Sem limite' : `${percent}% usado`}</small>
-                            </article>
-                          </div>
-                        );
-                      })()}
+                      const closingDate = bill?.closingDate
+                        ? new Date(`${bill.closingDate}T12:00:00`)
+                        : new Date(`${month}-01T12:00:00`);
+                      if (!bill?.closingDate) closingDate.setDate(card.closingDay + 1);
+                      else closingDate.setDate(closingDate.getDate() + 1);
+                      return (
+                        <div className="card-hud-tiles">
+                          <article>
+                            <span>Melhor dia</span>
+                            <strong>Dia {closingDate.getDate()}</strong>
+                            <small>Após fechamento</small>
+                          </article>
+                          <article>
+                            <span>Média mensal · 6 meses</span>
+                            <strong>{value(average)}</strong>
+                            <small>{percent === null ? 'Sem limite' : `${percent}% usado`}</small>
+                          </article>
+                        </div>
+                      );
+                    })()}
                     <section className="card-projection" aria-label="Projeção de faturas">
                       <div className="card-projection-heading">
                         <h3>Projeção de faturas</h3>
+                        <div className="finance-month-navigation card-projection-month-nav">
+                          <Tooltip text="Fatura anterior">
+                            <button
+                              className="icon-button"
+                              aria-label="Fatura anterior"
+                              disabled={month === '1900-01'}
+                              onClick={() => update({ month: shiftMonth(month, -1) })}
+                            >
+                              <ChevronLeft size={18} />
+                            </button>
+                          </Tooltip>
+                          <label className="period-picker">
+                            <span>Mês de vencimento</span>
+                            <MonthPicker
+                              clearable={false}
+                              aria-label="Mês da fatura"
+                              min="1900-01"
+                              max="9998-12"
+                              value={month}
+                              onChange={(e) => e.target.value && update({ month: e.target.value })}
+                            />
+                          </label>
+                          <Tooltip text="Próxima fatura">
+                            <button
+                              className="icon-button"
+                              aria-label="Próxima fatura"
+                              disabled={month === '9998-12'}
+                              onClick={() => update({ month: shiftMonth(month, 1) })}
+                            >
+                              <ChevronRight size={18} />
+                            </button>
+                          </Tooltip>
+                        </div>
                         {card.limit > 0 && (
                           <span className="card-limit-caption">Limite {value(card.limit)}</span>
                         )}
@@ -361,14 +383,19 @@ export function CardsPage() {
                       {(() => {
                         const projection = Array.from({ length: 8 }, (_, index) => {
                           const projectionMonth = shiftMonth(month, index);
-                          return card.bills.find((item) => item.month === projectionMonth) ?? {
-                            month: projectionMonth,
-                            total: 0,
-                          };
+                          return (
+                            card.bills.find((item) => item.month === projectionMonth) ?? {
+                              month: projectionMonth,
+                              total: 0,
+                            }
+                          );
                         });
                         const max = Math.max(0, ...projection.map((item) => item.total));
                         return projection.length ? (
-                          <div className="card-projection-chart no-scrollbar" aria-label="Faturas dos próximos meses">
+                          <div
+                            className="card-projection-chart no-scrollbar"
+                            aria-label="Faturas dos próximos meses"
+                          >
                             {projection.map((item) => {
                               const active = item.month === month;
                               const height = max > 0 ? Math.max(8, (item.total / max) * 100) : 8;
@@ -382,7 +409,9 @@ export function CardsPage() {
                                   onClick={() => update({ month: item.month })}
                                 >
                                   <strong>{value(item.total)}</strong>
-                                  <span className="card-projection-track"><i style={{ height: `${height}%` }} /></span>
+                                  <span className="card-projection-track">
+                                    <i style={{ height: `${height}%` }} />
+                                  </span>
                                   <span>{monthLabel(item.month)}</span>
                                 </button>
                               );
@@ -439,14 +468,17 @@ export function CardsPage() {
                             </Button>
                           )}
                         </div>
-                        <h3 className="card-entries-heading">Lançamentos na fatura · {bill.entries.length}</h3>
+                        <h3 className="card-entries-heading">
+                          Lançamentos na fatura · {bill.entries.length}
+                        </h3>
                         <ul className="card-entry-list">
                           {bill.entries.map((entry) => (
                             <li key={entry.id} className={!entry.active ? 'inactive' : ''}>
                               <div>
                                 <CreditIcon size={15} aria-hidden="true" />
                                 <strong>
-                                  {card.purchases.find((item) => item.id === entry.purchaseId)?.description ?? entry.description}
+                                  {card.purchases.find((item) => item.id === entry.purchaseId)
+                                    ?.description ?? entry.description}
                                 </strong>
                                 <span>
                                   {!entry.active
@@ -456,7 +488,9 @@ export function CardsPage() {
                                       : entry.kind === 'refund'
                                         ? 'Estorno'
                                         : (() => {
-                                            const purchase = card.purchases.find((item) => item.id === entry.purchaseId);
+                                            const purchase = card.purchases.find(
+                                              (item) => item.id === entry.purchaseId,
+                                            );
                                             return purchase && entry.installmentNumber
                                               ? `Parcela ${entry.installmentNumber}/${purchase.installments}`
                                               : 'Despesa da fatura';
@@ -531,40 +565,57 @@ export function CardsPage() {
                         )}
                       </>
                     ) : (
-                        <p className="card-empty-line">Nenhuma compra neste vencimento</p>
+                      <p className="card-empty-line">Nenhuma compra neste vencimento</p>
                     )}
                     {!!card.purchases.length && (
                       <details className="finance-disclosure">
                         <summary>Compras e parcelamentos · {card.purchases.length}</summary>
-                        <ul className="card-entry-list">
+                        <ul className="card-entry-list card-purchase-list">
                           {card.purchases.map((p) => (
                             <li key={p.id}>
-                              <div>
+                              <div className="purchase-mainline">
                                 <strong>{p.description}</strong>
+                                {p.installments > 1 &&
+                                  (() => {
+                                    const installment = bill?.entries.find(
+                                      (entry) => entry.purchaseId === p.id && entry.active,
+                                    )?.installmentNumber;
+                                    return (
+                                      <span className="purchase-installment">
+                                        {installment
+                                          ? `${installment}/${p.installments}`
+                                          : `${p.installments}x`}
+                                      </span>
+                                    );
+                                  })()}
+                              </div>
+                              <strong className="purchase-amount">{value(p.amount)}</strong>
+                              <div className="purchase-subline">
                                 <span>
-                                  {shortDate(p.purchaseDate)} · {p.installments} parcela(s)
+                                  {shortDate(p.purchaseDate)}
                                   {p.canceled ? ' · Cancelada' : ''}
                                 </span>
+                                {!p.canceled && (
+                                  <div className="inline-actions">
+                                    <button
+                                      className="text-button"
+                                      onClick={() => setDialog({ kind: 'category', purchase: p })}
+                                    >
+                                      Categoria
+                                    </button>
+                                    <button
+                                      className="icon-button purchase-cancel-button"
+                                      aria-label={`Cancelar compra ${p.description}`}
+                                      title="Cancelar compra"
+                                      onClick={() =>
+                                        setDialog({ kind: 'cancelPurchase', purchase: p })
+                                      }
+                                    >
+                                      <Trash2 size={15} />
+                                    </button>
+                                  </div>
+                                )}
                               </div>
-                              <strong>{value(p.amount)}</strong>
-                              {!p.canceled && (
-                                <div className="inline-actions">
-                                  <button
-                                    className="text-button"
-                                    onClick={() => setDialog({ kind: 'category', purchase: p })}
-                                  >
-                                    Categoria
-                                  </button>
-                                  <button
-                                    className="text-button"
-                                    onClick={() =>
-                                      setDialog({ kind: 'cancelPurchase', purchase: p })
-                                    }
-                                  >
-                                    Cancelar compra
-                                  </button>
-                                </div>
-                              )}
                             </li>
                           ))}
                         </ul>
@@ -572,13 +623,6 @@ export function CardsPage() {
                     )}
                   </section>
                 )}
-              </div>
-            )}
-            {cards.length > 0 && (
-              <div className="card-directory-footer">
-                <Link className="text-button" to="/wealth">
-                  Ver impacto no patrimônio
-                </Link>
               </div>
             )}
           </>

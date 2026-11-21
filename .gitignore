@@ -65,3 +65,6 @@ Thumbs.db
 Desktop.ini
 .idea/
 .vscode/
+
+# Quiet verification reports
+.verification/

@@ -23,6 +23,8 @@ import './app/styles/editorial-system.css';
 import './shared/ui/controls/controls.css';
 import './app/styles/mobile.css';
 import './app/styles/disclosures.css';
+import './app/styles/premium.css';
+document.documentElement.dataset.ui = 'bento';
 // Installed workers can lag one version behind the newly loaded application bundle.
 try {
   migrateProductStorage(localStorage);

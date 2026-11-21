@@ -44,7 +44,8 @@
     "deploy": "node scripts/deploy.mjs",
     "build:cloudflare": "npm run build -w @plannedwallet/app && node scripts/check-secrets.mjs",
     "deploy:cloudflare": "wrangler deploy --config wrangler.jsonc",
-    "check:cloudflare": "wrangler deploy --config wrangler.jsonc --dry-run"
+    "check:cloudflare": "wrangler deploy --config wrangler.jsonc --dry-run",
+    "check:quiet": "node scripts/check-quiet.mjs"
   },
   "type": "module"
 }

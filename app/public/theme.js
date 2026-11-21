@@ -1,5 +1,6 @@
 // Move browser state to the selected product identity before React or theme initialization.
 (() => {
+  document.documentElement.dataset.ui='bento';
   const moveKeys = (storage) => {
     const keys = Array.from({ length: storage.length }, (_, index) => storage.key(index));
     for (const key of keys) {
@@ -25,11 +26,11 @@
     /* Storage may be unavailable. */
   }
   try {
-    const mode = localStorage.getItem('plannedwallet-theme') || 'system';
+    const mode = localStorage.getItem('plannedwallet-theme') || 'dark';
     const dark =
       mode === 'dark' || (mode === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
     document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-    document.querySelector('meta[name="theme-color"]').content = dark ? '#141715' : '#f6f5f1';
+    document.querySelector('meta[name="theme-color"]').content = dark ? '#09090b' : '#f6f5f1';
   } catch {
     document.documentElement.dataset.theme = 'dark';
   }

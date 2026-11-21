@@ -1,3 +1,4 @@
+import { useFinancialVisibility } from '../privacy/financial-visibility';
 import type { components } from '../api/generated';
 import { money } from '../formatting/money';
 import { Link } from 'react-router-dom';
@@ -5,13 +6,15 @@ import './period-budget.css';
 type Budget = components['schemas']['PeriodBudgetDto'];
 export function PeriodBudget({
   budget,
-  visible = true,
+  visible: requestedVisible = true,
   forecast,
 }: {
   budget?: Budget;
   visible?: boolean;
   forecast?: { result: number | null; contribution: number | null };
 }) {
+  const { visible: globalVisible } = useFinancialVisibility();
+  const visible = requestedVisible && globalVisible;
   if (!budget) return null;
   const display = (value: number | null) =>
     !visible ? '••••••' : value == null ? 'Não disponível' : money(value);

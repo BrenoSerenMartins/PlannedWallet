@@ -137,6 +137,7 @@ async function signedIn(page: Page, rememberSpace = true) {
         },
         items: [],
       };
+    else if (path === '/v1/goals') data = { goals: [], accounts: [], allocated: 0 };
     else if (path === '/v1/accounts') data = [account];
     else if (path.startsWith('/v1/planning/')) data = monthlyPlan(path.split('/').pop()!, 0);
     else if (path === '/v1/commitments')
@@ -181,10 +182,7 @@ function historyFixture(month: string, count: number) {
   };
 }
 async function appMenuTrigger(page: Page) {
-  const mobile = page.getByRole('navigation', { name: 'Navegação móvel' });
-  return (await mobile.isVisible())
-    ? mobile.getByRole('button', { name: 'Mais', exact: true })
-    : page.getByRole('button', { name: /^Menu do espaço:/ });
+  return page.getByRole('button', { name: /^Menu do espaço:/ });
 }
 async function openAppMenu(page: Page) {
   const menu = page.getByRole('dialog', { name: 'Menu do espaço' });
@@ -403,7 +401,9 @@ for (const width of [360, 1440])
     await expect(
       page.getByRole('heading', { name: 'Planejamento mensal', exact: true }),
     ).toBeVisible();
-    await expect(page.getByText('-R$ 50,00', { exact: true })).toBeVisible();
+    await expect(
+      page.locator('.budget-line').getByText('-R$ 50,00', { exact: true }),
+    ).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
@@ -1019,7 +1019,7 @@ test('mobile more menu exposes imports and category organization', async ({ page
   await signedIn(page);
   await page.setViewportSize({ width: 390, height: 1000 });
   await page.goto('/');
-  await page.getByRole('button', { name: 'Mais', exact: true }).click();
+  await (await appMenuTrigger(page)).click();
   await page
     .getByRole('dialog')
     .getByRole('link', { name: 'Grupos e categorias', exact: true })
@@ -1400,7 +1400,14 @@ for (const width of [390, 1440])
         .filter({ has: page.getByRole('button', { name: 'Editar categoria Luz', exact: true }) })
         .locator('.category-type-dot');
       expect(await dot.evaluate((node) => getComputedStyle(node).backgroundColor)).toBe(
-        theme === 'claro' ? 'rgb(184, 75, 85)' : 'rgb(234, 160, 167)',
+        await page.evaluate(() => {
+          const sample = document.createElement('span');
+          sample.style.backgroundColor = 'var(--danger)';
+          document.body.append(sample);
+          const color = getComputedStyle(sample).backgroundColor;
+          sample.remove();
+          return color;
+        }),
       );
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
         true,
@@ -1600,7 +1607,9 @@ for (const width of [390, 1440])
       }),
     );
     await page.goto('/');
-    await expect(page.getByText('DINHEIRO DISPONÍVEL', { exact: false })).toBeVisible();
+    await expect(
+      page.locator('.balance-hero').getByText('Saldo disponível', { exact: true }),
+    ).toBeVisible();
     await expect(page.getByText('Benefícios · uso restrito', { exact: true })).toBeVisible();
     await page.goto('/accounts');
     await chooseSelect(
@@ -1848,6 +1857,8 @@ test('account forms use automatic defaults and preserve existing baseline amount
     name: 'Imported wallet',
     institution: 'mercado_pago',
     type: 'checking',
+    defaultIncomeCategoryId: null,
+    defaultExpenseCategoryId: null,
   });
   await accountAction(page, 'Editar conta');
   await fillControl(dialog.getByLabel('Nome da conta'), 'Renamed account');
@@ -1857,6 +1868,8 @@ test('account forms use automatic defaults and preserve existing baseline amount
     name: 'Renamed account',
     institution: 'mercado_pago',
     type: 'checking',
+    defaultIncomeCategoryId: null,
+    defaultExpenseCategoryId: null,
   });
 });
 
@@ -2165,9 +2178,9 @@ for (const width of [390, 1440])
       counterpartyId: maria.id,
       rememberCounterparty: true,
       rememberCategory: false,
-      categoryId: null,
       amount: -2500,
     });
+    expect(saved?.categoryId ?? null).toBeNull();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
@@ -2383,20 +2396,21 @@ for (const width of [360, 390, 768, 1440]) {
     await expect(page.locator('.hero-balance')).toHaveText('R$ 59,12');
     await expect(page.getByRole('region', { name: 'Saldos atuais' })).toContainText('R$ 230,00');
     await expect(page.getByRole('region', { name: 'Saldos atuais' })).toContainText('R$ 0,20');
+    await page.locator('.bento-month-details>summary').click();
     await expect(page.getByRole('link', { name: 'Ver movimentos do período' })).toContainText(
       'R$ 2.250,00',
     );
     await expect(page.locator('.month-metric.result')).toContainText('R$ 2.250,00');
     await expect(page.locator('.month-metric.expense')).toContainText('R$ 500,00');
     await expect(page.locator('.expense-groups')).toHaveCount(0);
-    await page.getByText('Composição por conta', { exact: false }).click();
-    await expect(page.locator('.balance-composition .account-line')).toHaveCount(3);
+    await page.getByRole('button', { name: 'Ver contas', exact: true }).click();
+    await expect(page.locator('.balance-hero .account-line')).toHaveCount(3);
     await page.getByRole('button', { name: 'Ocultar valores', exact: true }).click();
     await expect(page.locator('.hero-balance')).toHaveText('••••••');
-    await expect(page.locator('.monthly-analysis')).not.toContainText('R$');
-    await expect(page.locator('.balance-composition')).not.toContainText('R$');
+    await expect(page.locator('.bento-month-details')).not.toContainText('R$');
+    await expect(page.locator('.balance-hero .account-overview')).not.toContainText('R$');
     await page.getByRole('button', { name: 'Mostrar valores', exact: true }).click();
-    await page.getByRole('button', { name: 'Mês anterior', exact: true }).click();
+    await fillControl(page.getByLabel('Mês da visão geral'), '2026-08');
     await expectControlValue(page.getByLabel('Mês da visão geral'), '2026-08');
     await expect(page.locator('.hero-balance')).toHaveText('R$ 59,12');
     await page.goBack();
@@ -2411,17 +2425,14 @@ for (const width of [360, 390, 768, 1440]) {
         fullPage: true,
       });
     }
-    await page.getByRole('link', { name: 'Ver despesas do período', exact: true }).click();
+    await page.locator('.expense-kpi').click();
     await expect(page).toHaveURL(/from=2026-09-01.*to=2026-09-30.*type=expense/);
     await expectControlValue(await movementFilterControl(page, 'De'), '2026-09-01');
     await expectControlValue(await movementFilterControl(page, 'Até'), '2026-09-30');
     await page.goBack();
     await page
-      .getByRole('navigation', {
-        name: width > 1050 ? 'Navegação principal' : 'Navegação móvel',
-        exact: true,
-      })
-      .getByRole('link', { name: width > 1050 ? 'Planejamento' : 'Planejar', exact: true })
+      .getByRole('navigation', { name: 'Ações rápidas' })
+      .getByRole('link', { name: 'Planejar', exact: true })
       .click();
     await fillControl(page.getByLabel('Mês do planejamento'), '2026-09');
     await expectControlValue(page.getByLabel('Mês do planejamento'), '2026-09');
@@ -2455,7 +2466,7 @@ test('overview preserves balances when historical analysis fails and supports re
   await expect(page.getByRole('alert')).toContainText('Não foi possível carregar');
   failing = false;
   await page.getByRole('button', { name: 'Tentar novamente', exact: true }).click();
-  await expect(page.locator('.month-metric.expense > strong')).toHaveText('R$ 550,00');
+  await expect(page.locator('.expense-kpi > strong')).toHaveText('R$ 550,00');
   await expect(page.getByRole('alert')).toHaveCount(0);
 });
 
@@ -2475,8 +2486,7 @@ for (const width of [390, 1440]) {
     await expect(menu.getByRole('button', { name: /^Tema / })).toHaveCount(0);
     await expect(menu.getByRole('button', { name: 'Sair da conta', exact: true })).toHaveCount(0);
     const wealth = menu.getByRole('link', { name: 'Investimentos e patrimônio', exact: true });
-    if (width > 1050) await expect(wealth).not.toBeVisible();
-    else await expect(wealth).toBeVisible();
+    await expect(wealth).toBeVisible();
     if (await page.getByRole('tooltip').count()) {
       await page.keyboard.press('Escape');
       await expect(page.getByRole('tooltip')).toHaveCount(0);
@@ -2510,7 +2520,7 @@ for (const width of [360, 768, 1440])
         },
       }),
     );
-    await page.goto('/?month=2026-10&view=analysis');
+    await page.goto('/analytics?month=2026-10');
     const history = page.getByRole('region', { name: 'Evolução mensal', exact: true });
     await expect(history.locator('svg g[role="button"]')).toHaveCount(4);
     await chooseSelect(history.getByLabel('Intervalo do comparativo', { exact: true }), '7');
@@ -2531,7 +2541,7 @@ for (const width of [360, 768, 1440])
     await page.keyboard.press('Enter');
     await expect(history.locator('.history-selection')).toContainText('novembro de 2025');
     await history.getByRole('button', { name: 'Abrir mês', exact: true }).click();
-    await expectControlValue(page.getByLabel('Mês da visão geral'), '2025-11');
+    await expectControlValue(page.getByLabel('Mês das métricas'), '2025-11');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
@@ -2644,11 +2654,14 @@ for (const width of [320, 430, 1024, 1280, 1920])
       }),
     );
     await page.goto('/');
+    await page.getByRole('button', { name: 'Ver contas', exact: true }).click();
     await expect(page.locator('.current-balances')).toContainText('Referência do extrato');
     await expect(
       page.getByRole('link', { name: 'Ver origem', exact: true }).filter({ visible: true }),
     ).toHaveAttribute('href', '/imports/bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb');
-    const privacy = page.getByRole('button', { name: 'Ocultar valores', exact: true });
+    const privacy = page
+      .getByRole('button', { name: 'Ocultar valores', exact: true })
+      .and(page.locator(':visible'));
     const box = await privacy.boundingBox();
     expect(Math.round(box!.width * 100) / 100).toBeGreaterThanOrEqual(44);
     expect(Math.round(box!.height * 100) / 100).toBeGreaterThanOrEqual(44);
@@ -2873,7 +2886,13 @@ test('legacy accounts keep their institution and balance when renamed', async ({
   await fillControl(dialog.getByLabel('Nome da conta'), 'Conta preservada');
   await dialog.getByRole('button', { name: 'Salvar alterações', exact: true }).click();
   await expect(dialog).toHaveCount(0);
-  expect(saved).toEqual({ name: 'Conta preservada', institution: 'nubank', type: account.type });
+  expect(saved).toEqual({
+    name: 'Conta preservada',
+    institution: 'nubank',
+    type: account.type,
+    defaultIncomeCategoryId: null,
+    defaultExpenseCategoryId: null,
+  });
 });
 
 function commitmentsFixture(month = '2026-11', populated = false) {
@@ -3221,6 +3240,7 @@ async function financeFixtures(page: Page) {
   const cards = cardsFixture();
   const wealth = wealthFixture();
   await page.route('**/v1/cards?*', (r) => r.fulfill({ json: cards }));
+  await page.route('**/v1/cards', (r) => r.fulfill({ json: cards }));
   await page.route('**/v1/wealth', (r) => r.fulfill({ json: wealth }));
   await page.route('**/v1/wealth/overview', (r) => r.fulfill({ json: wealth }));
   return { cards, wealth };
@@ -3597,6 +3617,7 @@ for (const width of [360, 1440])
 const redesignedRoutes = [
   ['/', 'Visão geral'],
   ['/?view=analysis', 'Visão geral'],
+  ['/analytics', 'Métricas'],
   ['/transactions', 'Movimentações'],
   ['/accounts', 'Minhas contas'],
   ['/planning', 'Planejamento mensal'],
@@ -3653,9 +3674,7 @@ test('additional finance modules are discoverable from the shared mobile navigat
   await signedIn(page);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
-  const more = page
-    .getByRole('navigation', { name: 'Navegação móvel' })
-    .getByRole('button', { name: 'Mais' });
+  const more = await appMenuTrigger(page);
   await more.click();
   const menu = page.getByRole('dialog', { name: 'Menu do espaço' });
   await menu.getByRole('link', { name: 'Cartões e faturas' }).click();
@@ -3688,23 +3707,27 @@ test('new shared forms and account controls remain usable with a narrow viewport
   await expect(page.getByRole('button', { name: 'Adicionar conta', exact: true })).toBeFocused();
 });
 
-test('overview unifies analysis and daily tasks while keeping current balances independent of month selection', async ({
+test('overview keeps current balances independent of month selection and links to metrics', async ({
   page,
 }) => {
   await signedIn(page);
   await page.goto('/?month=2026-10&view=analysis');
-  await expect(page.getByRole('group', { name: 'Conteúdo da visão geral' })).toHaveCount(0);
   await expect(page.getByRole('region', { name: 'Saldos atuais', exact: true })).toBeVisible();
-  await expect(page.getByRole('region', { name: 'Evolução mensal', exact: true })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Fluxo financeiro', exact: true })).toBeVisible();
   await expect(
     page.getByRole('heading', { name: 'Últimos movimentos', exact: true }),
   ).toBeVisible();
-  await page.getByRole('button', { name: 'Mês anterior', exact: true }).click();
+  const before = await page.locator('.hero-balance').innerText();
+  await fillControl(page.getByLabel('Mês da visão geral'), '2026-09');
   await expectControlValue(page.getByLabel('Mês da visão geral'), '2026-09');
   expect(new URL(page.url()).searchParams.has('view')).toBe(false);
-  await page.getByRole('button', { name: 'Ocultar valores', exact: true }).click();
+  await expect(page.locator('.hero-balance')).toHaveText(before);
+  await page
+    .getByRole('button', { name: 'Ocultar valores', exact: true })
+    .and(page.locator(':visible'))
+    .click();
   await expect(
-    page.getByRole('region', { name: 'Evolução mensal', exact: true }),
+    page.getByRole('region', { name: 'Fluxo financeiro', exact: true }),
   ).not.toContainText('R$');
   await expect(page.locator('.hero-balance')).toHaveText('••••••');
 });
@@ -3920,7 +3943,8 @@ test.describe('help on touch screens', () => {
     await page.getByLabel('Mês do planejamento', { exact: true }).tap();
     await expect(tooltip).toHaveCount(0);
     await page.goto('/?month=2026-10');
-    await page.getByRole('button', { name: 'Mês anterior', exact: true }).tap();
+    await page.getByLabel('Mês da visão geral', { exact: true }).tap();
+    await page.getByRole('button', { name: 'Setembro de 2026', exact: true }).tap();
     await expectControlValue(page.getByLabel('Mês da visão geral'), '2026-09');
   });
 });
@@ -4114,7 +4138,7 @@ test('reduced motion keeps drawers, menus and tab indicators static', async ({ p
   await expect(dialog).toBeVisible();
   expect(await dialog.evaluate((node) => getComputedStyle(node).animationName)).toBe('none');
   await dialog.getByRole('button', { name: 'Fechar', exact: true }).click();
-  await page.goto('/planning');
+  await page.goto('/categories');
   const indicator = page.locator('.view-switcher-indicator').first();
   expect(await indicator.evaluate((node) => getComputedStyle(node).transitionDuration)).toBe('0s');
 });
@@ -4186,10 +4210,11 @@ for (const width of [390, 1440]) {
     const section = await page.locator('.budget-section').first().boundingBox();
     expect(box).not.toBeNull();
     expect(section).not.toBeNull();
-    expect(section!.y - (box!.y + box!.height)).toBeGreaterThanOrEqual(28);
+    expect(section!.y - (box!.y + box!.height)).toBeGreaterThanOrEqual(12);
+    await expect(page.locator('.budget-section').first()).toHaveCSS('border-radius', '24px');
     await expect(page.locator('.budget-section').first()).toHaveCSS(
-      'background-color',
-      'rgba(0, 0, 0, 0)',
+      'background-image',
+      /linear-gradient/,
     );
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
@@ -4398,7 +4423,8 @@ for (const width of [320, 390, 768]) {
         const bar = page.getByRole('navigation', { name: 'Navegação móvel', exact: true });
         const bounds = await bar.boundingBox();
         expect(bounds).not.toBeNull();
-        expect(Math.abs(bounds!.y + bounds!.height - 844)).toBeLessThanOrEqual(1);
+        expect(Math.abs(bounds!.y + bounds!.height - 828)).toBeLessThanOrEqual(1);
+        expect(bounds!.x).toBeGreaterThanOrEqual(16);
         for (const item of await bar.locator('a, button').all()) {
           const itemBounds = await item.boundingBox();
           expect(itemBounds!.y).toBeGreaterThanOrEqual(bounds!.y);
@@ -4466,7 +4492,9 @@ for (const saved of [false, true]) {
   });
 }
 
-test('mobile navigation stays flush with viewport when page containers move', async ({ page }) => {
+test('floating mobile navigation preserves its viewport inset when page containers move', async ({
+  page,
+}) => {
   await signedIn(page);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/transactions');
@@ -4477,7 +4505,8 @@ test('mobile navigation stays flush with viewport when page containers move', as
   });
   await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
   const bounds = await bar.boundingBox();
-  expect(Math.abs(bounds!.y + bounds!.height - 844)).toBeLessThanOrEqual(1);
+  expect(Math.abs(bounds!.y + bounds!.height - 828)).toBeLessThanOrEqual(1);
+  expect(bounds!.x).toBeGreaterThanOrEqual(16);
 });
 
 for (const width of [390, 1440]) {
@@ -4581,6 +4610,7 @@ for (const width of [390, 1440]) {
     await expect(panel).toContainText('R$ 700,00');
     await expectNoHorizontalOverflow(page);
     await page.goto('/?month=2026-12');
+    await page.locator('.bento-month-details>summary').click();
     await expect(panel.locator('.period-budget-head')).toContainText('R$ 100,00');
     await page.getByRole('button', { name: 'Ocultar valores', exact: true }).click();
     await expect(panel).not.toContainText('R$');

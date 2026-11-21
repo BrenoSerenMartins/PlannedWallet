@@ -7,9 +7,9 @@ const ThemeContext = createContext<{ mode: Mode; setMode: (value: Mode) => void 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<Mode>(() => {
     try {
-      return (localStorage.getItem('plannedwallet-theme') as Mode) || 'system';
+      return (localStorage.getItem('plannedwallet-theme') as Mode) || 'dark';
     } catch {
-      return 'system';
+      return 'dark';
     }
   });
   useEffect(() => {
@@ -19,7 +19,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       document.documentElement.dataset.theme = dark ? 'dark' : 'light';
       document
         .querySelector('meta[name="theme-color"]')
-        ?.setAttribute('content', dark ? '#141715' : '#f6f5f1');
+        ?.setAttribute('content', dark ? '#09090b' : '#f6f5f1');
     };
     apply();
     try {

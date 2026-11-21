@@ -1,0 +1,876 @@
+/* Black & Gold. Compatibility aliases keep existing controls and business views intact. */
+:root[data-ui='bento'] {
+  --bg-base: #09090b;
+  --bg-surface: #121215;
+  --bg-elevated: #1a1a1f;
+  --grad-card: linear-gradient(165deg, #16161a 0%, #0f0f12 100%);
+  --grad-hero:
+    radial-gradient(circle at top right, rgba(212, 175, 55, 0.14), transparent 65%),
+    linear-gradient(165deg, #19191f 0%, #101014 100%);
+  --gold-primary: #d4af37;
+  --gold-hover: #e5c158;
+  --gold-soft: #f3e5ab;
+  --gold-muted: rgba(212, 175, 55, 0.12);
+  --text-primary: #f4f4f6;
+  --text-secondary: #8e8e93;
+  --text-tertiary: #52525b;
+  --success: #10b981;
+  --success-bg: rgba(16, 185, 129, 0.12);
+  --danger: #ef4444;
+  --danger-bg: rgba(239, 68, 68, 0.12);
+  --radius-bento: 24px;
+  --radius-md: 16px;
+  --radius-sm: 12px;
+  --radius-lg: 24px;
+  --radius-pill: 9999px;
+  --border-subtle: 1px solid rgba(255, 255, 255, 0.05);
+  --border-gold: 1px solid rgba(212, 175, 55, 0.25);
+  --shadow-soft: 0 10px 25px -5px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --shadow-gold: 0 12px 30px -8px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(243, 229, 171, 0.25);
+  --shadow-pressed: inset 0 3px 8px rgba(0, 0, 0, 0.85);
+  --bg: var(--bg-base);
+  --surface: var(--bg-surface);
+  --surface-raised: var(--bg-elevated);
+  --surface-soft: var(--bg-elevated);
+  --text: var(--text-primary);
+  --muted: var(--text-secondary);
+  --faint: #98989f;
+  --border: rgba(255, 255, 255, 0.08);
+  --accent: var(--gold-primary);
+  --accent-text: #151109;
+  --accent-soft: var(--gold-muted);
+  --positive: var(--success);
+  --negative: var(--danger);
+  --warning: var(--gold-soft);
+  --brand: var(--gold-primary);
+  --shadow: var(--shadow-soft);
+  --hero-start: #19191f;
+  --hero-end: #101014;
+  --focus-ring: var(--gold-primary);
+  --rule-horizontal: none;
+  --rule-vertical: none;
+  --space-page: clamp(16px, 3vw, 40px);
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+}
+:root[data-ui='bento'][data-theme='light'] {
+  --bg-base: #f6f5f1;
+  --bg-surface: #fffefa;
+  --bg-elevated: #eeede8;
+  --grad-card: linear-gradient(165deg, #fffefa, #f7f6f1);
+  --grad-hero:
+    radial-gradient(circle at top right, rgba(180, 137, 37, 0.14), transparent 65%),
+    linear-gradient(165deg, #fffdf6, #f0ece1);
+  --text-primary: #24232a;
+  --text-secondary: #67666d;
+  --text-tertiary: #77757e;
+  --faint: #77757e;
+  --gold-primary: #8c6b15;
+  --gold-hover: #73540e;
+  --gold-soft: #795e24;
+  --gold-muted: rgba(140, 107, 21, 0.1);
+  --success: #087f5b;
+  --danger: #bc3341;
+  --success-bg: rgba(8, 127, 91, 0.08);
+  --danger-bg: rgba(188, 51, 65, 0.08);
+  --border: rgba(36, 35, 42, 0.1);
+  --border-subtle: 1px solid rgba(36, 35, 42, 0.06);
+  --border-gold: 1px solid rgba(140, 107, 21, 0.25);
+  --shadow-soft: 0 8px 24px -8px rgba(50, 39, 16, 0.12), inset 0 1px 0 #fff;
+  --shadow-gold: 0 12px 30px -8px rgba(85, 65, 20, 0.15), inset 0 1px 0 #fff;
+  --shadow-pressed: inset 0 2px 6px rgba(50, 39, 16, 0.15);
+  --accent-text: #fffefa;
+}
+:root[data-ui='bento'] body {
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family:
+    Inter,
+    -apple-system,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+:root[data-ui='bento']
+  :is(strong, b, dd, td, output, progress, .numeric, .tabular-nums, input[inputmode='decimal']) {
+  font-variant-numeric: tabular-nums;
+}
+:root[data-ui='bento'] :is(.bento-soft-card, .bento-hero-gold, .soft-btn) {
+  border: var(--border-subtle);
+  border-radius: var(--radius-bento);
+  background: var(--grad-card);
+  box-shadow: var(--shadow-soft);
+  min-width: 0;
+}
+:root[data-ui='bento'] .bento-hero-gold {
+  background: var(--grad-hero);
+  border: var(--border-gold);
+  box-shadow: var(--shadow-gold);
+}
+:root[data-ui='bento'] .soft-btn {
+  border-radius: var(--radius-md);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+:root[data-ui='bento'] :is(button, a) {
+  touch-action: manipulation;
+}
+:root[data-ui='bento'] :is(button, a.button, .bento-kpi, .finance-overview-links > a) {
+  transition:
+    transform 0.15s ease,
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+:root[data-ui='bento'] :is(button, a.button, .soft-btn):active:not(:disabled) {
+  transform: scale(0.96);
+}
+:root[data-ui='bento'] :is(a.bento-soft-card, .space-card, .credit-selector-item):active {
+  transform: scale(0.98);
+}
+:root[data-ui='bento'] :is(button, a, input, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--gold-hover);
+  outline-offset: 4px;
+}
+:root[data-ui='bento'] body .button {
+  min-height: 46px;
+  border-radius: var(--radius-md);
+  padding: 12px 20px;
+  background: linear-gradient(135deg, var(--gold-soft), var(--gold-primary));
+  color: var(--accent-text);
+  border: 0;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow:
+    0 6px 16px -8px rgba(212, 175, 55, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+:root[data-ui='bento'] body .button.secondary {
+  background: var(--grad-card);
+  color: var(--text);
+  border: var(--border-subtle);
+  box-shadow: var(--shadow-soft);
+}
+:root[data-ui='bento'] body :is(.icon-button, .quiet-action) {
+  border-radius: var(--radius-sm);
+  min-width: 44px;
+  min-height: 44px;
+}
+:root[data-ui='bento'] body .icon-button:hover {
+  background: var(--bg-elevated);
+  color: var(--gold-primary);
+}
+:root[data-ui='bento'] body .text-button {
+  color: var(--gold-primary);
+  font-size: 12px;
+  min-height: 36px;
+}
+:root[data-ui='bento']
+  body
+  :is(input, select, textarea, .select-trigger, .date-trigger, .month-trigger) {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+:root[data-ui='bento'] body input::placeholder {
+  color: var(--faint);
+}
+:root[data-ui='bento'] body :is(.badge, .filter-chip, .connection-chip) {
+  border-radius: var(--radius-pill);
+  background: var(--gold-muted);
+  color: var(--gold-soft);
+  border: 0;
+}
+:root[data-ui='bento'] body .view-switcher {
+  padding: 4px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-pill);
+  border: var(--border-subtle);
+}
+:root[data-ui='bento'] body .view-switcher button {
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+}
+:root[data-ui='bento'] body .view-switcher button[aria-pressed='true'] {
+  background: var(--gold-muted);
+  color: var(--gold-primary);
+  box-shadow: inset 0 1px 0 rgba(243, 229, 171, 0.12);
+}
+:root[data-ui='bento'] body .panel {
+  background: var(--grad-card);
+  border: var(--border-subtle);
+  border-radius: var(--radius-bento);
+  box-shadow: var(--shadow-soft);
+}
+:root[data-ui='bento']
+  body
+  :is(.dialog-content, .control-popover, .action-menu-content, .tooltip-content) {
+  background: var(--bg-surface);
+  border: var(--border-subtle);
+  box-shadow: var(--shadow-soft);
+  border-radius: var(--radius-md);
+}
+:root[data-ui='bento'] body .dialog-content {
+  border-radius: var(--radius-bento);
+  background: var(--grad-card);
+}
+:root[data-ui='bento'] body :is(.error-state, .empty-state) {
+  border-radius: var(--radius-bento);
+}
+:root[data-ui='bento'] body .skeleton {
+  border-radius: var(--radius-bento);
+  background: linear-gradient(
+    100deg,
+    var(--bg-elevated) 20%,
+    color-mix(in srgb, var(--bg-elevated), var(--text) 5%) 40%,
+    var(--bg-elevated) 60%
+  );
+  background-size: 200% 100%;
+  animation: bento-shimmer 1.8s linear infinite;
+}
+@keyframes bento-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+/* Application chrome: quiet desktop bar, floating mobile glass dock. */
+:root[data-ui='bento'] body .app-main {
+  margin: 0 auto;
+  max-width: 1600px;
+  padding: 0;
+}
+:root[data-ui='bento'] body .app-header {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 24px;
+  min-height: 88px;
+  padding: 16px var(--space-page);
+  background: var(--bg-base);
+  border: 0;
+}
+:root[data-ui='bento'] body .logo-symbol {
+  color: var(--gold-primary);
+}
+:root[data-ui='bento'] body .logo-wordmark {
+  font-size: 22px;
+  letter-spacing: -0.8px;
+}
+:root[data-ui='bento'] body .desktop-navigation {
+  justify-content: center;
+  gap: 4px;
+}
+:root[data-ui='bento'] body .desktop-navigation :is(a, .action-menu-trigger) {
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+:root[data-ui='bento'] body .desktop-navigation :is(a.active, .action-menu-trigger.active) {
+  background: var(--gold-muted);
+  color: var(--gold-soft);
+  box-shadow: inset 0 1px 0 rgba(243, 229, 171, 0.12);
+}
+:root[data-ui='bento'] body .header-actions {
+  gap: 8px;
+}
+:root[data-ui='bento'] body .header-space-menu {
+  padding: 6px 10px 6px 6px;
+  border: var(--border-subtle);
+  border-radius: var(--radius-pill);
+  background: var(--bg-surface);
+}
+:root[data-ui='bento'] body .space-menu-avatar {
+  background: var(--gold-muted);
+  color: var(--gold-primary);
+  border: 1px solid color-mix(in srgb, var(--gold-primary) 30%, transparent);
+}
+:root[data-ui='bento'] body .page-content {
+  padding: 16px var(--space-page) 48px;
+  max-width: 1320px;
+  margin: 0 auto;
+  width: 100%;
+}
+:root[data-ui='bento'] body .page-content :is(h1.contextual-page-title, .page-heading h1) {
+  font-size: 26px;
+  letter-spacing: -0.8px;
+  font-weight: 600;
+}
+:root[data-ui='bento'] body .page-heading {
+  margin: 0 0 24px;
+  padding: 0;
+}
+:root[data-ui='bento'] body .section-heading {
+  padding: 20px 24px;
+}
+:root[data-ui='bento'] body .section-heading h2 {
+  font-size: 14px;
+  letter-spacing: -0.2px;
+}
+:root[data-ui='bento'] body .more-menu .menu-mobile-destination {
+  display: flex;
+}
+:root[data-ui='bento'] body .more-menu a {
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  margin-block: 6px;
+}
+:root[data-ui='bento'] body .more-menu a:hover {
+  background: var(--gold-muted);
+}
+:root[data-ui='bento'] body .notification-count {
+  font-size: 0;
+  width: 7px;
+  height: 7px;
+  min-width: 7px;
+  min-height: 7px;
+  padding: 0;
+  top: 8px;
+  right: 8px;
+  background: var(--gold-primary);
+  color: transparent;
+  border: 2px solid var(--bg-base);
+  box-sizing: content-box;
+}
+:root[data-ui='bento'] body .bottom-nav {
+  display: none;
+}
+/* The same surface language across existing account, planning and management flows. */
+:root[data-ui='bento']
+  body
+  .page-content
+  :is(
+    .planning-metrics,
+    .wealth-summary,
+    .card-directory-surface,
+    .settings-panel,
+    .category-group-panel,
+    .card-detail,
+    .cashflow-forecast,
+    .wealth-composition,
+    .upload-panel,
+    .counterparty-panel,
+    .goal-record,
+    .account-record,
+    .budget-group,
+    .planning-invoice-section,
+    .commitments-section
+  ) {
+  background: var(--grad-card);
+  border: var(--border-subtle);
+  border-radius: var(--radius-bento);
+  box-shadow: var(--shadow-soft);
+  padding: 24px;
+  overflow: visible;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  :is(
+    .account-ledger,
+    .goals-page,
+    .counterparties-page,
+    .planning-page,
+    .wealth-page,
+    .cards-page,
+    .settings-page
+  ) {
+  gap: 20px;
+}
+:root[data-ui='bento'] body .page-content .account-ledger {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+:root[data-ui='bento'] body .page-content .account-record {
+  margin: 0;
+  min-width: 0;
+}
+:root[data-ui='bento'] body .page-content :is(.account-record h2, .goal-record h2) {
+  font-size: 16px;
+}
+:root[data-ui='bento'] body .page-content :is(.account-record-balance, .account-record-value) {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.8px;
+}
+:root[data-ui='bento'] body .page-content .planning-metrics {
+  gap: 16px;
+}
+:root[data-ui='bento'] body .page-content .planning-metrics > .panel {
+  box-shadow: none;
+  background: transparent;
+  border: 0;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-metrics
+  :is(.metric-income, .metric-expense, .metric-result) {
+  padding: 16px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-metrics
+  :is(.metric-income, .metric-expense, .metric-result)::after {
+  display: none;
+}
+:root[data-ui='bento'] body .page-content .planning-metrics strong {
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 700;
+}
+:root[data-ui='bento'] body .page-content .budget-group {
+  margin-bottom: 16px;
+}
+:root[data-ui='bento'] body .page-content .budget-group > summary {
+  padding: 0;
+  gap: 16px;
+}
+:root[data-ui='bento'] body .page-content .budget-group[open] > .budget-group-content {
+  padding-top: 20px;
+}
+:root[data-ui='bento'] body .page-content .budget-line {
+  background: none;
+  box-shadow: none;
+  border: 0;
+  padding: 18px 0;
+}
+:root[data-ui='bento'] body .page-content .planning-invoice-section .budget-group {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+:root[data-ui='bento'] body .page-content .summary-action-bar {
+  padding: 0 0 20px;
+  background: none;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  :is(.category-group-panel, .counterparty-panel)
+  > summary {
+  padding: 0;
+  min-height: 56px;
+}
+:root[data-ui='bento'] body .page-content .wealth-overview > .panel {
+  background: var(--bg-elevated);
+  border: var(--border-subtle);
+  box-shadow: none;
+  border-radius: var(--radius-md);
+  padding: 20px;
+}
+:root[data-ui='bento'] body .page-content .wealth-overview {
+  gap: 12px;
+}
+:root[data-ui='bento'] body .page-content .wealth-overview > .wealth-net-worth {
+  background: var(--grad-hero);
+  border: var(--border-gold);
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  :is(
+    .goal-account,
+    .goal-event,
+    .wealth-overview,
+    .wealth-detail-columns,
+    .card-detail-columns,
+    .card-recurring-section
+  ) {
+  background-image: none;
+}
+:root[data-ui='bento'] body .page-content .goal-record progress {
+  height: 6px;
+  border-radius: var(--radius-pill);
+  accent-color: var(--gold-primary);
+}
+:root[data-ui='bento'] body .page-content :is(.credit-selector-item, .holding-selector-item) {
+  background: var(--bg-elevated);
+  border: var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+:root[data-ui='bento'] body .page-content .credit-selector-item.selected {
+  background: var(--grad-hero);
+  border: var(--border-gold);
+  box-shadow: var(--shadow-gold);
+}
+:root[data-ui='bento'] body .page-content .card-directory-footer {
+  padding-top: 20px;
+}
+/* Ledger: pill filters and tactile rows, preserving grouping and contextual actions. */
+:root[data-ui='bento'] body .page-content .transactions-page .movement-toolbar {
+  padding: 16px;
+  background: var(--bg-surface);
+  border: var(--border-subtle);
+  border-radius: var(--radius-bento);
+  margin-bottom: 16px;
+}
+:root[data-ui='bento'] body .page-content .search-field {
+  background: var(--bg-elevated);
+  border: var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding-inline: 14px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+:root[data-ui='bento'] body .page-content .search-field input {
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+:root[data-ui='bento'] body .page-content .movement-typebar {
+  margin-bottom: 18px;
+}
+:root[data-ui='bento'] body .page-content .movement-day {
+  margin-block: 16px;
+  background: var(--grad-card);
+  border: var(--border-subtle);
+  border-radius: var(--radius-bento);
+  padding: 16px;
+  box-shadow: var(--shadow-soft);
+}
+:root[data-ui='bento'] body .page-content .movement-row {
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-md);
+}
+:root[data-ui='bento'] body .page-content .movement-row:hover {
+  background: var(--bg-elevated);
+}
+:root[data-ui='bento'] body .transaction-icon {
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+  width: 42px;
+  height: 42px;
+  color: var(--muted);
+}
+:root[data-ui='bento'] body .transaction-icon.income {
+  background: var(--success-bg);
+  color: var(--success);
+}
+:root[data-ui='bento'] body .transaction-icon.expense {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+:root[data-ui='bento'] body .transaction-row {
+  border: 0;
+  background: none;
+  min-height: 64px;
+  border-radius: var(--radius-sm);
+}
+:root[data-ui='bento'] body .transaction-row:hover {
+  background: var(--bg-elevated);
+}
+/* Preferences, login and public pages inherit the same materials and brand. */
+:root[data-ui='bento'] body .settings-page > .view-content {
+  display: grid;
+  gap: 20px;
+}
+:root[data-ui='bento'] body .settings-panel {
+  min-width: 0;
+}
+:root[data-ui='bento'] body .settings-panel .section-heading {
+  padding: 0 0 20px;
+}
+:root[data-ui='bento'] body .theme-options button {
+  background: var(--bg-elevated);
+  border: var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+:root[data-ui='bento'] body .theme-options button[aria-pressed='true'] {
+  border: var(--border-gold);
+  background: var(--gold-muted);
+}
+:root[data-ui='bento'] body .space-card-container {
+  background: var(--grad-card);
+  border: var(--border-subtle);
+  border-radius: var(--radius-bento);
+  box-shadow: var(--shadow-soft);
+}
+:root[data-ui='bento'] body .auth-panel {
+  background: var(--grad-card);
+  border: var(--border-subtle);
+  border-radius: var(--radius-bento);
+  padding: 28px;
+  box-shadow: var(--shadow-soft);
+}
+:root[data-ui='bento'] body .auth-panel :is(input, .password-control) {
+  background: var(--bg-elevated);
+}
+:root[data-ui='bento'] body .landing-preview {
+  background: var(--grad-hero);
+  border: var(--border-gold);
+  border-radius: 32px;
+  box-shadow: var(--shadow-gold);
+  padding: 24px;
+}
+:root[data-ui='bento'] body :is(.landing-feature, .landing-plan, .pricing-card, .landing-step) {
+  background: var(--grad-card);
+  border: var(--border-subtle);
+  border-radius: var(--radius-bento);
+  padding: 24px;
+  box-shadow: var(--shadow-soft);
+}
+:root[data-ui='bento'] body .landing-hero h1 {
+  letter-spacing: -0.06em;
+}
+/* Privacy adds protection to financial rows outside the Home's explicit masks. */
+:root[data-ui='bento']
+  [data-values-hidden='true']
+  :is(
+    .movement-amount,
+    .transaction-amount,
+    .account-record-balance,
+    .account-record-value,
+    .planning-metric-value,
+    .goal-metrics strong,
+    .wealth-net-worth strong,
+    .budget-line dd,
+    .budget-group-metric strong
+  ) {
+  filter: blur(8px);
+  user-select: none;
+}
+@media (max-width: 1150px) {
+  :root[data-ui='bento'] body .app-header {
+    gap: 14px;
+  }
+  :root[data-ui='bento'] body .desktop-navigation :is(a, .action-menu-trigger) {
+    padding: 10px 8px;
+  }
+  :root[data-ui='bento'] body .header-space-menu > span:not(.space-menu-avatar) {
+    display: none;
+  }
+}
+@media (max-width: 1050px) {
+  :root[data-ui='bento'] {
+    --mobile-nav-height: calc(96px + env(safe-area-inset-bottom));
+  }
+  :root[data-ui='bento'] body .app-header {
+    display: flex;
+    justify-content: space-between;
+    min-height: 72px;
+    padding: 12px 16px;
+  }
+  :root[data-ui='bento'] body .desktop-navigation {
+    display: none;
+  }
+  :root[data-ui='bento'] body .header-brand {
+    min-height: 44px;
+  }
+  :root[data-ui='bento'] body .header-brand .logo-wordmark {
+    font-size: 20px;
+  }
+  :root[data-ui='bento'] body .header-brand .logo-symbol {
+    width: 30px;
+    height: 30px;
+  }
+  :root[data-ui='bento'] body .page-content {
+    padding: 16px 16px calc(116px + env(safe-area-inset-bottom));
+  }
+  :root[data-ui='bento'] body .bottom-nav {
+    display: grid;
+    position: fixed;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    left: max(16px, env(safe-area-inset-left));
+    right: max(16px, env(safe-area-inset-right));
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    inset-block-start: auto;
+    width: auto;
+    max-width: 480px;
+    height: 64px;
+    margin-inline: auto;
+    transform: none;
+    translate: none;
+    gap: 4px;
+    padding: 5px 8px;
+    border-radius: 24px;
+    background: color-mix(in srgb, var(--bg-surface) 85%, transparent);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: var(--border-subtle);
+    box-shadow:
+      0 12px 32px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    z-index: 50;
+  }
+  :root[data-ui='bento'] body .bottom-nav::after {
+    display: none;
+  }
+  :root[data-ui='bento'] body .bottom-nav a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 52px;
+    min-height: 44px;
+    font-size: 10px;
+    line-height: 1.3;
+    color: #92929b;
+    border-radius: 16px;
+  }
+  :root[data-ui='bento'] body .bottom-nav a.active {
+    color: var(--gold-primary);
+    background: transparent;
+  }
+  :root[data-ui='bento'] body .bottom-nav a.active svg {
+    filter: drop-shadow(0 3px 6px rgba(212, 175, 55, 0.45));
+  }
+  :root[data-ui='bento'] body .header-actions .visibility-button {
+    display: none;
+  }
+  :root[data-ui='bento'] body .header-space-menu {
+    display: flex;
+    min-width: 44px;
+    min-height: 44px;
+    justify-content: center;
+    padding: 4px 8px;
+  }
+  :root[data-ui='bento'] body .header-actions .header-notifications {
+    display: none;
+  }
+}
+@media (max-width: 650px) {
+  :root[data-ui='bento'] body .page-content .account-ledger {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  :root[data-ui='bento']
+    body
+    .page-content
+    :is(
+      .planning-metrics,
+      .wealth-summary,
+      .card-directory-surface,
+      .settings-panel,
+      .category-group-panel,
+      .card-detail,
+      .cashflow-forecast,
+      .wealth-composition,
+      .upload-panel,
+      .counterparty-panel,
+      .goal-record,
+      .account-record,
+      .budget-group,
+      .planning-invoice-section,
+      .commitments-section
+    ) {
+    padding: 18px;
+  }
+  :root[data-ui='bento'] body .page-content .contextual-page-title {
+    font-size: 24px;
+  }
+  :root[data-ui='bento'] body .page-content .budget-group > summary {
+    flex-wrap: wrap;
+  }
+  :root[data-ui='bento'] body .page-content .budget-group-totals {
+    width: 100%;
+  }
+  :root[data-ui='bento'] body .page-content .budget-line {
+    padding: 16px 0;
+  }
+  :root[data-ui='bento'] body .page-content .card-detail .section-heading {
+    padding: 0 0 16px;
+  }
+  :root[data-ui='bento'] body .app-header .header-actions {
+    gap: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-ui='bento'] :is(*, *::before, *::after) {
+    scroll-behavior: auto;
+    animation: none !important;
+    transition: none !important;
+  }
+  :root[data-ui='bento'] :is(button, a):active {
+    transform: none !important;
+  }
+}
+@media (max-width: 1050px) {
+  :root[data-ui='bento']
+    body
+    .premium-app:not([data-page='/'])
+    .header-actions
+    .header-notifications {
+    display: block;
+  }
+  :root[data-ui='bento'] body .premium-app:not([data-page='/']) .header-actions .visibility-button {
+    display: grid;
+  }
+}
+:root[data-ui='bento'] body .auth-entry .entry-access {
+  background: var(--grad-card);
+  border: var(--border-subtle);
+  border-radius: var(--radius-bento);
+  box-shadow: var(--shadow-soft);
+}
+:root[data-ui='bento'] body .page-content .movement-table {
+  background: var(--grad-card);
+  border: var(--border-subtle);
+  border-radius: var(--radius-bento);
+  box-shadow: var(--shadow-soft);
+  padding: 18px;
+}
+:root[data-ui='bento'] body .page-content .movement-entry + .movement-entry {
+  border: 0;
+}
+:root[data-ui='bento'] body .page-content .movement-entry:hover {
+  background: var(--bg-elevated);
+}
+:root[data-ui='bento'] body .page-content .movement-direction {
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+}
+:root[data-ui='bento']
+  [data-values-hidden='true']
+  :is(
+    .cell-amount,
+    .planning-comparison dd,
+    .planning-difference,
+    .planning-contribution,
+    .budget-line dd,
+    .budget-group-metric strong,
+    .balance-reference strong
+  ) {
+  filter: blur(8px);
+  user-select: none;
+}
+:root[data-ui='bento'] body .premium-app .more-menu a svg:first-child {
+  color: var(--gold-primary);
+}
+:root[data-ui='bento'] body .page-content :is(.account-record, .goal-record)::after {
+  display: none;
+}
+@media (max-width: 600px) {
+  :root[data-ui='bento'] body .auth-entry .entry-access {
+    padding: 22px;
+  }
+}
+:root[data-ui='bento'] body .page-content > .loading {
+  background: var(--grad-card);
+  border: var(--border-subtle);
+  border-radius: var(--radius-bento);
+  padding: 24px;
+  min-height: 180px;
+}
+:root[data-ui='bento'] body .balance-hero .loading {
+  min-height: 240px;
+  padding: 16px 0;
+}
+:root[data-ui='bento']
+  [data-values-hidden='true']
+  :is(
+    .goals-overview > strong,
+    .goal-event > span,
+    .goal-record .field-help,
+    .goal-account > span
+  ) {
+  filter: blur(8px);
+  user-select: none;
+}

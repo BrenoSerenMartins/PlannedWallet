@@ -1,3 +1,7 @@
+import {
+  FinancialVisibilityProvider,
+  useFinancialVisibility,
+} from '../shared/privacy/financial-visibility';
 import { createPortal } from 'react-dom';
 import { ActionMenu } from '../shared/ui/action-menu';
 import { Tooltip } from '../shared/ui/tooltip';
@@ -13,7 +17,6 @@ import {
   UsersRound,
   CalendarDays,
   FolderTree,
-  Menu,
   ArrowDownUp,
   ChevronRight,
   ChevronDown,
@@ -22,11 +25,16 @@ import {
   Settings2,
   Upload,
   WifiOff,
+  Eye,
+  EyeOff,
+  Target,
+  ScanSearch,
 } from 'lucide-react';
 import { useAuth } from '../features/auth/auth-provider';
 import { Logo, Modal } from '../shared/ui/primitives';
 const navigation = [
   { to: '/', label: 'Visão geral', mobile: 'Início', Icon: House },
+  { to: '/analytics', label: 'Métricas', mobile: 'Métricas', Icon: ChartNoAxesCombined },
   { to: '/transactions', label: 'Movimentações', mobile: 'Movimentos', Icon: ArrowDownUp },
   { to: '/accounts', label: 'Contas', mobile: 'Contas', Icon: Landmark },
   { to: '/planning', label: 'Planejamento', mobile: 'Planejar', Icon: CalendarDays },
@@ -37,8 +45,8 @@ const navigation = [
     mobile: 'Patrimônio',
     Icon: ChartNoAxesCombined,
   },
-  { to: '/recognition', label: 'Revisão assistida', mobile: 'Revisão', Icon: Landmark },
-  { to: '/goals', label: 'Metas e reservas', mobile: 'Metas', Icon: Landmark },
+  { to: '/recognition', label: 'Revisão assistida', mobile: 'Revisão', Icon: ScanSearch },
+  { to: '/goals', label: 'Metas e reservas', mobile: 'Metas', Icon: Target },
   { to: '/imports', label: 'Importar extrato', mobile: 'Importar', Icon: Upload },
   { to: '/categories', label: 'Grupos e categorias', mobile: 'Categorias', Icon: FolderTree },
   {
@@ -49,8 +57,16 @@ const navigation = [
   },
   { to: '/settings', label: 'Preferências', mobile: 'Mais', Icon: Settings2 },
 ];
-const primaryPaths = ['/', '/transactions', '/accounts', '/planning', '/wealth'];
+const primaryPaths = ['/', '/analytics', '/transactions', '/accounts', '/planning'];
 export function AppShell() {
+  return (
+    <FinancialVisibilityProvider>
+      <ShellContent />
+    </FinancialVisibilityProvider>
+  );
+}
+function ShellContent() {
+  const { visible, toggle } = useFinancialVisibility();
   const { session } = useAuth();
   const notices = useNotifications();
   const wasOnline = useRef(navigator.onLine);
@@ -131,7 +147,8 @@ export function AppShell() {
     'Você';
   return (
     <div
-      className={`app-shell${arriving ? ' app-entry' : ''}`}
+      className={`app-shell premium-app${arriving ? ' app-entry' : ''}`}
+      data-page={location.pathname}
       onAnimationEnd={(event) => {
         if (event.target === event.currentTarget && event.animationName === 'app-arrive')
           setArriving(false);
@@ -180,7 +197,17 @@ export function AppShell() {
               })}
           </nav>
           <div className="header-actions">
-            <NotificationCenter />
+            <button
+              className="icon-button visibility-button"
+              aria-label={visible ? 'Ocultar valores' : 'Mostrar valores'}
+              aria-pressed={!visible}
+              onClick={toggle}
+            >
+              {visible ? <Eye size={19} /> : <EyeOff size={19} />}
+            </button>
+            <span className="header-notifications">
+              <NotificationCenter />
+            </span>
             {!online && (
               <span className="connection-chip" aria-label="Sem conexão">
                 <WifiOff size={16} />
@@ -210,32 +237,17 @@ export function AppShell() {
       </div>
       {createPortal(
         <nav className="bottom-nav" aria-label="Navegação móvel">
-          {navigation
-            .filter((n) => ['/', '/transactions', '/accounts', '/planning'].includes(n.to))
-            .map(({ to, mobile, Icon }) => (
-              <NavLink key={to} to={to} end={to === '/'}>
-                <Icon size={20} />
-                <span>{mobile}</span>
-              </NavLink>
-            ))}
-          <button
-            type="button"
-            onClick={(event) => {
-              menuTrigger.current = event.currentTarget;
-              setMore(true);
-            }}
-            aria-haspopup="dialog"
-            className={
-              ['/cards', '/wealth', '/categories', '/imports', '/counterparties', '/settings'].some(
-                (path) => location.pathname.startsWith(path),
-              )
-                ? 'active'
-                : ''
-            }
-          >
-            <Menu size={20} />
-            <span>Mais</span>
-          </button>
+          {[
+            { to: '/', label: 'Início', Icon: House },
+            { to: '/analytics', label: 'Métricas', Icon: ChartNoAxesCombined },
+            { to: '/transactions', label: 'Extrato', Icon: ArrowDownUp },
+            { to: '/settings', label: 'Ajustes', Icon: Settings2 },
+          ].map(({ to, label, Icon }) => (
+            <NavLink key={to} to={to} end={to === '/'}>
+              <Icon size={21} strokeWidth={1.7} aria-hidden="true" />
+              <span>{label}</span>
+            </NavLink>
+          ))}
         </nav>,
         document.body,
       )}
@@ -251,8 +263,14 @@ export function AppShell() {
       >
         <nav className="more-menu" aria-label="Mais funções">
           {[
-            { title: 'Seu dinheiro', paths: ['/cards', '/wealth', '/imports'] },
-            { title: 'Organização', paths: ['/categories', '/counterparties', '/settings'] },
+            {
+              title: 'Seu dinheiro',
+              paths: ['/accounts', '/planning', '/cards', '/wealth', '/imports'],
+            },
+            {
+              title: 'Organização',
+              paths: ['/goals', '/recognition', '/categories', '/counterparties', '/settings'],
+            },
           ].map((group) => (
             <div className="more-menu-group" key={group.title}>
               <h3>{group.title}</h3>

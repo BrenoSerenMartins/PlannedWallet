@@ -1,3 +1,4 @@
+import { useFinancialVisibility } from '../privacy/financial-visibility';
 import { Tooltip } from './tooltip';
 import {
   ArrowDownLeft,
@@ -20,6 +21,7 @@ export function TransactionRow({
   categoryLabel?: string;
   onClick?: () => void;
 }) {
+  const { visible } = useFinancialVisibility();
   const Icon =
     t.transactionType === 'transfer'
       ? ArrowLeftRight
@@ -54,7 +56,7 @@ export function TransactionRow({
       <strong
         className={`transaction-amount ${t.transactionType === 'income' ? 'positive-text' : ''}`}
       >
-        {hidden ? '••••' : `${t.amount > 0 ? '+ ' : ''}${money(t.amount)}`}
+        {hidden || !visible ? '••••' : `${t.amount > 0 ? '+ ' : ''}${money(t.amount)}`}
       </strong>
       {onClick &&
         (t.reconciliationStatus === 'reconciled' ? (

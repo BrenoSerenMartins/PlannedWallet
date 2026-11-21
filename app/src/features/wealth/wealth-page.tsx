@@ -1,3 +1,4 @@
+import { useFinancialVisibility } from '../../shared/privacy/financial-visibility';
 import { IconAction } from '../../shared/ui/icon-action';
 import { ChartNoAxesCombined as EmptyStateIcon } from 'lucide-react';
 import { HelpTip, Tooltip } from '../../shared/ui/tooltip';
@@ -41,7 +42,7 @@ export function WealthPage() {
   });
   const write = useFinanceWrite();
   const [dialog, setDialog] = useState<Dialog | null>(null);
-  const [visible, setVisible] = useState(true);
+  const { visible, toggle: toggleVisibility } = useFinancialVisibility();
   const [archived, setArchived] = useState(false);
   const { success: setMessage } = useNotifications();
   const [captureBusy, setCaptureBusy] = useState(false);
@@ -106,7 +107,7 @@ export function WealthPage() {
                       aria-label={
                         visible ? 'Ocultar valores do patrimônio' : 'Mostrar valores do patrimônio'
                       }
-                      onClick={() => setVisible(!visible)}
+                      onClick={toggleVisibility}
                     >
                       {visible ? <Eye size={18} /> : <EyeOff size={18} />}
                     </button>

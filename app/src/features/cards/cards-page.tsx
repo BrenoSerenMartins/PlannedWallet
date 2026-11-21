@@ -1,3 +1,4 @@
+import { useFinancialVisibility } from '../../shared/privacy/financial-visibility';
 import { IconAction } from '../../shared/ui/icon-action';
 import { MonthPicker } from '../../shared/ui/controls/month-picker';
 import { HelpTip, Tooltip } from '../../shared/ui/tooltip';
@@ -51,7 +52,7 @@ export function CardsPage() {
   });
   const write = useFinanceWrite();
   const [dialog, setDialog] = useState<Dialog | null>(null);
-  const [visible, setVisible] = useState(true);
+  const { visible, toggle: toggleVisibility } = useFinancialVisibility();
   const [showArchived, setShowArchived] = useState(false);
   const { success: setMessage } = useNotifications();
   const value = (n: number) => (visible ? money(n) : '••••••');
@@ -91,7 +92,7 @@ export function CardsPage() {
                   aria-label={
                     visible ? 'Ocultar valores dos cartões' : 'Mostrar valores dos cartões'
                   }
-                  onClick={() => setVisible(!visible)}
+                  onClick={toggleVisibility}
                 >
                   {visible ? <Eye size={18} /> : <EyeOff size={18} />}
                 </button>

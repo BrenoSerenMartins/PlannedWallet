@@ -32,7 +32,12 @@ export function TransactionForm({
   const [billMonth, setBillMonth] = useState(
     entry?.transactionDate.slice(0, 7) ?? dateToday().slice(0, 7),
   );
-  const [kind, setKind] = useState(entry?.transactionType ?? 'expense');
+  const [kind, setKind] = useState(
+    entry?.transactionType ??
+      (new URLSearchParams(window.location.search).get('type') === 'transfer'
+        ? 'transfer'
+        : 'expense'),
+  );
   const [account, setAccount] = useState(entry?.accountId ?? accounts[0]?.id ?? '');
   const selectedAccount = accounts.find((a) => a.id === account);
   const [destination, setDestination] = useState('');

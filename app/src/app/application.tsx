@@ -10,6 +10,9 @@ import { authReturnError } from '../features/auth/auth-return';
 import { AuthPage } from '../features/auth/auth-page';
 import { Loading } from '../shared/ui/primitives';
 import { AppShell } from './app-shell';
+const AnalyticsPage = lazy(() =>
+  import('../features/dashboard/analytics-page').then((m) => ({ default: m.AnalyticsPage })),
+);
 const DashboardPage = lazy(() =>
   import('../features/dashboard/dashboard-page').then((module) => ({
     default: module.DashboardPage,
@@ -90,6 +93,7 @@ export function Application() {
                 <Route element={<WorkspaceBoundary />}>
                   <Route element={<AppShell />}>
                     <Route index element={<DashboardPage />} />
+                    <Route path="analytics" element={<AnalyticsPage />} />
                     <Route path="accounts" element={<AccountsPage />} />
                     <Route path="accounts/:accountId" element={<TransactionsPage />} />
                     <Route path="transactions" element={<TransactionsPage />} />

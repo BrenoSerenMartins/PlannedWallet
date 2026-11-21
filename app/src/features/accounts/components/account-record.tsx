@@ -1,3 +1,4 @@
+import { useFinancialVisibility } from '../../../shared/privacy/financial-visibility';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight, Landmark } from 'lucide-react';
 import type { Account } from '../../../shared/api/resources';
@@ -22,6 +23,7 @@ export function AccountRecord({
   onCorrect: () => void;
   onEdit: () => void;
 }) {
+  const { visible } = useFinancialVisibility();
   const product =
     a.type === 'benefit_food'
       ? 'Vale-alimentação'
@@ -61,7 +63,7 @@ export function AccountRecord({
         </div>
         <div className="account-record-value">
           <span>Saldo registrado</span>
-          <strong>{money(a.balance)}</strong>
+          <strong>{visible ? money(a.balance) : '••••••'}</strong>
         </div>
         <ActionMenu label={`Ações da conta ${a.name}`}>
           <button type="button" onClick={onEdit}>

@@ -364,17 +364,17 @@ export function TransactionsPage() {
               A data inicial deve ser anterior ou igual à data final.
             </p>
           )}
-          <div className="form-actions">
-            <Button disabled={rangeInvalid} onClick={() => setFiltersOpen(false)}>
-              Ver movimentos
-            </Button>
-          </div>
           <ExportMovements
             query={query.toString()}
             accounts={accounts.data ?? []}
             categories={categories.data ?? []}
             disabled={rangeInvalid}
           />
+          <div className="form-actions">
+            <Button disabled={rangeInvalid} onClick={() => setFiltersOpen(false)}>
+              Ver movimentos
+            </Button>
+          </div>
         </Modal>
         {(activeFilters.length > 0 || search) && (
           <div className="active-filters" aria-label="Filtros aplicados">

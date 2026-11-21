@@ -1,5 +1,4 @@
 import { PlanningCardBills } from './components/planning-card-bills';
-import { MonthPicker } from '../../shared/ui/controls/month-picker';
 import { ActionMenu } from '../../shared/ui/action-menu';
 import type { ReactNode } from 'react';
 import { useNotifications } from '../../shared/feedback/notification-provider';
@@ -7,8 +6,8 @@ import { BenefitPlanningNotice } from './components/benefit-planning-notice';
 import { CommitmentsPage } from './commitments-page';
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { validMonth, shiftMonth } from '../../shared/formatting/month';
-import { Copy, Pencil, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { validMonth } from '../../shared/formatting/month';
+import { Copy, Pencil, ArrowRight } from 'lucide-react';
 import { dateToday } from '../../shared/formatting/money';
 import { ErrorState, Loading, Modal } from '../../shared/ui/primitives';
 import { useMonthlyPlan, usePreviousMonthlyPlan } from './hooks/use-monthly-plan';
@@ -67,43 +66,18 @@ function MonthlyBudgetPage({ navigation }: { navigation?: ReactNode }) {
           <>
             <header className="future-page-heading">
               <h1>Visão futura</h1>
-              <div className="future-page-controls">
-                <div className="future-month-navigation" aria-label="Navegar entre meses">
-                  <button
-                    type="button"
-                    className="icon-button"
-                    aria-label="Mês anterior"
-                    disabled={month === '1900-01'}
-                    onClick={() => setMonth(shiftMonth(month, -1))}
-                  >
-                    <ChevronLeft size={17} />
-                  </button>
-                  <label className="period-picker">
-                    <span className="sr-only">Mês do plano</span>
-                    <MonthPicker
-                      clearable={false}
-                      aria-label="Mês do planejamento"
-                      min="1900-01"
-                      max="9998-12"
-                      value={month}
-                      onChange={(e) => {
-                        if (e.target.value) {
-                          setMonth(e.target.value);
-                          setMessage('');
-                        }
-                      }}
-                    />
-                  </label>
-                  <button
-                    type="button"
-                    className="icon-button"
-                    aria-label="Próximo mês"
-                    disabled={month === '9998-12'}
-                    onClick={() => setMonth(shiftMonth(month, 1))}
-                  >
-                    <ChevronRight size={17} />
-                  </button>
-                </div>
+            </header>
+            <PlanningSummary
+              plan={plan}
+              month={month}
+              onMonthChange={(value) => {
+                setMonth(value);
+                setMessage('');
+              }}
+              navigation={navigation}
+              onEditPlan={() => setDialog('edit')}
+              commitments={<PlanningCardBills plan={plan} />}
+              periodActions={
                 <ActionMenu label="Mais ações do planejamento">
                   <Link to={`/planning?view=commitments&month=${month}`}>
                     Agenda de compromissos
@@ -127,13 +101,7 @@ function MonthlyBudgetPage({ navigation }: { navigation?: ReactNode }) {
                     </button>
                   )}
                 </ActionMenu>
-              </div>
-            </header>
-            <PlanningSummary
-              plan={plan}
-              navigation={navigation}
-              onEditPlan={() => setDialog('edit')}
-              commitments={<PlanningCardBills plan={plan} />}
+              }
             />
             {plan.totals.missingCategoryCount > 0 && (
               <div className="review-banner planning-included">

@@ -31,10 +31,12 @@ export function CardRecurring({ card, month }: { card: Card; month: string }) {
   return (
     <section className="card-recurring-section">
       <div className="section-heading">
-        <h2>Assinaturas e recorrentes</h2>
-        {!query.isPending && !query.isError && (
-          <strong className="card-recurring-total">{displayMoney(monthlyTotal)}/mês</strong>
-        )}
+        <div className="card-recurring-heading-copy">
+          <h2>Assinaturas e recorrentes</h2>
+          {!query.isPending && !query.isError && (
+            <span className="card-recurring-total">{displayMoney(monthlyTotal)}/mês</span>
+          )}
+        </div>
         <Button className="secondary compact" onClick={() => setEdit('new')}>
           <Plus size={16} /> Nova
         </Button>

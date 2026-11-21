@@ -1140,9 +1140,15 @@
     font-size: 9px;
   }
   :root[data-ui='bento'] body .bottom-nav {
-    left: 12px;
-    right: 12px;
+    left: max(16px, env(safe-area-inset-left));
+    right: max(16px, env(safe-area-inset-right));
     bottom: calc(12px + env(safe-area-inset-bottom));
+    width: auto;
+    max-width: 480px;
+    margin: 0 auto;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    transform: none;
+    translate: none;
     height: 64px;
     padding: 4px;
     border: var(--border-subtle);
@@ -1273,12 +1279,7 @@
   }
 
   :root[data-ui='bento'] body .page-content .planning-page > .future-page-heading {
-    display: flex;
-    width: 100%;
-    justify-content: flex-end;
-    gap: 0;
-    margin: 0 0 12px;
-    padding: 0;
+    display: none;
   }
   :root[data-ui='bento'] body .page-content .planning-page > .future-page-heading > h1 {
     display: none;
@@ -1341,6 +1342,306 @@
     gap: 5px;
     font-size: 11px;
     white-space: nowrap;
+  }
+}
+
+/* Planning opens directly with the monthly result; month and details live in its hero. */
+:root[data-ui='bento'] body .page-content .planning-page .planning-metrics {
+  margin-top: 0;
+  background: transparent;
+  box-shadow: none;
+}
+:root[data-ui='bento'] body .page-content .planning-page .metric-result {
+  margin-top: 0;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-result-topline {
+  align-items: center;
+  gap: 8px;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-page
+  .planning-result-topline
+  > span:first-child {
+  min-width: 0;
+  white-space: nowrap;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-hero-controls {
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+  gap: 6px;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-page
+  .planning-hero-controls
+  .future-month-navigation {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-page
+  .planning-hero-controls
+  .future-month-navigation
+  > .icon-button {
+  width: 28px;
+  height: 32px;
+  min-width: 28px;
+  min-height: 32px;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-page
+  .planning-hero-controls
+  .period-picker
+  > span {
+  display: none;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-hero-controls .month-trigger {
+  min-height: 32px;
+  padding: 4px 9px;
+  border: 1px solid rgba(212, 175, 55, 0.22);
+  border-radius: var(--radius-pill);
+  background: rgba(212, 175, 55, 0.1);
+  color: var(--gold-soft);
+  font-size: 11px;
+  white-space: nowrap;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-page
+  .planning-hero-controls
+  .month-trigger
+  svg {
+  width: 13px;
+  height: 13px;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-hero-controls > .action-menu {
+  flex: 0 0 auto;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-page
+  .planning-hero-controls
+  > .action-menu
+  > summary {
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
+  border-radius: 50%;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-result-value {
+  font-size: clamp(28px, 5vw, 36px);
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-result-difference {
+  align-self: flex-start;
+  width: fit-content;
+  margin-top: -4px;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-result-footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  gap: 8px;
+}
+:root[data-ui='bento'] body .page-content .planning-page .period-budget-hero {
+  display: flex;
+  flex: 0 0 auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-page
+  .period-budget-hero:has(> .period-budget-details[open]) {
+  display: block;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-page
+  .period-budget-hero
+  .period-budget-details {
+  flex: 0 0 auto;
+  margin: 0;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-page
+  .period-budget-hero
+  .period-budget-details
+  > summary {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border: 1px solid rgba(212, 175, 55, 0.22);
+  border-radius: var(--radius-pill);
+  background: rgba(212, 175, 55, 0.1);
+  color: var(--gold-soft);
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-page
+  .period-budget-hero
+  .period-budget-details
+  > summary::-webkit-details-marker {
+  display: none;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-page
+  .period-budget-hero
+  .period-budget-details
+  > summary
+  > svg {
+  transition: transform 160ms ease;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-page
+  .period-budget-hero
+  .period-budget-details[open]
+  > summary
+  > svg {
+  transform: rotate(180deg);
+}
+:root[data-ui='bento'] body .page-content .planning-page .period-budget-hero .period-budget-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 12px 0;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-page
+  .period-budget-hero
+  .period-budget-head
+  > div {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-page
+  .period-budget-hero
+  .period-budget-head
+  span,
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-page
+  .period-budget-hero
+  .period-budget-details
+  .field-help {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-page
+  .period-budget-hero
+  .period-budget-head
+  strong {
+  color: var(--text-primary);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-page
+  .period-budget-hero
+  .period-budget-flows
+  > div {
+  gap: 8px 16px;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-included {
+  flex-wrap: nowrap;
+  padding: 12px 16px;
+}
+@media (max-width: 1050px) {
+  :root[data-ui='bento'] body .page-content .planning-page .planning-result-topline {
+    align-items: flex-start;
+  }
+  :root[data-ui='bento']
+    body
+    .page-content
+    .planning-page
+    .planning-result-topline
+    > span:first-child {
+    font-size: 12px;
+  }
+  :root[data-ui='bento'] body .page-content .planning-page .planning-hero-controls {
+    gap: 2px;
+  }
+  :root[data-ui='bento']
+    body
+    .page-content
+    .planning-page
+    .planning-hero-controls
+    .future-month-navigation
+    > .icon-button {
+    width: 22px;
+    min-width: 22px;
+  }
+  :root[data-ui='bento'] body .page-content .planning-page .planning-hero-controls .month-trigger {
+    min-height: 30px;
+    padding: 4px 7px;
+    font-size: 10px;
+  }
+  :root[data-ui='bento']
+    body
+    .page-content
+    .planning-page
+    .planning-hero-controls
+    > .action-menu
+    > summary {
+    width: 28px;
+    height: 30px;
+    min-height: 30px;
+  }
+  :root[data-ui='bento'] body .bottom-nav {
+    position: fixed;
+    left: max(16px, env(safe-area-inset-left));
+    right: max(16px, env(safe-area-inset-right));
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    width: auto;
+    max-width: 480px;
+    margin: 0 auto;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    transform: none;
+    translate: none;
   }
 }
 
@@ -1608,5 +1909,119 @@
   :root[data-ui='bento'] body .page-content .planning-page .budget-group-actual,
   :root[data-ui='bento'] body .page-content .planning-page .budget-line-actual {
     font-size: 13px;
+  }
+}
+
+/* Final card-page and six-destination dock polish. */
+:root[data-ui='bento'] body .page-content .cards-page .credit-card-frame-new {
+  display: grid;
+  place-items: stretch;
+}
+:root[data-ui='bento'] body .page-content .cards-page .credit-card-new {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px dashed rgba(212, 175, 55, 0.38);
+  border-radius: 20px;
+  background: rgba(212, 175, 55, 0.045);
+  color: var(--gold-soft);
+  font-size: 14px;
+}
+:root[data-ui='bento'] body .page-content .cards-page .credit-card-new:hover:not(:disabled) {
+  border-color: rgba(212, 175, 55, 0.68);
+  background: rgba(212, 175, 55, 0.09);
+}
+:root[data-ui='bento'] body .page-content .cards-page .card-purchases-disclosure {
+  margin: 12px 0;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 18px;
+  background: #141418;
+}
+:root[data-ui='bento'] body .page-content .cards-page .card-purchases-disclosure > summary {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 2px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+:root[data-ui='bento'] body .page-content .cards-page .card-purchases-disclosure > summary::after {
+  content: none;
+}
+:root[data-ui='bento'] body .page-content .cards-page .card-purchases-disclosure > summary > svg {
+  flex: 0 0 auto;
+  color: var(--text-secondary);
+  transition: transform 160ms ease;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .cards-page
+  .card-purchases-disclosure[open]
+  > summary
+  > svg {
+  transform: rotate(180deg);
+}
+:root[data-ui='bento'] body .page-content .cards-page .card-purchases-disclosure > ul {
+  padding-bottom: 10px;
+}
+:root[data-ui='bento'] body .page-content .card-recurring-section .section-heading {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+:root[data-ui='bento'] body .page-content .card-recurring-heading-copy {
+  display: grid;
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: 3px;
+}
+:root[data-ui='bento'] body .page-content .card-recurring-section .section-heading h2 {
+  overflow: hidden;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+:root[data-ui='bento'] body .page-content .card-recurring-total {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 400;
+  text-align: left;
+}
+:root[data-ui='bento'] body .page-content .card-recurring-section .section-heading > .button {
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 8px 14px;
+  white-space: nowrap;
+}
+@media (max-width: 1050px) {
+  :root[data-ui='bento'] body .bottom-nav > :is(a, button) {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 6px 2px;
+    border-radius: 16px;
+  }
+  :root[data-ui='bento'] body .bottom-nav > a.active {
+    width: min(100%, 56px);
+    justify-self: center;
+    padding: 6px 2px;
+    border-radius: 16px;
+  }
+  :root[data-ui='bento'] body .page-content .card-recurring-section .section-heading h2 {
+    font-size: clamp(12px, 3.8vw, 14px);
   }
 }

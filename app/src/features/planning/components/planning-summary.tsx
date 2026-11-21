@@ -1,20 +1,35 @@
 import { PeriodBudget } from '../../../shared/ui/period-budget';
 import type { ReactNode } from 'react';
 import { HelpTip } from '../../../shared/ui/tooltip';
-import { ArrowDownLeft, ArrowUpRight, PiggyBank, Scale } from 'lucide-react';
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  ChevronLeft,
+  ChevronRight,
+  PiggyBank,
+  Scale,
+} from 'lucide-react';
 import type { MonthlyPlan } from '../../../shared/api/resources';
 import { money } from '../../../shared/formatting/money';
+import { MonthPicker } from '../../../shared/ui/controls/month-picker';
+import { shiftMonth } from '../../../shared/formatting/month';
 const display = (value: number | null) => (value === null ? 'Não definido' : money(value));
 export function PlanningSummary({
   plan,
   navigation,
   onEditPlan,
   commitments,
+  month,
+  onMonthChange,
+  periodActions,
 }: {
   plan: MonthlyPlan;
   navigation?: ReactNode;
   onEditPlan?: () => void;
   commitments?: ReactNode;
+  month: string;
+  onMonthChange: (month: string) => void;
+  periodActions?: ReactNode;
 }) {
   const { totals: t } = plan;
   const incomeProgress =
@@ -29,10 +44,6 @@ export function PlanningSummary({
     t.actualIncome > 0 ? Math.min(100, Math.max(0, (t.actualExpense / t.actualIncome) * 100)) : 0;
   return (
     <>
-      <PeriodBudget
-        budget={plan.budget}
-        forecast={{ result: t.plannedResult, contribution: plan.contribution }}
-      />
       <section className="planning-metrics" aria-label="Resumo do planejamento">
         <article
           className="planning-metric metric-result bento-hero-gold"
@@ -42,18 +53,59 @@ export function PlanningSummary({
             <span>
               <Scale size={18} /> Resultado projetado
             </span>
-            {t.resultDifference !== null && (
-              <span
-                className={`planning-result-difference ${t.resultDifference >= 0 ? 'positive-text' : 'negative-text'}`}
-              >
-                {t.resultDifference > 0 ? '+' : ''}
-                {money(t.resultDifference)} vs. previsto
-              </span>
-            )}
+            <div className="planning-hero-controls">
+              <div className="future-month-navigation" aria-label="Navegar entre meses">
+                <button
+                  type="button"
+                  className="icon-button"
+                  aria-label="Mês anterior"
+                  disabled={month === '1900-01'}
+                  onClick={() => onMonthChange(shiftMonth(month, -1))}
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <label className="period-picker">
+                  <span className="sr-only">Mês do plano</span>
+                  <MonthPicker
+                    clearable={false}
+                    aria-label="Mês do planejamento"
+                    min="1900-01"
+                    max="9998-12"
+                    value={month}
+                    onChange={(e) => e.target.value && onMonthChange(e.target.value)}
+                  />
+                </label>
+                <button
+                  type="button"
+                  className="icon-button"
+                  aria-label="Próximo mês"
+                  disabled={month === '9998-12'}
+                  onClick={() => onMonthChange(shiftMonth(month, 1))}
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+              {periodActions}
+            </div>
           </div>
           <strong className="planning-result-value">{money(t.actualResult)}</strong>
+          {t.resultDifference !== null && (
+            <span
+              className={`planning-result-difference ${t.resultDifference >= 0 ? 'positive-text' : 'negative-text'}`}
+            >
+              {t.resultDifference > 0 ? '+' : ''}
+              {money(t.resultDifference)} vs. previsto
+            </span>
+          )}
           <div className="planning-result-footer">
-            <span>Previsto: {display(t.plannedResult)}</span>
+            <div className="planning-result-footer-row">
+              <span>Previsto: {display(t.plannedResult)}</span>
+              <PeriodBudget
+                budget={plan.budget}
+                forecast={{ result: t.plannedResult, contribution: plan.contribution }}
+                variant="hero"
+              />
+            </div>
             <div
               className="planning-result-meter"
               role="img"

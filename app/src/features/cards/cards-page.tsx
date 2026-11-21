@@ -1,5 +1,4 @@
 import { useFinancialVisibility } from '../../shared/privacy/financial-visibility';
-import { IconAction } from '../../shared/ui/icon-action';
 import { MonthPicker } from '../../shared/ui/controls/month-picker';
 import { HelpTip, Tooltip } from '../../shared/ui/tooltip';
 import { useNotifications } from '../../shared/feedback/notification-provider';
@@ -11,6 +10,7 @@ import {
   Plus,
   Pencil,
   Trash2,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
@@ -108,18 +108,6 @@ export function CardsPage() {
   return (
     <div className="page-enter cards-page">
       <section className="card-directory-surface" aria-label="Cartões cadastrados">
-        <div className="card-workspace-toolbar">
-          <h1 className="contextual-page-title">Cartões e faturas</h1>
-          <div className="inline-actions">
-            <IconAction
-              label="Novo cartão"
-              icon={<Plus size={18} />}
-              onClick={() => setDialog({ kind: 'new' })}
-              disabled={!navigator.onLine}
-            />
-          </div>
-        </div>
-
         {query.isPending ? (
           <Loading />
         ) : query.isError ? (
@@ -151,7 +139,13 @@ export function CardsPage() {
                     : 'Cadastre seu cartão para acompanhar faturas, parcelas e limite disponível.'}
                 </p>
                 {!all.length && (
-                  <span className="card-empty-hint">Use o botão + para adicionar.</span>
+                  <Button
+                    className="compact"
+                    onClick={() => setDialog({ kind: 'new' })}
+                    disabled={!navigator.onLine}
+                  >
+                    <Plus size={16} /> Novo cartão
+                  </Button>
                 )}
               </div>
             ) : (
@@ -161,7 +155,7 @@ export function CardsPage() {
                   className="credit-selector no-scrollbar"
                   role="group"
                   aria-label="Escolher cartão"
-                  onScroll={(event) => {
+                  onScroll={() => {
                     if (swipeTimer.current) clearTimeout(swipeTimer.current);
                     swipeTimer.current = setTimeout(() => {
                       const selector = selectorRef.current;
@@ -237,6 +231,17 @@ export function CardsPage() {
                       )}
                     </div>
                   ))}
+                  <div className="credit-card-frame credit-card-frame-new">
+                    <button
+                      type="button"
+                      className="credit-card-new"
+                      onClick={() => setDialog({ kind: 'new' })}
+                      disabled={!navigator.onLine}
+                    >
+                      <Plus size={22} aria-hidden="true" />
+                      <strong>Novo cartão</strong>
+                    </button>
+                  </div>
                 </div>
                 {card && (
                   <section className="card-detail">
@@ -568,8 +573,11 @@ export function CardsPage() {
                       <p className="card-empty-line">Nenhuma compra neste vencimento</p>
                     )}
                     {!!card.purchases.length && (
-                      <details className="finance-disclosure">
-                        <summary>Compras e parcelamentos · {card.purchases.length}</summary>
+                      <details className="finance-disclosure card-purchases-disclosure">
+                        <summary>
+                          <span>Compras e parcelamentos · {card.purchases.length}</span>
+                          <ChevronDown size={17} aria-hidden="true" />
+                        </summary>
                         <ul className="card-entry-list card-purchase-list">
                           {card.purchases.map((p) => (
                             <li key={p.id}>

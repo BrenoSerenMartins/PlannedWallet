@@ -2,16 +2,19 @@ import { useFinancialVisibility } from '../privacy/financial-visibility';
 import type { components } from '../api/generated';
 import { money } from '../formatting/money';
 import { Link } from 'react-router-dom';
+import { ChevronDown } from 'lucide-react';
 import './period-budget.css';
 type Budget = components['schemas']['PeriodBudgetDto'];
 export function PeriodBudget({
   budget,
   visible: requestedVisible = true,
   forecast,
+  variant = 'default',
 }: {
   budget?: Budget;
   visible?: boolean;
   forecast?: { result: number | null; contribution: number | null };
+  variant?: 'default' | 'hero';
 }) {
   const { visible: globalVisible } = useFinancialVisibility();
   const visible = requestedVisible && globalVisible;
@@ -24,10 +27,45 @@ export function PeriodBudget({
     'reference-under-review': 'A referência de saldo precisa de conferência.',
   };
   return (
-    <section className="period-budget" aria-label="Disponível no período">
-      <div className="period-budget-head">
-        {budget.carried != null || budget.available != null ? (
-          <>
+    <section
+      className={`period-budget${variant === 'hero' ? ' period-budget-hero' : ''}`}
+      aria-label="Disponível no período"
+    >
+      {variant !== 'hero' && (
+        <div className="period-budget-head">
+          {budget.carried != null || budget.available != null ? (
+            <>
+              {budget.carried != null && (
+                <div>
+                  <span>Saldo trazido</span>
+                  <strong>{display(budget.carried)}</strong>
+                </div>
+              )}
+              {budget.available != null && (
+                <div>
+                  <span>Disponível</span>
+                  <strong>{display(budget.available)}</strong>
+                </div>
+              )}
+            </>
+          ) : (
+            <span className="period-budget-unavailable">Saldo trazido ainda não disponível</span>
+          )}
+        </div>
+      )}
+      <details className="period-budget-details">
+        <summary>
+          {variant === 'hero' ? (
+            <>
+              <span>Detalhes</span>
+              <ChevronDown size={15} aria-hidden="true" />
+            </>
+          ) : (
+            'Detalhes'
+          )}
+        </summary>
+        {variant === 'hero' && (
+          <div className="period-budget-head">
             {budget.carried != null && (
               <div>
                 <span>Saldo trazido</span>
@@ -40,13 +78,11 @@ export function PeriodBudget({
                 <strong>{display(budget.available)}</strong>
               </div>
             )}
-          </>
-        ) : (
-          <span className="period-budget-unavailable">Saldo trazido ainda não disponível</span>
+            {budget.carried == null && budget.available == null && (
+              <span className="period-budget-unavailable">Saldo trazido ainda não disponível</span>
+            )}
+          </div>
         )}
-      </div>
-      <details className="period-budget-details">
-        <summary>Detalhes</summary>
         <p className="field-help">
           Reservas ficam fora do disponível. Benefícios antecipados entram no mês configurado, sem
           duplicar o saldo trazido.

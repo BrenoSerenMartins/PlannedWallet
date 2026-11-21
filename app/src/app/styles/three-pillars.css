@@ -124,22 +124,30 @@
   display: flex;
   gap: 14px;
   overflow-x: auto;
-  padding: 4px 4px 12px;
+  padding: 4px max(8%, 24px) 12px;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
   overscroll-behavior-x: contain;
+  scroll-padding-inline: max(8%, 24px);
 }
 :root[data-ui='bento'] body .page-content .cards-page .credit-selector::-webkit-scrollbar {
   display: none;
 }
+:root[data-ui='bento'] body .page-content .cards-page .credit-card-frame {
+  position: relative;
+  flex: 0 0 min(84vw, 370px);
+  min-width: 280px;
+  aspect-ratio: 1.586 / 1;
+  scroll-snap-align: center;
+}
 :root[data-ui='bento'] body .page-content .cards-page .credit-selector-item,
 :root[data-ui='bento'] body .page-content .cards-page .credit-selector-item.selected {
   position: relative;
-  flex: 0 0 clamp(280px, 32vw, 370px);
-  min-width: 280px;
-  aspect-ratio: 1.586 / 1;
-  scroll-snap-align: start;
   display: flex;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  aspect-ratio: auto;
   flex-direction: column;
   justify-content: space-between;
   padding: 20px;
@@ -169,8 +177,8 @@
   flex-wrap: nowrap;
 }
 :root[data-ui='bento'] body .page-content .cards-page .credit-selector-item > span:first-child {
-  justify-content: flex-end;
-  padding-left: 48px;
+  justify-content: flex-start;
+  padding: 0 42px 0 48px;
 }
 :root[data-ui='bento'] body .page-content .cards-page .credit-selector-item > span:first-child svg {
   color: var(--gold-soft);
@@ -184,18 +192,77 @@
   font-variant-numeric: tabular-nums;
 }
 :root[data-ui='bento'] body .page-content .cards-page .credit-selector-item.selected::after {
-  content: 'Fatura e limite';
-  color: var(--text-secondary);
-  font-size: 11px;
-  letter-spacing: 0.04em;
+  display: none;
+}
+:root[data-ui='bento'] body .page-content .cards-page .credit-card-edit {
+  position: absolute;
+  z-index: 2;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  min-height: 34px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+  background: rgba(18, 18, 21, 0.72);
+  color: var(--gold-soft);
+}
+:root[data-ui='bento'] body .page-content .cards-page .credit-card-edit:disabled {
+  opacity: 0.5;
 }
 :root[data-ui='bento'] body .page-content .cards-page .card-detail {
   min-width: 0;
-  padding: 20px;
-  border: var(--border-subtle);
-  border-radius: var(--radius-bento);
-  background: var(--grad-card);
-  box-shadow: var(--shadow-soft);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+:root[data-ui='bento'] body .page-content .cards-page .cards-workspace,
+:root[data-ui='bento'] body .page-content .cards-page .card-directory-surface .cards-workspace {
+  padding: 0;
+}
+:root[data-ui='bento'] body .page-content .cards-page .card-directory-surface {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+:root[data-ui='bento'] body .page-content .cards-page .card-workspace-toolbar {
+  padding: 0 0 12px;
+}
+:root[data-ui='bento'] body .page-content .cards-page .selected-card-metadata {
+  margin: 4px 0 12px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+:root[data-ui='bento'] body .page-content .cards-page .card-bill-toolbar {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 14px;
+}
+:root[data-ui='bento'] body .page-content .cards-page .card-bill-toolbar .finance-month-navigation {
+  width: auto;
+  flex: 0 1 auto;
+  gap: 4px;
+}
+:root[data-ui='bento'] body .page-content .cards-page .card-bill-toolbar .period-picker > span {
+  display: none;
+}
+:root[data-ui='bento'] body .page-content .cards-page .card-bill-toolbar > .inline-actions {
+  flex-wrap: nowrap;
+  width: auto;
+  flex: 0 0 auto;
+  gap: 8px;
+}
+:root[data-ui='bento'] body .page-content .cards-page .card-bill-toolbar > .inline-actions .button {
+  white-space: nowrap;
 }
 :root[data-ui='bento'] body .page-content .cards-page .card-projection {
   display: grid;
@@ -236,19 +303,42 @@
   border-radius: var(--radius-pill);
   background: var(--bg-elevated);
 }
+:root[data-ui='bento'] body .page-content .card-limit-overview {
+  display: grid;
+  gap: 12px;
+  margin: 14px 0;
+  padding: 16px;
+  border: var(--border-subtle);
+  border-radius: var(--radius-bento);
+  background: var(--grad-card);
+  box-shadow: var(--shadow-soft);
+}
+:root[data-ui='bento'] body .page-content .card-limit-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+:root[data-ui='bento'] body .page-content .card-limit-heading strong {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
 :root[data-ui='bento'] body .page-content .card-limit-bar > span:first-child { background: var(--gold-primary); }
 :root[data-ui='bento'] body .page-content .card-limit-bar > span:nth-child(2) { background: rgba(243, 229, 171, 0.42); }
 :root[data-ui='bento'] body .page-content .card-limit-legend {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 8px 14px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
   margin-top: 10px;
   color: var(--text-secondary);
   font-size: 11px;
   font-variant-numeric: tabular-nums;
 }
-:root[data-ui='bento'] body .page-content .card-limit-legend span { display: inline-flex; align-items: center; gap: 6px; }
+:root[data-ui='bento'] body .page-content .card-limit-legend > span { display: flex; min-width: 0; align-items: start; gap: 5px; }
+:root[data-ui='bento'] body .page-content .card-limit-legend > span > span { display: grid; gap: 3px; min-width: 0; }
+:root[data-ui='bento'] body .page-content .card-limit-legend strong { color: var(--text-primary); font-size: 10px; font-weight: 600; white-space: nowrap; }
 :root[data-ui='bento'] body .page-content .card-limit-legend i { width: 7px; height: 7px; border-radius: 50%; background: var(--bg-elevated); }
 :root[data-ui='bento'] body .page-content .card-limit-legend i.current { background: var(--gold-primary); }
 :root[data-ui='bento'] body .page-content .card-limit-legend i.future { background: rgba(243, 229, 171, 0.65); }
@@ -272,36 +362,42 @@
   font-size: 11px;
 }
 :root[data-ui='bento'] body .page-content .card-hud-tiles article > strong {
-  font-size: 18px;
+  font-size: clamp(13px, 3.8vw, 16px);
+  overflow-wrap: anywhere;
   font-variant-numeric: tabular-nums;
 }
 :root[data-ui='bento'] body .page-content .card-projection-chart {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 8px;
+  display: flex;
+  gap: 10px;
   min-height: 150px;
+  overflow-x: auto;
+  padding: 2px 2px 8px;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
 }
 :root[data-ui='bento'] body .page-content .card-projection-month {
   display: grid;
-  grid-template-rows: 18px minmax(60px, 1fr) 18px;
+  flex: 0 0 76px;
+  grid-template-rows: 20px minmax(60px, 1fr) 18px;
   justify-items: center;
   align-items: end;
   gap: 6px;
-  min-width: 0;
-  padding: 0 2px;
+  min-width: 76px;
+  padding: 0 3px;
   border: 0;
   background: transparent;
   color: var(--text-secondary);
   font-size: 11px;
   cursor: pointer;
+  scroll-snap-align: center;
 }
 :root[data-ui='bento'] body .page-content .card-projection-month > strong {
-  max-width: 100%;
-  overflow: hidden;
+  max-width: none;
+  overflow: visible;
   color: var(--text-secondary);
-  font-size: 10px;
+  font-size: 9px;
   font-variant-numeric: tabular-nums;
-  text-overflow: ellipsis;
+  text-overflow: clip;
   white-space: nowrap;
 }
 :root[data-ui='bento'] body .page-content .card-projection-track {
@@ -324,6 +420,54 @@
 :root[data-ui='bento'] body .page-content .card-projection-month.selected > strong { color: var(--gold-soft); }
 :root[data-ui='bento'] body .page-content .card-projection-month.selected .card-projection-track i { background: var(--gold-primary); }
 :root[data-ui='bento'] body .page-content .card-projection-month:focus-visible { outline: 2px solid var(--gold-primary); outline-offset: 3px; }
+:root[data-ui='bento'] body .page-content .card-entries-heading { margin: 16px 0 8px; font-size: 13px; font-weight: 600; }
+:root[data-ui='bento'] body .page-content .card-empty-line { margin: 12px 0; color: var(--text-secondary); font-size: 13px; }
+:root[data-ui='bento'] body .page-content .card-recurring-section {
+  padding: 16px;
+  border: var(--border-subtle);
+  border-radius: var(--radius-bento);
+  background: var(--grad-card);
+  box-shadow: var(--shadow-soft);
+}
+:root[data-ui='bento'] body .page-content .card-recurring-section .section-heading { padding: 0 0 10px; }
+:root[data-ui='bento'] body .page-content .card-recurring-section h2 { margin: 0; font-size: 14px; }
+:root[data-ui='bento'] body .page-content .card-recurring-section .goal-account { padding-block: 12px; }
+:root[data-ui='bento'] body .page-content .card-entry-list > li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+  border: 0;
+}
+:root[data-ui='bento'] body .page-content .card-entry-list > li > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+:root[data-ui='bento'] body .page-content .card-entry-list > li > div:first-child > svg {
+  flex: 0 0 auto;
+  color: var(--gold-primary);
+}
+:root[data-ui='bento'] body .page-content .card-entry-list > li > div:first-child > strong {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+:root[data-ui='bento'] body .page-content .card-entry-list > li > div:first-child > span {
+  flex: 0 0 auto;
+  padding: 3px 7px;
+  border-radius: var(--radius-pill);
+  background: var(--gold-muted);
+  color: var(--gold-soft);
+  font-size: 10px;
+  white-space: nowrap;
+}
+:root[data-ui='bento'] body .page-content .card-entry-list > li > strong {
+  white-space: nowrap;
+}
 
 @media (max-width: 760px) {
   :root[data-ui='bento'] body .page-content { padding-bottom: calc(112px + env(safe-area-inset-bottom)); }
@@ -333,7 +477,13 @@
   :root[data-ui='bento'] body .page-content .future-page-heading { display: grid; gap: 4px; }
   :root[data-ui='bento'] body .page-content .card-projection { padding: 14px; }
   :root[data-ui='bento'] body .page-content .card-hud-tiles article { padding: 12px; }
-  :root[data-ui='bento'] body .page-content .card-projection-chart { gap: 4px; }
+  :root[data-ui='bento'] body .page-content .cards-page .credit-selector { padding-inline: 8%; }
+  :root[data-ui='bento'] body .page-content .cards-page .credit-card-frame { flex-basis: 84vw; min-width: 0; }
+  :root[data-ui='bento'] body .page-content .cards-page .card-bill-toolbar { align-items: center; flex-wrap: wrap; }
+  :root[data-ui='bento'] body .page-content .cards-page .card-bill-toolbar > .inline-actions { margin-left: auto; }
+  :root[data-ui='bento'] body .page-content .cards-page .finance-month-navigation > .icon-button { display: none; }
+  :root[data-ui='bento'] body .page-content .cards-page .card-bill-toolbar > .inline-actions .button { padding-inline: 9px; font-size: 11px; }
+  :root[data-ui='bento'] body .page-content .card-limit-overview { padding: 12px; }
   :root[data-ui='bento'] body .page-content .card-projection-month > strong { font-size: 9px; }
   :root[data-ui='bento'] body .bottom-nav {
     left: 12px;

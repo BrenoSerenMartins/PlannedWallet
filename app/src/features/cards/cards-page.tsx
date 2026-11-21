@@ -3,7 +3,7 @@ import { IconAction } from '../../shared/ui/icon-action';
 import { MonthPicker } from '../../shared/ui/controls/month-picker';
 import { HelpTip, Tooltip } from '../../shared/ui/tooltip';
 import { useNotifications } from '../../shared/feedback/notification-provider';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -23,7 +23,7 @@ import type {
   CardPayment,
   CardPurchase,
 } from '../../shared/api/resources';
-import { Button, EmptyState, ErrorState, Loading, Modal } from '../../shared/ui/primitives';
+import { Button, ErrorState, Loading, Modal } from '../../shared/ui/primitives';
 import {
   FinanceForm,
   useFinanceChoices,
@@ -58,6 +58,8 @@ export function CardsPage() {
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const { visible, toggle: toggleVisibility } = useFinancialVisibility();
   const [showArchived, setShowArchived] = useState(false);
+  const selectorRef = useRef<HTMLDivElement>(null);
+  const swipeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { success: setMessage } = useNotifications();
   const value = (n: number) => (visible ? money(n) : '••••••');
   const all = query.data?.cards ?? [];
@@ -71,11 +73,26 @@ export function CardsPage() {
     next.delete('action');
     setParams(next, { replace: true });
   }, [params, card, bill, setParams]);
-  const update = (changes: Record<string, string>) => {
+  const update = (changes: Record<string, string>, replace = false) => {
     const next = new URLSearchParams(params);
     for (const [key, val] of Object.entries(changes)) next.set(key, val);
-    setParams(next);
+    setParams(next, { replace });
   };
+  useEffect(() => {
+    const selector = selectorRef.current;
+    if (!selector || !card) return;
+    const selected = Array.from(selector.querySelectorAll<HTMLButtonElement>('[data-card-id]'))
+      .find((item) => item.dataset.cardId === card.id);
+    if (selected) {
+      selector.scrollTo({
+        left: selector.scrollLeft + selected.getBoundingClientRect().left - selector.getBoundingClientRect().left - (selector.clientWidth - selected.offsetWidth) / 2,
+        behavior: 'smooth',
+      });
+    }
+  }, [card?.id, cards.length]);
+  useEffect(() => () => {
+    if (swipeTimer.current) clearTimeout(swipeTimer.current);
+  }, []);
   const saved = (newMonth?: string) => {
     setDialog(null);
     setMessage('Registro salvo. Faturas, relatórios e previsão foram atualizados.');
@@ -147,66 +164,88 @@ export function CardsPage() {
               </div>
             ) : (
               <div className="cards-workspace">
-                <div className="credit-selector" role="group" aria-label="Escolher cartão">
+                <div
+                  ref={selectorRef}
+                  className="credit-selector no-scrollbar"
+                  role="group"
+                  aria-label="Escolher cartão"
+                  onScroll={(event) => {
+                    if (swipeTimer.current) clearTimeout(swipeTimer.current);
+                    swipeTimer.current = setTimeout(() => {
+                      const selector = selectorRef.current;
+                      if (!selector) return;
+                      const center = selector.getBoundingClientRect().left + selector.clientWidth / 2;
+                      const nearest = Array.from(
+                        selector.querySelectorAll<HTMLButtonElement>('[data-card-id]'),
+                      ).reduce<HTMLButtonElement | null>((closest, item) => {
+                        if (!closest) return item;
+                        const distance = Math.abs(item.getBoundingClientRect().left + item.offsetWidth / 2 - center);
+                        const closestDistance = Math.abs(closest.getBoundingClientRect().left + closest.offsetWidth / 2 - center);
+                        return distance < closestDistance ? item : closest;
+                      }, null);
+                      const id = nearest?.dataset.cardId;
+                      if (id && id !== card?.id) update({ card: id }, true);
+                    }, 100);
+                  }}
+                >
                   {cards.map((c) => (
-                    <button
-                      key={c.id}
-                      type="button"
-                      className={`panel credit-selector-item ${c.id === card?.id ? 'selected' : ''}`}
-                      aria-pressed={c.id === card?.id}
-                      onClick={() => update({ card: c.id })}
-                    >
-                      <span>
-                        <CreditIcon size={20} />
-                        <strong>{c.name}</strong>
-                        {c.archived && <small>Arquivado</small>}
-                      </span>
-                      <span>
-                        Dívida total<strong>{value(c.debt)}</strong>
-                      </span>
-                      {c.limit > 0 ? (
-                        <>
-                          <span className="credit-limit">
-                            <span
-                              style={{
-                                width: visible
-                                  ? `${Math.min(100, (c.debt / c.limit) * 100)}%`
-                                  : '0%',
-                              }}
-                            />
-                          </span>
-                          <small>
-                            Disponível {value(c.availableLimit)} de {value(c.limit)}
-                          </small>
-                        </>
-                      ) : (
-                        <small>Limite não informado</small>
+                    <div className="credit-card-frame" key={c.id}>
+                      <button
+                        type="button"
+                        className={`panel credit-selector-item ${c.id === card?.id ? 'selected' : ''}`}
+                        data-card-id={c.id}
+                        aria-pressed={c.id === card?.id}
+                        onClick={() => update({ card: c.id })}
+                      >
+                        <span>
+                          <CreditIcon size={20} />
+                          <strong>{c.name}</strong>
+                          {c.archived && <small>Arquivado</small>}
+                        </span>
+                        <span>
+                          Fatura / dívida atual<strong>{value(c.debt)}</strong>
+                        </span>
+                        {c.limit > 0 ? (
+                          <>
+                            <span className="credit-limit">
+                              <span
+                                style={{
+                                  width: visible
+                                    ? `${Math.min(100, (c.debt / c.limit) * 100)}%`
+                                    : '0%',
+                                }}
+                              />
+                            </span>
+                            <small>
+                              Disponível {value(c.availableLimit)} de {value(c.limit)}
+                            </small>
+                          </>
+                        ) : (
+                          <small>Limite não informado</small>
+                        )}
+                        {c.credit > 0 && <small>Crédito no cartão {value(c.credit)}</small>}
+                      </button>
+                      {c.id === card?.id && (
+                        <Tooltip text="Editar cartão">
+                          <button
+                            type="button"
+                            className="credit-card-edit"
+                            aria-label="Editar cartão"
+                            onClick={() => setDialog({ kind: 'edit' })}
+                            disabled={!navigator.onLine}
+                          >
+                            <Pencil size={16} />
+                          </button>
+                        </Tooltip>
                       )}
-                      {c.credit > 0 && <small>Crédito no cartão {value(c.credit)}</small>}
-                    </button>
+                    </div>
                   ))}
                 </div>
                 {card && (
-                  <section className="panel card-detail">
-                    <div className="section-heading">
-                      <div>
-                        <h2>{card.name}</h2>
-                        <p>
-                          Fecha dia {card.closingDay} · vence dia {card.dueDay}
-                          {' · '}
-                          <Link to="/transactions?new=1">Pagar pela transação da conta</Link>
-                        </p>
-                      </div>
-                      <Tooltip text="Editar cartão">
-                        <button
-                          className="icon-button"
-                          aria-label="Editar cartão"
-                          onClick={() => setDialog({ kind: 'edit' })}
-                        >
-                          <Pencil size={18} />
-                        </button>
-                      </Tooltip>
-                    </div>
+                  <section className="card-detail">
+                    <p className="selected-card-metadata">
+                      Fecha dia {card.closingDay} <span aria-hidden="true">·</span> vence dia {card.dueDay}
+                    </p>
                     <div className="card-bill-toolbar">
                       <div className="finance-month-navigation">
                         <Tooltip text="Fatura anterior">
@@ -243,31 +282,21 @@ export function CardsPage() {
                       </div>
                       <div className="inline-actions">
                         <Button
-                          className="secondary compact"
+                          className="compact"
                           disabled={card.archived || !navigator.onLine}
                           onClick={() => setDialog({ kind: 'purchase' })}
                         >
-                          Registrar compra
+                          <Plus size={15} /> Compra
                         </Button>
-                        <button
-                          className="text-button"
+                        <Button
+                          className="secondary compact"
                           disabled={card.archived || !navigator.onLine}
                           onClick={() => setDialog({ kind: 'opening' })}
                         >
                           Dívida anterior
-                        </button>
+                        </Button>
                       </div>
                     </div>
-                    <section className="card-projection bento-soft-card" aria-label="Projeção de faturas">
-                      <div className="card-projection-heading">
-                        <div>
-                          <h3>Projeção de faturas</h3>
-                          <p>Valores previstos pelas compras já lançadas</p>
-                        </div>
-                        {card.limit > 0 && (
-                          <span className="card-limit-caption">Limite {value(card.limit)}</span>
-                        )}
-                      </div>
                       {card.limit > 0 && (() => {
                         const current = Math.max(0, bill?.remaining ?? 0);
                         const future = card.bills
@@ -278,14 +307,18 @@ export function CardsPage() {
                         const futureWidth = Math.min(100 - currentWidth, (future / total) * 100);
                         return (
                           <div className="card-limit-overview">
+                            <div className="card-limit-heading">
+                              <span>Limite comprometido</span>
+                              <strong>{value(card.limit)}</strong>
+                            </div>
                             <div className="card-limit-bar" role="img" aria-label={`Fatura do mês ${value(current)}, faturas futuras ${value(future)}, disponível ${value(card.availableLimit)}`}>
                               <span style={{ width: `${currentWidth}%` }} />
                               <span style={{ width: `${futureWidth}%` }} />
                             </div>
                             <div className="card-limit-legend">
-                              <span><i className="current" /> Mês: {value(current)}</span>
-                              <span><i className="future" /> Futuras: {value(future)}</span>
-                              <span><i className="available" /> Disponível: {value(card.availableLimit)}</span>
+                              <span><i className="current" /><span>Mês<strong>{value(current)}</strong></span></span>
+                              <span><i className="future" /><span>Futuras<strong>{value(future)}</strong></span></span>
+                              <span><i className="available" /><span>Disponível<strong>{value(card.availableLimit)}</strong></span></span>
                             </div>
                           </div>
                         );
@@ -307,20 +340,26 @@ export function CardsPage() {
                         return (
                           <div className="card-hud-tiles">
                             <article>
-                              <span>Melhor dia para comprar</span>
-                              <strong>{nextDay ? nextDay.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : 'Após o fechamento'}</strong>
-                              <small>Dia seguinte ao fechamento da fatura</small>
+                              <span>Melhor dia</span>
+                              <strong>{nextDay ? `Dia ${nextDay.getDate()}` : 'Pós-fechamento'}</strong>
                             </article>
                             <article>
                               <span>Média mensal · 6 meses</span>
                               <strong>{value(average)}</strong>
-                              <small>{percent === null ? 'Limite não informado' : `${percent}% do limite comprometido`}</small>
+                              <small>{percent === null ? 'Sem limite' : `${percent}% usado`}</small>
                             </article>
                           </div>
                         );
                       })()}
+                    <section className="card-projection" aria-label="Projeção de faturas">
+                      <div className="card-projection-heading">
+                        <h3>Projeção de faturas</h3>
+                        {card.limit > 0 && (
+                          <span className="card-limit-caption">Limite {value(card.limit)}</span>
+                        )}
+                      </div>
                       {(() => {
-                        const projection = Array.from({ length: 6 }, (_, index) => {
+                        const projection = Array.from({ length: 8 }, (_, index) => {
                           const projectionMonth = shiftMonth(month, index);
                           return card.bills.find((item) => item.month === projectionMonth) ?? {
                             month: projectionMonth,
@@ -329,7 +368,7 @@ export function CardsPage() {
                         });
                         const max = Math.max(0, ...projection.map((item) => item.total));
                         return projection.length ? (
-                          <div className="card-projection-chart" aria-label="Faturas dos próximos meses">
+                          <div className="card-projection-chart no-scrollbar" aria-label="Faturas dos próximos meses">
                             {projection.map((item) => {
                               const active = item.month === month;
                               const height = max > 0 ? Math.max(8, (item.total / max) * 100) : 8;
@@ -350,7 +389,7 @@ export function CardsPage() {
                             })}
                           </div>
                         ) : (
-                          <p className="card-projection-empty">As próximas faturas aparecem aqui quando houver compras parceladas lançadas.</p>
+                          <p className="card-projection-empty">Sem faturas futuras</p>
                         );
                       })()}
                     </section>
@@ -400,11 +439,15 @@ export function CardsPage() {
                             </Button>
                           )}
                         </div>
+                        <h3 className="card-entries-heading">Lançamentos na fatura · {bill.entries.length}</h3>
                         <ul className="card-entry-list">
                           {bill.entries.map((entry) => (
                             <li key={entry.id} className={!entry.active ? 'inactive' : ''}>
                               <div>
-                                <strong>{entry.description}</strong>
+                                <CreditIcon size={15} aria-hidden="true" />
+                                <strong>
+                                  {card.purchases.find((item) => item.id === entry.purchaseId)?.description ?? entry.description}
+                                </strong>
                                 <span>
                                   {!entry.active
                                     ? 'Desfeito'
@@ -488,20 +531,8 @@ export function CardsPage() {
                         )}
                       </>
                     ) : (
-                      <EmptyState
-                        compact
-                        icon={<CreditIcon size={26} />}
-                        title="Nenhuma compra nesta fatura"
-                      >
-                        As parcelas aparecerão aqui conforme o mês de vencimento.
-                      </EmptyState>
+                        <p className="card-empty-line">Nenhuma compra neste vencimento</p>
                     )}
-                    <p className="field-help">
-                      Os pagamentos entram na previsão de saldo automaticamente. Não cadastre um
-                      compromisso recorrente para a mesma fatura. Créditos excedentes abatem as
-                      faturas mais antigas; confira o valor informado pelo emissor. Encargos devem
-                      ser registrados conforme o banco.
-                    </p>
                     {!!card.purchases.length && (
                       <details className="finance-disclosure">
                         <summary>Compras e parcelamentos · {card.purchases.length}</summary>

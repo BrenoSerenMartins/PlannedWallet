@@ -9,6 +9,7 @@ import { FinanceForm, useFinanceChoices } from '../../../shared/ui/finance-forms
 import { CategorySelect } from '../../../shared/ui/category-select';
 import { Select } from '../../../shared/ui/controls/select';
 import { MonthPicker } from '../../../shared/ui/controls/month-picker';
+import { Plus } from 'lucide-react';
 import { money, parseMoney, dateToday } from '../../../shared/formatting/money';
 type Rule = components['schemas']['CardRecurringResourceDto'];
 type Card = CardsSummary['cards'][number];
@@ -22,15 +23,11 @@ export function CardRecurring({ card, month }: { card: Card; month: string }) {
   return (
     <section className="card-recurring-section">
       <div className="section-heading">
-        <h2>Assinaturas e cobranças recorrentes</h2>
-        <Button className="secondary" onClick={() => setEdit('new')}>
-          Nova assinatura
+        <h2>Assinaturas e recorrentes</h2>
+        <Button className="secondary compact" onClick={() => setEdit('new')}>
+          <Plus size={16} /> Nova
         </Button>
       </div>
-      <p className="field-help">
-        Entram na previsão das próximas faturas. Confirme quando a cobrança acontecer ou vincule uma
-        compra já registrada.
-      </p>
       {query.isPending ? (
         <Loading />
       ) : query.isError ? (
@@ -223,10 +220,6 @@ function ConfirmForm({
           ))}
         </Select>
       </label>
-      <p className="field-help">
-        Se a compra já existe, selecione-a para evitar duplicação. A previsão é substituída pela
-        compra confirmada.
-      </p>
     </FinanceForm>
   );
 }

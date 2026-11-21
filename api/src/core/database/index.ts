@@ -60,6 +60,11 @@ export class DatabaseService implements OnModuleDestroy {
     if (!scope) throw new Error('A verified user transaction is required.');
     return scope.userId;
   }
+  get workspaceId(): string {
+    const scope = this.scope.getStore();
+    if (!scope?.workspaceId) throw new BadRequestException('Selecione um espaço financeiro.');
+    return scope.workspaceId;
+  }
   async query<T extends QueryResultRow = QueryResultRow>(
     sql: string,
     values: unknown[] = [],

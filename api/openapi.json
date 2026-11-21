@@ -282,6 +282,40 @@
         "tags": ["Goals"]
       }
     },
+    "/v1/cards/{id}/invoices/import": {
+      "post": {
+        "operationId": "CardsController_importInvoice",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": ["Cards"]
+      }
+    },
+    "/v1/cards/invoices/{importId}": {
+      "get": {
+        "operationId": "CardsController_getInvoiceImport",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": ["Cards"]
+      }
+    },
     "/v1/cards": {
       "get": {
         "operationId": "CardsController_summary",

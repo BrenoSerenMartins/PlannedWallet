@@ -9,6 +9,7 @@ import { HealthModule } from './modules/health/index.js';
 import { IntegrationModule } from './composition/integration.module.js';
 import { ImportsModule } from './modules/imports/index.js';
 import { DashboardModule } from './modules/dashboard/index.js';
+import { FinancialCryptoModule } from './core/crypto/index.js';
 @Module({
   imports: [
     AlertsModule,
@@ -18,6 +19,7 @@ import { DashboardModule } from './modules/dashboard/index.js';
     IntegrationModule,
     ImportsModule,
     DashboardModule,
+    FinancialCryptoModule,
     DataExportModule,
     ProfilesModule,
     WorkspacesModule,

@@ -470,3 +470,38 @@ body .card-directory-surface .cards-workspace {
   min-width: 0;
   overflow-wrap: anywhere;
 }
+.card-invoice-import-preview {
+  display: grid;
+  gap: 8px;
+  max-height: 320px;
+  overflow: auto;
+  padding: 0;
+  margin: 14px 0 0;
+  list-style: none;
+}
+.card-invoice-import-preview li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: var(--surface-raised);
+}
+.card-invoice-import-preview li > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.card-invoice-import-preview small {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+@media (max-width: 480px) {
+  .card-invoice-import-preview li {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .card-invoice-import-preview li > small:last-child {
+    grid-column: 1 / -1;
+  }
+}

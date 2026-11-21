@@ -16,5 +16,7 @@ services:
         sync: false
       - key: RUNTIME_DATABASE_URL
         sync: false
+      - key: FINANCIAL_DATA_KEK_BASE64
+        generateValue: true
       - key: DOCS_ENABLED
         value: 'false'

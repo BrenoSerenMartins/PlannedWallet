@@ -72,18 +72,21 @@ cp .env.example .env.local
 
 Se você já possui `.env.local`, preserve esse arquivo. Preencha os valores conforme o seu projeto Supabase:
 
-| Variável                   | Uso                                                                                    |
-| -------------------------- | -------------------------------------------------------------------------------------- |
-| `SUPABASE_URL`             | URL pública do projeto                                                                 |
-| `SUPABASE_PUBLISHABLE_KEY` | Chave pública usada na autenticação                                                    |
-| `SUPABASE_PROJECT_REF`     | Identificador do projeto                                                               |
-| `DATABASE_URL`             | Conexão administrativa PostgreSQL completa, incluindo a senha, para setup e migrations |
-| `SUPABASE_DB_PASSWORD`     | Senha administrativa usada quando existe uma conexão de pooler salva pelo Supabase CLI |
-| `RUNTIME_DATABASE_URL`     | Conexão restrita da API, preenchida pelo setup; preserve-a após a primeira execução    |
-| `DATABASE_CA_FILE`         | Opcional: caminho para uma CA confiável diferente da incluída no projeto               |
-| `PORT`                     | Porta da API; padrão `8083`                                                            |
+| Variável                    | Uso                                                                                                                          |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `SUPABASE_URL`              | URL pública do projeto                                                                                                       |
+| `SUPABASE_PUBLISHABLE_KEY`  | Chave pública usada na autenticação                                                                                          |
+| `SUPABASE_PROJECT_REF`      | Identificador do projeto                                                                                                     |
+| `DATABASE_URL`              | Conexão administrativa PostgreSQL completa, incluindo a senha, para setup e migrations                                       |
+| `SUPABASE_DB_PASSWORD`      | Senha administrativa usada quando existe uma conexão de pooler salva pelo Supabase CLI                                       |
+| `RUNTIME_DATABASE_URL`      | Conexão restrita da API, preenchida pelo setup; preserve-a após a primeira execução                                          |
+| `FINANCIAL_DATA_KEK_BASE64` | Chave de 32 bytes em Base64 para proteger as chaves pessoais de dados financeiros; mantenha somente nos segredos do servidor |
+| `DATABASE_CA_FILE`          | Opcional: caminho para uma CA confiável diferente da incluída no projeto                                                     |
+| `PORT`                      | Porta da API; padrão `8083`                                                                                                  |
 
 As credenciais administrativas ficam no ambiente de setup. O navegador recebe apenas a URL e a chave pública de autenticação.
+
+Para habilitar a revisão criptografada de faturas, gere `FINANCIAL_DATA_KEK_BASE64` com `openssl rand -base64 32` e configure o valor como segredo da API local e do Render. A API usa essa chave para proteger uma chave de dados exclusiva por titular; mantenha uma cópia segura, pois perder a chave mestra torna os dados cifrados ilegíveis. Essa camada protege os dados importados contra leitura direta do banco; quem controla o processo da API e seu segredo ainda pode descriptografá-los. Os registros financeiros existentes ainda usam o armazenamento atual e não foram migrados por esta etapa.
 
 ### 3. Preparar o banco
 

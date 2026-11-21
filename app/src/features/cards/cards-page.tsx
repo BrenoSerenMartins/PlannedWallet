@@ -37,7 +37,7 @@ import { CardPaymentForm } from './components/card-payment-form';
 import { CardRecurring } from './components/card-recurring';
 import './cards.css';
 type Dialog =
-  | { kind: 'new' | 'edit' | 'purchase' | 'opening' | 'pay' }
+  | { kind: 'new' | 'edit' | 'purchase' | 'opening' | 'pay' | 'invoice' }
   | { kind: 'refund' | 'undoRefund' | 'undoOpening'; entry: CardEntry }
   | { kind: 'undoPayment'; payment: CardPayment }
   | { kind: 'category' | 'cancelPurchase'; purchase: CardPurchase };
@@ -264,6 +264,13 @@ export function CardsPage() {
                           onClick={() => setDialog({ kind: 'opening' })}
                         >
                           Dívida anterior
+                        </Button>
+                        <Button
+                          className="secondary compact"
+                          disabled={card.archived || !navigator.onLine}
+                          onClick={() => setDialog({ kind: 'invoice' })}
+                        >
+                          Importar fatura
                         </Button>
                       </div>
                     </div>
@@ -647,15 +654,17 @@ export function CardsPage() {
               ? 'Editar cartão'
               : dialog?.kind === 'purchase'
                 ? 'Compra no cartão'
-                : dialog?.kind === 'pay'
-                  ? 'Pagamento da fatura'
-                  : dialog?.kind === 'opening'
-                    ? 'Dívida anterior'
-                    : dialog?.kind === 'refund'
-                      ? 'Estorno no cartão'
-                      : dialog?.kind === 'category'
-                        ? 'Categoria da compra'
-                        : 'Revisar correção'
+                : dialog?.kind === 'invoice'
+                  ? 'Importar fatura'
+                  : dialog?.kind === 'pay'
+                    ? 'Pagamento da fatura'
+                    : dialog?.kind === 'opening'
+                      ? 'Dívida anterior'
+                      : dialog?.kind === 'refund'
+                        ? 'Estorno no cartão'
+                        : dialog?.kind === 'category'
+                          ? 'Categoria da compra'
+                          : 'Revisar correção'
         }
         description="Confira os valores antes de confirmar."
       >
@@ -665,6 +674,9 @@ export function CardsPage() {
         )}
         {dialog?.kind === 'purchase' && card && (
           <CardPurchaseForm card={card} write={write} onSaved={saved} />
+        )}
+        {dialog?.kind === 'invoice' && card && (
+          <CardInvoiceImportForm cardId={card.id} month={month} />
         )}
         {dialog?.kind === 'opening' && card && (
           <CardOpeningForm card={card} month={month} write={write} onSaved={() => saved()} />
@@ -739,6 +751,132 @@ export function CardsPage() {
           )}
       </Modal>
     </div>
+  );
+}
+
+type InvoiceImportPreview = {
+  id: string;
+  status: string;
+  parsed: {
+    total: number;
+    billMonth: string;
+    warnings: string[];
+    lines: Array<{
+      date: string;
+      description: string;
+      amount: number;
+      installmentNumber: number | null;
+      installmentCount: number | null;
+    }>;
+  };
+  reconciliation: Array<{
+    lineIndex: number;
+    purchaseId: string | null;
+    confidence: 'exact' | 'ambiguous' | 'unmatched';
+  }>;
+};
+
+function CardInvoiceImportForm({ cardId, month }: { cardId: string; month: string }) {
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<InvoiceImportPreview | null>(null);
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  return (
+    <form
+      className="finance-form"
+      onSubmit={async (event) => {
+        event.preventDefault();
+        if (!file) return setError('Selecione a fatura em PDF ou CSV.');
+        const form = new FormData();
+        form.set('billMonth', month);
+        form.set('file', file);
+        setBusy(true);
+        setError('');
+        try {
+          setPreview(
+            await request<InvoiceImportPreview>(`/cards/${cardId}/invoices/import`, {
+              method: 'POST',
+              body: form,
+            }),
+          );
+        } catch (cause) {
+          setError(cause instanceof Error ? cause.message : 'Não foi possível ler a fatura.');
+        } finally {
+          setBusy(false);
+        }
+      }}
+    >
+      {!preview ? (
+        <>
+          <label>
+            Fatura do período {monthLabel(month)}
+            <input
+              type="file"
+              accept=".pdf,.csv,application/pdf,text/csv"
+              onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+            />
+          </label>
+          <p className="field-help">
+            A prévia é protegida por criptografia e não altera compras nem parcelas existentes.
+          </p>
+          {error && (
+            <p role="alert" className="field-error">
+              {error}
+            </p>
+          )}
+          <Button type="submit" disabled={busy || !file}>
+            {busy ? 'Lendo fatura…' : 'Ler fatura'}
+          </Button>
+        </>
+      ) : (
+        <section aria-label="Prévia da fatura importada">
+          <p>
+            <strong>{preview.parsed.lines.length} lançamentos reconhecidos</strong>
+          </p>
+          <p>
+            Total lido · <strong className="tabular-nums">{money(preview.parsed.total)}</strong>
+          </p>
+          <p className="field-help">
+            A fatura foi salva como revisão criptografada. Nenhum lançamento foi confirmado ou
+            alterado.
+          </p>
+          {preview.parsed.warnings.map((warning) => (
+            <p className="field-help" key={warning}>
+              {warning}
+            </p>
+          ))}
+          <ul className="card-invoice-import-preview">
+            {preview.parsed.lines.slice(0, 20).map((line, index) => {
+              const match = preview.reconciliation[index];
+              return (
+                <li key={`${line.date}-${index}`}>
+                  <span>
+                    {line.description}
+                    <small>
+                      {shortDate(line.date)}
+                      {line.installmentNumber
+                        ? ` · ${line.installmentNumber}/${line.installmentCount}`
+                        : ''}
+                    </small>
+                  </span>
+                  <strong className="tabular-nums">{money(line.amount)}</strong>
+                  <small>
+                    {match?.confidence === 'exact'
+                      ? 'Encontrado'
+                      : match?.confidence === 'ambiguous'
+                        ? 'Revisar'
+                        : 'Novo'}
+                  </small>
+                </li>
+              );
+            })}
+          </ul>
+          {preview.parsed.lines.length > 20 && (
+            <p className="field-help">Mostrando 20 de {preview.parsed.lines.length} lançamentos.</p>
+          )}
+        </section>
+      )}
+    </form>
   );
 }
 function PurchaseCategory({

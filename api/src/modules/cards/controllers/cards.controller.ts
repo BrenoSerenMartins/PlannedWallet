@@ -11,11 +11,16 @@ import {
   Query,
   Req,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  UnprocessableEntityException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBearerAuth,
   ApiBody,
   ApiCreatedResponse,
+  ApiConsumes,
   ApiOkResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -24,6 +29,7 @@ import { DatabaseService } from '../../../core/database/index.js';
 import { validateInput } from '../../../core/http/index.js';
 import { requireUuid } from '../../../core/rest/index.js';
 import { CardsService } from '../services/cards.service.js';
+import { CardInvoiceImportsService } from '../services/card-invoice-imports.service.js';
 import {
   CardRecurringDto,
   ConfirmCardRecurringDto,
@@ -51,7 +57,28 @@ export class CardsController {
   constructor(
     @Inject(DatabaseService) private readonly db: DatabaseService,
     @Inject(CardsService) private readonly cards: CardsService,
+    @Inject(CardInvoiceImportsService) private readonly invoiceImports: CardInvoiceImportsService,
   ) {}
+  @Post(':id/invoices/import')
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024, files: 1, fields: 1 } }),
+  )
+  async importInvoice(
+    @Req() r: AuthenticatedRequest,
+    @Param('id') id: string,
+    @Body('billMonth') billMonth: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) throw new UnprocessableEntityException('Selecione uma fatura em PDF ou CSV.');
+    return this.db.forUser(r.identity.id, () =>
+      this.invoiceImports.import(requireUuid(id), billMonth, file),
+    );
+  }
+  @Get('invoices/:importId')
+  getInvoiceImport(@Req() r: AuthenticatedRequest, @Param('importId') id: string) {
+    return this.db.forUser(r.identity.id, () => this.invoiceImports.get(requireUuid(id)), true);
+  }
   @Get() @ApiOkResponse({ type: CardsSummaryDto }) summary(
     @Req() r: AuthenticatedRequest,
     @Query('month') month?: string,

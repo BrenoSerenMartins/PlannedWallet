@@ -1,3 +1,4 @@
+import { PageHeader } from '../../shared/ui/page-header';
 import { SearchField } from '../../shared/ui/controls/search-field';
 import { accountOptionIcons } from '../../shared/branding/account-icons';
 import { ExportMovements } from './components/export-movements';
@@ -201,8 +202,16 @@ export function TransactionsPage() {
   };
   return (
     <div className="page-enter transactions-page">
-      <h1 className="sr-only">{accountName ?? 'Movimentações'}</h1>
-      {accountName && <p className="movement-account-context">{accountName}</p>}
+      {accountName ? (
+        <header className="movement-account-heading">
+          <Link className="text-button" to="/accounts">
+            ← Contas
+          </Link>
+          <h1>{accountName}</h1>
+        </header>
+      ) : (
+        <PageHeader route title="Movimentações" />
+      )}
       {requestedTransaction.isError && <ErrorState error={requestedTransaction.error} />}
       <section className="movements-workbench" aria-label="Lista de movimentações">
         <div className="movement-toolbar">
@@ -267,6 +276,7 @@ export function TransactionsPage() {
           open={filtersOpen}
           onOpenChange={setFiltersOpen}
           title="Filtros avançados"
+          description="Refine os critérios para filtrar suas movimentações."
         >
           <div className="movement-filter-form">
             <div className="movement-period">

@@ -1,3 +1,4 @@
+import { Button } from '../../../shared/ui/primitives';
 import { Select } from '../../../shared/ui/controls/select';
 import {
   artworkIssuerLogos,
@@ -28,10 +29,12 @@ export function CardForm({
   card,
   write,
   onSaved,
+  onDelete,
 }: {
   card?: CreditCard;
   write: Writer;
   onSaved: () => void;
+  onDelete?: () => void;
 }) {
   const choices = useFinanceChoices();
   const [manualArtwork, setArtwork] = useState<CardArtworkId | '' | undefined>(
@@ -166,6 +169,11 @@ export function CardForm({
             : 'Depois de cadastrar, registre compras ou uma dívida anterior.'}{' '}
           O limite é informativo.
         </p>
+        {onDelete && (
+          <Button type="button" className="destructive" onClick={onDelete}>
+            Excluir cartão
+          </Button>
+        )}
       </FinanceForm>
     </FinanceChoices>
   );

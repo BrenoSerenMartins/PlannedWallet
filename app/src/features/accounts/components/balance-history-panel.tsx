@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { Account, BalanceHistory } from '../../../shared/api/resources';
 import { request } from '../../../shared/api/client';
 import { money } from '../../../shared/formatting/money';
-import { Button, ErrorState, Loading } from '../../../shared/ui/primitives';
+import { EmptyState, Button, ErrorState, Loading } from '../../../shared/ui/primitives';
 const labels: Record<string, string> = {
   manual: 'Conferência manual',
   statement: 'Base identificada no extrato',
@@ -53,7 +53,7 @@ export function BalanceHistoryPanel({
         As correções ajustam o saldo base. Elas ficam neste histórico, separadas de receitas,
         despesas e transferências.
       </p>
-      {!history.data.length && <p>Nenhuma alteração do saldo base registrada.</p>}
+      {!history.data.length && <EmptyState title="Nenhuma alteração no saldo base" compact />}
       {history.data.map((event) => (
         <article className="panel" key={event.id}>
           <strong>{labels[event.operation] ?? event.operation}</strong>

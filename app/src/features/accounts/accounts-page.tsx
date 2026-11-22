@@ -1,3 +1,5 @@
+import { PageHeader } from '../../shared/ui/page-header';
+import { SearchField } from '../../shared/ui/controls/search-field';
 import { IconAction } from '../../shared/ui/icon-action';
 import { Landmark as EmptyStateIcon } from 'lucide-react';
 import { useNotifications } from '../../shared/feedback/notification-provider';
@@ -56,6 +58,7 @@ export function AccountsPage() {
     }
   }
   const [scope, setScope] = useState('all');
+  const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
   const [adjusting, setAdjusting] = useState<Account>();
   const [historyAccount, setHistoryAccount] = useState<Account>();
@@ -66,17 +69,24 @@ export function AccountsPage() {
   });
   const visibleAccounts = (accounts.data ?? []).filter(
     (a) =>
-      scope === 'all' ||
-      (scope === 'benefits'
-        ? a.type.startsWith('benefit_')
-        : scope === 'reserve'
-          ? a.type === 'reserve'
-          : !a.type.startsWith('benefit_') && a.type !== 'reserve'),
+      a.name.toLocaleLowerCase('pt-BR').includes(search.trim().toLocaleLowerCase('pt-BR')) &&
+      (scope === 'all' ||
+        (scope === 'benefits'
+          ? a.type.startsWith('benefit_')
+          : scope === 'reserve'
+            ? a.type === 'reserve'
+            : !a.type.startsWith('benefit_') && a.type !== 'reserve')),
   );
   return (
     <div className="page-enter accounts-page">
-      <h1 className="sr-only">Minhas contas</h1>
+      <PageHeader route title="Minhas contas" />
       <div className="account-directory-toolbar">
+        <SearchField
+          aria-label="Buscar contas"
+          placeholder="Buscar…"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+        />
         <label className="account-type-filter">
           <span className="sr-only">Tipo de conta</span>
           <Select
@@ -116,7 +126,7 @@ export function AccountsPage() {
               icon={<EmptyStateIcon size={28} strokeWidth={1.5} />}
               title="Nenhuma conta neste filtro"
             >
-              Escolha outro tipo de conta ou adicione uma conta.
+              Mude a busca ou o tipo de conta.
             </EmptyState>
           )}
           {visibleAccounts.map((a) => (
@@ -149,6 +159,7 @@ export function AccountsPage() {
         open={!!historyAccount}
         onOpenChange={(value) => !value && setHistoryAccount(undefined)}
         title="Histórico de saldo"
+        description="Acompanhe os ajustes manuais realizados no saldo base."
       >
         {historyAccount && (
           <BalanceHistoryPanel

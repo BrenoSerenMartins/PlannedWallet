@@ -50,11 +50,15 @@ export function CompactForecast({
             <dl>
               <div>
                 <dt>A receber</dt>
-                <dd>{display(preview.income)}</dd>
+                <dd className={preview.income > 0 ? 'positive-text' : 'amount-neutral'}>
+                  {display(preview.income)}
+                </dd>
               </div>
               <div>
                 <dt>A pagar</dt>
-                <dd>{display(preview.expense)}</dd>
+                <dd className={preview.expense > 0 ? 'negative-text' : 'amount-neutral'}>
+                  {display(preview.expense)}
+                </dd>
               </div>
             </dl>
           </div>
@@ -62,24 +66,21 @@ export function CompactForecast({
             {preview.items.slice(0, 3).map((item) => (
               <li key={item.id}>
                 <button type="button" onClick={() => setSelected(item.id)}>
-                  <span className="forecast-preview-date">
-                    {shortDate(item.dueDate)}
-                    <small>
+                  <span className="forecast-preview-description">{item.description}</span>
+                  <strong className={item.type === 'income' ? 'positive-text' : ''}>
+                    {display(item.amount)}
+                  </strong>
+                  <span className="forecast-preview-meta">
+                    <small>{item.account}</small>
+                    <span className="forecast-preview-date">
+                      {shortDate(item.dueDate)} ·{' '}
                       {item.dueDate < data.today
                         ? 'Em atraso'
                         : item.type === 'income'
                           ? 'A receber'
                           : 'A pagar'}
-                    </small>
+                    </span>
                   </span>
-                  <span className="forecast-preview-description">
-                    {item.description}
-                    <small>{item.account}</small>
-                  </span>
-                  <strong className={item.type === 'income' ? 'positive-text' : ''}>
-                    {display(item.amount)}
-                  </strong>
-                  <ArrowRight size={16} aria-hidden="true" />
                 </button>
               </li>
             ))}

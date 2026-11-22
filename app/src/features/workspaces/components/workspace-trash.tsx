@@ -5,7 +5,7 @@ import { ChevronDown, RotateCcw, Trash2 } from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
 import { request } from '../../../shared/api/client';
 import type { TrashedWorkspace } from '../../../shared/api/resources';
-import { Button, ErrorState, Loading } from '../../../shared/ui/primitives';
+import { EmptyState, Button, ErrorState, Loading } from '../../../shared/ui/primitives';
 import { useWorkspace } from '../workspace-provider';
 export function WorkspaceTrash() {
   const { session } = useAuth();
@@ -81,7 +81,7 @@ export function WorkspaceTrash() {
           ))}
         </ul>
       ) : (
-        <p>Nenhum espaço na lixeira.</p>
+        <EmptyState title="Nenhum espaço na lixeira" compact />
       )}
     </details>
   );

@@ -693,3 +693,22 @@ body .spaces-page .workspace-trash[open] > :not(summary) {
   background: var(--surface);
   overflow-wrap: anywhere;
 }
+
+@media (max-width: 360px) {
+  body .spaces-page .spaces-topbar {
+    gap: 8px;
+    padding-inline: 12px;
+  }
+  body .spaces-page .spaces-topbar .logo {
+    min-width: 0;
+    font-size: 18px;
+  }
+  body .spaces-page .spaces-topbar .logo-symbol {
+    width: 28px;
+    height: 28px;
+    flex: none;
+  }
+  body .spaces-page .spaces-topbar > div {
+    flex: none;
+  }
+}

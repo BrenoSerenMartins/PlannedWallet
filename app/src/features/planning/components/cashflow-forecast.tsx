@@ -45,11 +45,15 @@ export function ForecastDetails({
             </div>
             <div>
               <span>A receber</span>
-              <strong className="income">{value(total('income'))}</strong>
+              <strong className={total('income') > 0 ? 'income' : 'amount-neutral'}>
+                {value(total('income'))}
+              </strong>
             </div>
             <div>
               <span>A pagar</span>
-              <strong className="expense">{value(total('expense'))}</strong>
+              <strong className={total('expense') > 0 ? 'expense' : 'amount-neutral'}>
+                {value(total('expense'))}
+              </strong>
             </div>
             <div className="forecast-result">
               <span>Dinheiro previsto</span>
@@ -138,11 +142,7 @@ export function CashflowForecast({
           Ver compromissos <ArrowRight size={16} />
         </Link>
       )}
-      <Modal
-        open={adding}
-        onOpenChange={setAdding}
-        title="Novo compromisso"
-      >
+      <Modal open={adding} onOpenChange={setAdding} title="Novo compromisso">
         {adding && (
           <CommitmentForm
             onSave={async (data, key) => {

@@ -1,3 +1,4 @@
+import { PageHeader } from '../../shared/ui/page-header';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowUpRight, Target } from 'lucide-react';
@@ -56,16 +57,12 @@ export function AnalyticsPage() {
   };
   return (
     <div className="page-enter analytics-page">
-      <header className="analytics-header">
-        <div>
-          <span className="page-intro">Seu dinheiro em perspectiva</span>
-          <h1>Métricas</h1>
-        </div>
+      <PageHeader route title="Métricas" className="analytics-header">
         <label>
           <span className="sr-only">Mês das métricas</span>
           <MonthPicker value={month} required onChange={(e) => setMonth(e.target.value)} />
         </label>
-      </header>
+      </PageHeader>
       <div className="analytics-grid">
         <section className="bento-soft-card spending-donut">
           <div className="bento-card-heading">

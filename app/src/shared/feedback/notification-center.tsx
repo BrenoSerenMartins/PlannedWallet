@@ -2,7 +2,7 @@ import { FinancialAlerts, useFinancialAlerts } from './financial-alerts';
 import { Tooltip } from '../ui/tooltip';
 import { useState } from 'react';
 import { Bell } from 'lucide-react';
-import { Modal } from '../ui/primitives';
+import { EmptyState, Modal } from '../ui/primitives';
 import { noticeIcons, useNotifications } from './notification-provider';
 
 export function NotificationCenter() {
@@ -41,7 +41,7 @@ export function NotificationCenter() {
       >
         <FinancialAlerts query={financial} onClose={() => setOpen(false)} />
         {!items.length ? (
-          <p className="notification-empty">Nenhum aviso por aqui.</p>
+          <EmptyState title="Nenhum aviso por aqui" compact />
         ) : (
           <>
             <div className="notification-history-tools">

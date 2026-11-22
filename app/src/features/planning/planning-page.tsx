@@ -1,3 +1,4 @@
+import { PageHeader } from '../../shared/ui/page-header';
 import { PlanningCardBills } from './components/planning-card-bills';
 import { ActionMenu } from '../../shared/ui/action-menu';
 import type { ReactNode } from 'react';
@@ -56,7 +57,7 @@ function MonthlyBudgetPage({ navigation }: { navigation?: ReactNode }) {
   }
   return (
     <div className="page-enter planning-page">
-      <h1 className="sr-only">Planejamento mensal</h1>
+      <PageHeader route title="Planejamento mensal" />
       {query.isPending ? (
         <Loading layout="planning" />
       ) : query.isError ? (
@@ -64,9 +65,6 @@ function MonthlyBudgetPage({ navigation }: { navigation?: ReactNode }) {
       ) : (
         plan && (
           <>
-            <header className="future-page-heading">
-              <h2>Visão futura</h2>
-            </header>
             <PlanningSummary
               plan={plan}
               month={month}

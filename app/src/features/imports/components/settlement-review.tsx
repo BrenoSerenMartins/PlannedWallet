@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useImportReview } from '../hooks/use-import-review';
 import type { ImportBatch } from '../../../shared/api/resources';
-import { Button } from '../../../shared/ui/primitives';
+import { EmptyState, Button } from '../../../shared/ui/primitives';
 import { ImportReviewRow } from './import-review-row';
 
 // Retained only to inspect or undo imports created before statement-only ingestion.
@@ -76,7 +76,7 @@ export function SettlementReview({
             ))}
           </tbody>
         </table>
-        {!items.length && <p className="field-help">Nenhum registro para este filtro.</p>}
+        {!items.length && <EmptyState title="Nenhum registro neste filtro" compact />}
         <div className="review-pagination">
           <span>
             Página {page + 1} de {Math.max(1, Math.ceil(items.length / 25))}

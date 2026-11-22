@@ -3,8 +3,10 @@ import { useQuery } from '@tanstack/react-query';
 import type { components } from '../../shared/api/generated';
 import { request } from '../../shared/api/client';
 import { useFinanceWrite } from '../../shared/api/use-finance-write';
+import { Plus } from 'lucide-react';
+import { IconAction } from '../../shared/ui/icon-action';
 import { PageHeader } from '../../shared/ui/page-header';
-import { Button, Loading, ErrorState, Modal } from '../../shared/ui/primitives';
+import { EmptyState, Button, Loading, ErrorState, Modal } from '../../shared/ui/primitives';
 import { Select } from '../../shared/ui/controls/select';
 import { DatePicker } from '../../shared/ui/controls/date-picker';
 import { money, parseMoney } from '../../shared/formatting/money';
@@ -27,8 +29,8 @@ export function GoalsPage() {
   }
   return (
     <div className="page-enter goals-page">
-      <PageHeader title="Metas e reservas">
-        <Button onClick={() => setDialog('new')}>Nova meta</Button>
+      <PageHeader route title="Metas e reservas">
+        <IconAction label="Nova meta" icon={<Plus size={18} />} onClick={() => setDialog('new')} />
       </PageHeader>
       {query.isPending ? (
         <Loading />
@@ -61,9 +63,9 @@ export function GoalsPage() {
             ))}
           </details>
           {!query.data.goals.length && (
-            <p className="muted">
-              Crie uma meta e escolha quanto do saldo de uma conta quer reservar.
-            </p>
+            <EmptyState title="Nenhuma meta criada">
+              Crie uma meta para reservar parte do saldo de uma conta.
+            </EmptyState>
           )}
           {query.data.goals.map((g) => (
             <article className="goal-record" key={g.id}>
@@ -121,7 +123,7 @@ export function GoalsPage() {
               <details className="finance-disclosure">
                 <summary>Histórico de alocações</summary>
                 {!g.allocations.length ? (
-                  <p className="field-help">Nenhuma alocação registrada.</p>
+                  <EmptyState title="Nenhuma alocação registrada" compact />
                 ) : (
                   g.allocations.map((e) => (
                     <div className="goal-event" key={e.id}>

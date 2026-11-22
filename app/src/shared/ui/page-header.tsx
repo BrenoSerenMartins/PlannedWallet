@@ -7,19 +7,29 @@ export function PageHeader({
   navigation,
   children,
   compact = false,
+  route = false,
+  className = '',
+  titleLabel,
 }: {
   title: ReactNode;
   compact?: boolean;
+  route?: boolean;
+  className?: string;
+  titleLabel?: string;
   description?: ReactNode;
   navigation?: ReactNode;
   children?: ReactNode;
 }) {
-  if (compact && !navigation && !children) return <h1 className="sr-only">{title}</h1>;
+  if (compact && !route && !navigation && !children) return <h1 className="sr-only">{title}</h1>;
   return (
-    <header className={`page-heading page-header${compact ? ' page-header-compact' : ''}`}>
+    <header
+      className={`page-heading page-header${compact ? ' page-header-compact' : ''}${route ? ' route-page-header' : ''} ${className}`}
+    >
       <div className="page-header-copy">
         <div className="page-header-headingline">
-          <h1 className={compact ? 'sr-only' : undefined}>{title}</h1>
+          <h1 aria-label={titleLabel} className={compact && !route ? 'sr-only' : undefined}>
+            {title}
+          </h1>
           {navigation}
         </div>
         {description && !compact && <p>{description}</p>}

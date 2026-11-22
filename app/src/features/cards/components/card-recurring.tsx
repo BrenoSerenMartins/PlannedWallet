@@ -4,7 +4,7 @@ import { request } from '../../../shared/api/client';
 import type { components } from '../../../shared/api/generated';
 import type { CardsSummary } from '../../../shared/api/resources';
 import { useFinanceWrite } from '../../../shared/api/use-finance-write';
-import { Button, Modal, ErrorState, Loading } from '../../../shared/ui/primitives';
+import { EmptyState, Button, Modal, ErrorState, Loading } from '../../../shared/ui/primitives';
 import { FinanceForm, useFinanceChoices } from '../../../shared/ui/finance-forms';
 import { CategorySelect } from '../../../shared/ui/category-select';
 import { Select } from '../../../shared/ui/controls/select';
@@ -46,7 +46,7 @@ export function CardRecurring({ card, month }: { card: Card; month: string }) {
       ) : query.isError ? (
         <ErrorState error={query.error} retry={() => void query.refetch()} />
       ) : query.data.length === 0 ? (
-        <p className="card-recurring-empty">Nenhuma assinatura vinculada</p>
+        <EmptyState title="Nenhuma assinatura vinculada" compact />
       ) : (
         <div className="card-recurring-list">
           {query.data.map((r) => (

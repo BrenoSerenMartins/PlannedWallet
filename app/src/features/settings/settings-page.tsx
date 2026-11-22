@@ -1,10 +1,11 @@
+import { PageHeader } from '../../shared/ui/page-header';
 import { useState } from 'react';
 import {
   deviceNotificationsEnabled,
   setDeviceNotifications,
   supportsDeviceNotifications,
 } from '../../shared/feedback/device-notifications';
-import { Select } from '../../shared/ui/controls/select';
+import { ViewSwitcher } from '../../shared/ui/view-switcher';
 import { useSearchParams } from 'react-router-dom';
 import { ShieldCheck } from 'lucide-react';
 import { useAuth } from '../auth/auth-provider';
@@ -28,19 +29,17 @@ export function SettingsPage() {
 
   return (
     <div className="page-enter settings-page">
-      <h1 className="contextual-page-title">Preferências</h1>
-      <label className="workspace-section-select">
-        <span className="sr-only">Seções de preferências</span>
-        <Select
-          aria-label="Seções de preferências"
-          value={view}
-          onChange={(event) => setView(event.target.value)}
-        >
-          <option value="appearance">Aparência</option>
-          <option value="data">Dados e backup</option>
-          <option value="account">Conta</option>
-        </Select>
-      </label>
+      <PageHeader route title="Ajustes" />
+      <ViewSwitcher
+        label="Seções de ajustes"
+        value={view}
+        onChange={setView}
+        options={[
+          { value: 'account', label: 'Conta' },
+          { value: 'data', label: 'Dados' },
+          { value: 'appearance', label: 'Aparência' },
+        ]}
+      />
       <div className="view-content">
         {view === 'appearance' && (
           <>

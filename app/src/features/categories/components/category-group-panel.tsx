@@ -59,11 +59,11 @@ export function CategoryGroupPanel({
               </Tooltip>
             </>
           )}
-          <Button className="secondary compact" onClick={onAdd}>
-            <Plus size={16} />
-            Adicionar categoria
-          </Button>
         </div>
+        <Button className="secondary compact category-add-action" onClick={onAdd}>
+          <Plus size={16} />
+          Adicionar categoria
+        </Button>
       </header>
       <div className="category-rows">
         {categories.map((category) => (

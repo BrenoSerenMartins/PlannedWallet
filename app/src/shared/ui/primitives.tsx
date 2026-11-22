@@ -40,7 +40,7 @@ export function EmptyState({
   compact = false,
 }: {
   title: string;
-  children: ReactNode;
+  children?: ReactNode;
   action?: ReactNode;
   icon?: ReactNode;
   compact?: boolean;
@@ -51,7 +51,7 @@ export function EmptyState({
         {icon ?? <Wallet size={28} strokeWidth={1.5} />}
       </span>
       <h3>{title}</h3>
-      <p>{children}</p>
+      {children && <p>{children}</p>}
       {action}
     </div>
   );
@@ -176,6 +176,7 @@ export function Modal({
               window.dispatchEvent(new Event('plannedwallet:dismiss-tooltip'));
             }
           }}
+          {...(!description ? { 'aria-describedby': undefined } : {})}
           className={`dialog-content ${variant === 'detail' ? 'dialog-detail' : ''}`}
           onOpenAutoFocus={() => {
             previousFocus.current =
@@ -194,9 +195,7 @@ export function Modal({
           <div className="dialog-heading">
             <div>
               <Dialog.Title>{title}</Dialog.Title>
-              <Dialog.Description>
-                {description ?? 'Preencha os dados e confira antes de salvar.'}
-              </Dialog.Description>
+              {description && <Dialog.Description>{description}</Dialog.Description>}
             </div>
             <Tooltip text="Fechar">
               <Dialog.Close className="icon-button" aria-label="Fechar">

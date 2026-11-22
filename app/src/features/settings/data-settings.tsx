@@ -75,7 +75,7 @@ export function DataSettings() {
   return (
     <div className="page-enter">
       <section className="panel settings-panel">
-        <div className="section-heading">
+        <div className="section-heading backup-heading">
           <div>
             <h2>Seus dados, com você</h2>
             <p>Exporte seu histórico ou restaure um backup revisado.</p>

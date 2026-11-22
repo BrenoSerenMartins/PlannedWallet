@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { Select } from '../../../shared/ui/controls/select';
 import { useState, type FormEvent } from 'react';
 import type { Category, CategoryGroup } from '../../../shared/api/resources';
@@ -86,16 +87,25 @@ export function CategoryForm({
       )}
       {kind === 'group' && (
         <>
-          <label>
+          <label className="category-color-picker">
             Cor
-            <input
-              type="color"
-              value={color}
-              onChange={(e) => {
-                setColor(e.target.value);
-              }}
-            />
+            <input type="color" value={color} onChange={(e) => setColor(e.target.value)} />
+            <output>{color.toUpperCase()}</output>
           </label>
+          <div className="category-color-palette" role="group" aria-label="Cores sugeridas">
+            {['#f28a97', '#d4af37', '#e98955', '#68b8ff', '#b69afa', '#3cae85', '#a1a1aa'].map(
+              (option) => (
+                <button
+                  type="button"
+                  key={option}
+                  aria-label={`Usar cor ${option.toUpperCase()}`}
+                  aria-pressed={color.toLowerCase() === option}
+                  style={{ '--swatch': option } as CSSProperties}
+                  onClick={() => setColor(option)}
+                />
+              ),
+            )}
+          </div>
           <div className="category-color-actions">
             <span className="field-help">
               {type === 'expense' ? 'Padrão de despesa: vermelho.' : 'Padrão de receita: verde.'}

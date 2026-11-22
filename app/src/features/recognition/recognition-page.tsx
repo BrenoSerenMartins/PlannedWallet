@@ -6,7 +6,7 @@ import type { components } from '../../shared/api/generated';
 import { request } from '../../shared/api/client';
 import { useFinanceWrite } from '../../shared/api/use-finance-write';
 import { PageHeader } from '../../shared/ui/page-header';
-import { Button, Loading, ErrorState, Modal } from '../../shared/ui/primitives';
+import { EmptyState, Button, Loading, ErrorState, Modal } from '../../shared/ui/primitives';
 import { FinanceForm } from '../../shared/ui/finance-forms';
 import { money, shortDate } from '../../shared/formatting/money';
 type Queue = components['schemas']['RecognitionQueueDto'];
@@ -35,8 +35,9 @@ export function RecognitionPage() {
     }
   }
   return (
-    <div className="page-enter">
+    <div className="page-enter recognition-page">
       <PageHeader
+        route
         title="Revisão assistida"
         description="Revise sugestões de categoria, identificação e pagamento."
       />
@@ -78,7 +79,7 @@ export function RecognitionPage() {
               Rejeitar sugestões
             </Button>
           </div>
-          {!query.data.items.length && <p>Nenhuma sugestão pendente neste momento.</p>}
+          {!query.data.items.length && <EmptyState title="Nenhuma sugestão pendente" compact />}
           {query.data.items.map((item) => (
             <article className="goal-record" key={item.signature}>
               <label className="check-row">
@@ -122,7 +123,8 @@ export function RecognitionPage() {
       <details className="finance-disclosure">
         <summary>Alterações recentes e desfazer</summary>
         <p className="field-help">
-          Desfaça pagamentos em Cartões. Aqui, alterações só podem ser desfeitas antes de uma nova edição.
+          Desfaça pagamentos em Cartões. Aqui, alterações só podem ser desfeitas antes de uma nova
+          edição.
         </p>
         {changes.data?.map((c) => (
           <div key={c.id} className="goal-event">

@@ -3,8 +3,6 @@ import {
   useFinancialVisibility,
 } from '../shared/privacy/financial-visibility';
 import { createPortal } from 'react-dom';
-import { ActionMenu } from '../shared/ui/action-menu';
-import { Tooltip } from '../shared/ui/tooltip';
 import { productName } from '../shared/brand';
 import { NotificationCenter } from '../shared/feedback/notification-center';
 import { useNotifications } from '../shared/feedback/notification-provider';
@@ -38,7 +36,7 @@ const navigation = [
   { to: '/', label: 'Visão geral', mobile: 'Início', Icon: House },
   { to: '/planning', label: 'Planejamento', mobile: 'Planejar', Icon: CalendarDays },
   { to: '/cards', label: 'Cartões e faturas', mobile: 'Cartões', Icon: CreditCard },
-  { to: '/transactions', label: 'Movimentações', mobile: 'Movimentos', Icon: ArrowDownUp },
+  { to: '/transactions', label: 'Movimentações', mobile: 'Extrato', Icon: ArrowDownUp },
   { to: '/accounts', label: 'Contas', mobile: 'Contas', Icon: Landmark },
   { to: '/analytics', label: 'Métricas', mobile: 'Métricas', Icon: ChartNoAxesCombined },
   {
@@ -57,7 +55,7 @@ const navigation = [
     mobile: 'Pessoas',
     Icon: UsersRound,
   },
-  { to: '/settings', label: 'Preferências', mobile: 'Ajustes', Icon: Settings },
+  { to: '/settings', label: 'Ajustes', mobile: 'Ajustes', Icon: Settings },
 ];
 const primaryPaths = ['/', '/planning', '/cards', '/transactions', '/imports'];
 export function AppShell() {
@@ -193,6 +191,57 @@ function ShellContent() {
           setArriving(false);
       }}
     >
+      <aside className="desktop-sidebar" aria-label="Menu lateral">
+        <NavLink to="/" className="sidebar-brand" aria-label={`${productName} — início`}>
+          <Logo />
+        </NavLink>
+        <button
+          type="button"
+          className={`header-more header-space-menu ${navigation.filter((n) => !primaryPaths.includes(n.to) && n.to !== '/settings').some((n) => location.pathname.startsWith(n.to)) ? 'active' : ''}`}
+          onClick={(event) => {
+            menuTrigger.current = event.currentTarget;
+            setMore(true);
+          }}
+          aria-haspopup="dialog"
+          aria-label={`Menu do espaço: ${active?.name ?? 'Seu espaço'}`}
+        >
+          <span className="space-menu-avatar" aria-hidden="true">
+            {active?.name.slice(0, 1).toLocaleUpperCase() ?? '·'}
+          </span>
+          <span>{active?.name ?? 'Seu espaço'}</span>
+          <ChevronDown size={14} />
+        </button>
+        <nav aria-label="Navegação principal">
+          {[
+            { title: 'Principal', paths: [...primaryPaths, '/accounts'] },
+            {
+              title: 'Patrimônio e organização',
+              paths: [
+                '/wealth',
+                '/analytics',
+                '/goals',
+                '/categories',
+                '/counterparties',
+                '/recognition',
+              ],
+            },
+            { title: 'Sistema', paths: ['/settings'] },
+          ].map(({ title, paths }) => (
+            <section key={title}>
+              <h2>{title}</h2>
+              {paths.map((path) => {
+                const { to, label, mobile, Icon } = navigation.find((item) => item.to === path)!;
+                return (
+                  <NavLink key={to} to={to} end={to === '/'} aria-label={label}>
+                    <Icon size={18} aria-hidden="true" />
+                    <span>{to === '/transactions' ? 'Extrato' : mobile}</span>
+                  </NavLink>
+                );
+              })}
+            </section>
+          ))}
+        </nav>
+      </aside>
       <div className="app-main">
         <header className="app-header">
           <NavLink to="/" className="header-brand" aria-label={`${productName} — início`}>
@@ -204,43 +253,6 @@ function ShellContent() {
             </NavLink>
             <strong>{mobileTitle}</strong>
           </div>
-          <nav className="desktop-navigation" aria-label="Navegação principal">
-            {navigation
-              .filter((n) => primaryPaths.includes(n.to))
-              .map(({ to, label, Icon }) => {
-                const title = to === '/wealth' ? 'Patrimônio' : label;
-                if (to === '/accounts')
-                  return (
-                    <ActionMenu
-                      key={to}
-                      label="Contas"
-                      active={
-                        location.pathname.startsWith('/accounts') ||
-                        location.pathname.startsWith('/cards')
-                      }
-                      trigger={
-                        <>
-                          <Icon size={17} aria-hidden="true" />
-                          <span>Contas</span>
-                          <ChevronDown size={12} aria-hidden="true" />
-                        </>
-                      }
-                    >
-                      <NavLink to="/accounts">Contas e saldos</NavLink>
-                      <NavLink to="/cards">Cartões e faturas</NavLink>
-                    </ActionMenu>
-                  );
-
-                return (
-                  <Tooltip key={to} text={title}>
-                    <NavLink to={to} end={to === '/'} aria-label={title}>
-                      <Icon size={17} strokeWidth={1.65} aria-hidden="true" />
-                      <span>{title}</span>
-                    </NavLink>
-                  </Tooltip>
-                );
-              })}
-          </nav>
           <div className="header-actions">
             <button
               className="icon-button visibility-button"
@@ -253,15 +265,13 @@ function ShellContent() {
             <span className="header-notifications">
               <NotificationCenter />
             </span>
-            <Tooltip text="Preferências">
-              <NavLink
-                to="/settings"
-                className="icon-button header-settings"
-                aria-label="Preferências"
-              >
-                <Settings size={19} aria-hidden="true" />
-              </NavLink>
-            </Tooltip>
+            <NavLink
+              to="/settings"
+              className="icon-button mobile-settings-link"
+              aria-label="Ajustes"
+            >
+              <Settings size={18} aria-hidden="true" />
+            </NavLink>
             {!online && (
               <span className="connection-chip" aria-label="Sem conexão">
                 <WifiOff size={16} />
@@ -305,7 +315,14 @@ function ShellContent() {
               <span>{label}</span>
             </NavLink>
           ))}
-          <button type="button" onClick={() => setMore(true)} aria-label="Abrir mais funções">
+          <button
+            type="button"
+            onClick={(event) => {
+              menuTrigger.current = event.currentTarget;
+              setMore(true);
+            }}
+            aria-label="Abrir mais funções"
+          >
             <Ellipsis size={21} strokeWidth={1.7} aria-hidden="true" />
             <span>Mais</span>
           </button>
@@ -330,8 +347,9 @@ function ShellContent() {
             },
             {
               title: 'Organização',
-              paths: ['/goals', '/recognition', '/categories', '/counterparties'],
+              paths: ['/goals', '/recognition', '/categories', '/counterparties', '/analytics'],
             },
+            { title: 'Sistema', paths: ['/settings'] },
           ].map((group) => (
             <div className="more-menu-group" key={group.title}>
               <h3>{group.title}</h3>

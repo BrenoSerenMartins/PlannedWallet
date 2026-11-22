@@ -1,0 +1,823 @@
+:root[data-ui='bento'] {
+  --text-hero: 2rem;
+  --text-kpi: 1.25rem;
+  --text-section: 1rem;
+  --text-title: 0.875rem;
+  --text-meta: 0.75rem;
+  --text-secondary: #a1a1aa;
+  --radius-hero: 22px;
+  --radius-bento: 18px;
+  --radius-md: 12px;
+  --sidebar-surface: #0c0c0f;
+}
+
+:root[data-ui='bento'][data-theme='light'] {
+  --bg-base: #f8fafc;
+  --text-secondary: #67666d;
+  --bg-surface: #fff;
+  --bg-elevated: #edf0f4;
+  --grad-card: linear-gradient(165deg, #fff, #f8fafc);
+  --sidebar-surface: var(--bg-surface);
+}
+
+.desktop-sidebar {
+  display: none;
+}
+
+:root[data-ui='bento'] .bento-hero-gold {
+  border-radius: var(--radius-hero);
+}
+
+:root[data-ui='bento']
+  body
+  :is(.bento-card-heading, .section-heading, .forecast-preview-heading)
+  h2 {
+  font-size: var(--text-section);
+  font-weight: 600;
+}
+
+:root[data-ui='bento'] body :is(.empty-state, .page-content .empty-state) {
+  padding: 28px 20px;
+  background: var(--bg-elevated);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-bento);
+  text-align: center;
+}
+
+:root[data-ui='bento'] body .empty-state.empty-state-compact {
+  padding: 20px;
+}
+:root[data-ui='bento'] body .empty-state .empty-icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  margin-inline: auto;
+  border-radius: var(--radius-sm);
+  background: var(--gold-muted);
+  color: var(--gold-primary);
+}
+.empty-state .empty-icon svg {
+  width: 20px;
+  height: 20px;
+}
+:root[data-ui='bento'] body .empty-state h3 {
+  font-size: var(--text-title);
+}
+:root[data-ui='bento'] body .empty-state p {
+  font-size: var(--text-meta);
+}
+
+:root[data-ui='bento'] body .page-content .wealth-summary.wealth-summary-flat {
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+:root[data-ui='bento'] body .page-content .wealth-overview > .panel {
+  min-width: 0;
+  padding: clamp(12px, 2.5vw, 20px);
+}
+:root[data-ui='bento'] body .page-content .wealth-overview > .panel > strong {
+  font-size: clamp(1.1rem, 4.5vw, 1.35rem);
+  white-space: nowrap;
+  overflow-wrap: normal;
+  font-variant-numeric: tabular-nums;
+}
+:root[data-ui='bento'] body .page-content .wealth-overview > .wealth-net-worth > strong {
+  font-size: var(--text-hero);
+}
+
+:root[data-ui='bento'] body .forecast-preview-totals dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+:root[data-ui='bento'] body .forecast-preview-list button {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 8px 12px;
+  text-align: start;
+}
+.forecast-preview-list button > strong {
+  white-space: nowrap;
+}
+.forecast-preview-meta {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  color: var(--text-secondary);
+  font-size: var(--text-meta);
+}
+:root[data-ui='bento'] body .forecast-preview-meta .forecast-preview-date {
+  display: inline-flex;
+  width: auto;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--gold-muted);
+  color: var(--gold-soft);
+}
+
+:root[data-ui='bento'] body .page-content .settings-panel .backup-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.backup-heading > svg {
+  flex: none;
+  color: var(--gold-primary);
+}
+
+.movement-account-heading,
+.route-context {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 12px;
+}
+.movement-account-heading h1,
+.route-context > strong {
+  margin: 0;
+  font-size: var(--text-section);
+}
+
+:root[data-ui='bento'] body .page-content .category-group-tabs {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border: 0;
+}
+:root[data-ui='bento'] body .page-content .category-group-tabs > button {
+  flex: 0 0 auto;
+  border-radius: var(--radius-pill);
+  border: var(--border-subtle);
+  padding: 8px 12px;
+  white-space: nowrap;
+}
+:root[data-ui='bento'] body .page-content .category-group-tabs > button[aria-selected='true'] {
+  background: var(--gold-muted);
+  color: var(--gold-soft);
+  border: var(--border-gold);
+  box-shadow: none;
+}
+.category-group-tabs > button::after {
+  content: none;
+}
+:root[data-ui='bento'] body .page-content .category-list-heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+}
+.category-list-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+:root[data-ui='bento']
+  body
+  .page-content
+  :is(
+    .movement-toolbar,
+    .account-directory-toolbar,
+    .directory-toolbar,
+    .category-toolbar,
+    .wealth-directory-toolbar
+  ) {
+  background: none;
+  border: 0;
+  box-shadow: none;
+  gap: 8px;
+  padding-inline: 0;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  :is(
+    .movement-toolbar,
+    .account-directory-toolbar,
+    .directory-toolbar,
+    .category-toolbar,
+    .wealth-directory-toolbar
+  )
+  .search-field {
+  min-height: 42px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  :is(
+    .movement-toolbar,
+    .account-directory-toolbar,
+    .directory-toolbar,
+    .category-toolbar,
+    .wealth-directory-toolbar
+  )
+  :is(.icon-button, .quiet-action) {
+  min-width: 42px;
+  min-height: 42px;
+  border-radius: var(--radius-sm);
+}
+
+@media (max-width: 1023px) {
+  :root[data-ui='bento'] body .premium-app .app-header {
+    position: sticky;
+    top: 0;
+    height: 56px;
+  }
+
+  :root[data-ui='bento'] body .premium-app .page-content {
+    padding-bottom: calc(116px + env(safe-area-inset-bottom));
+  }
+
+  :root[data-ui='bento']
+    body
+    .page-content
+    :is(
+      .imports-page:not(.imports-review-page) > .page-header h1,
+      .workspace-route-title,
+      .goals-page > .page-header h1,
+      .recognition-page > .page-header h1,
+      .counterparties-page > h1,
+      .categories-page > h1,
+      .wealth-page .wealth-summary-toolbar > h1,
+      .settings-page > h1,
+      .analytics-page .analytics-header h1
+    ) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  :root[data-ui='bento']
+    body
+    .page-content
+    :is(.imports-page, .goals-page, .recognition-page)
+    > .page-header {
+    margin-block: 0 8px;
+  }
+
+  :root[data-ui='bento'] body .page-content .wealth-summary-toolbar {
+    justify-content: flex-end;
+    min-height: 0;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root[data-ui='bento'] body .bottom-nav {
+    display: none;
+  }
+  :root[data-ui='bento'] body .premium-app .desktop-sidebar {
+    display: flex;
+    position: fixed;
+    z-index: 45;
+    inset: 0 auto 0 0;
+    width: 240px;
+    flex-direction: column;
+    gap: 16px;
+    padding: 24px 16px;
+    overflow-y: auto;
+    background: var(--sidebar-surface);
+    border-right: var(--border-subtle);
+  }
+  .sidebar-brand {
+    display: inline-flex;
+    text-decoration: none;
+  }
+  :root[data-ui='bento'] body .desktop-sidebar .header-space-menu > span:not(.space-menu-avatar) {
+    display: inline;
+  }
+  .desktop-sidebar .logo {
+    font-size: 20px;
+  }
+  .desktop-sidebar nav {
+    display: grid;
+    gap: 16px;
+  }
+  .desktop-sidebar nav h2 {
+    margin: 0 8px 5px;
+    color: var(--text-secondary);
+    font-size: var(--text-meta);
+    font-weight: 600;
+  }
+  .desktop-sidebar nav a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 38px;
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: var(--text-title);
+  }
+  .desktop-sidebar nav a:is(:hover, [aria-current='page']) {
+    background: var(--gold-muted);
+    color: var(--gold-soft);
+  }
+  :root[data-ui='bento'] body .premium-app .app-main {
+    margin-inline: 240px 0;
+    width: auto;
+    max-width: none;
+  }
+  :root[data-ui='bento'] body .premium-app .app-header {
+    display: flex;
+    justify-content: flex-end;
+    margin: auto;
+    max-width: 1264px;
+    padding-inline: 32px;
+  }
+  :root[data-ui='bento'] body .premium-app .app-header > :is(.header-brand, .mobile-header-title),
+  :root[data-ui='bento'] body .premium-app .app-header .header-space-menu {
+    display: none;
+  }
+  :root[data-ui='bento'] body .premium-app .page-content {
+    max-width: 1264px;
+    width: 100%;
+    margin-inline: auto;
+    padding: 28px 32px;
+  }
+  :root[data-ui='bento']
+    body
+    .page-content
+    :is(.page-header h1, .contextual-page-title, .analytics-header h1) {
+    font-size: 24px;
+    font-weight: 700;
+  }
+  :root[data-ui='bento'] body .page-content .page-header p {
+    font-size: 13px;
+  }
+  :root[data-ui='bento'] body .page-content :is(.planning-sections, .analytics-grid) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+  :root[data-ui='bento'] body .page-content .planning-page .planning-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+  :root[data-ui='bento'] body .page-content .planning-metrics > .metric-result {
+    grid-area: 1 / 1;
+  }
+  :root[data-ui='bento'] body .page-content .planning-metrics > .metric-contribution {
+    grid-area: 1 / 2;
+  }
+  :root[data-ui='bento']
+    body
+    .page-content
+    .planning-metrics
+    > :not(.metric-result, .metric-contribution) {
+    grid-column: 1 / -1;
+  }
+  :root[data-ui='bento'] body .page-content .cards-workspace {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: 16px;
+  }
+  :root[data-ui='bento'] body .dialog-content {
+    width: min(calc(100vw - 48px), 480px);
+    border-radius: 24px;
+    border: var(--border-subtle);
+  }
+  :root[data-ui='bento'] body .dialog-overlay {
+    backdrop-filter: blur(8px);
+  }
+}
+
+.bento-dashboard
+  > :is(.home-balance-column, .home-month-column, .home-activity-column, .home-upcoming-column) {
+  display: contents;
+}
+
+@media (min-width: 1024px) {
+  :root[data-ui='bento'] body .page-content .bento-dashboard {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 16px;
+  }
+  :root[data-ui='bento']
+    body
+    .page-content
+    .bento-dashboard
+    > :is(.home-balance-column, .home-month-column, .home-activity-column, .home-upcoming-column) {
+    display: grid;
+    gap: 16px;
+    min-width: 0;
+    align-content: start;
+  }
+  .home-balance-column {
+    grid-area: 2 / 1 / 3 / 8;
+  }
+  .home-month-column {
+    grid-area: 2 / 8 / 3 / 13;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .home-activity-column {
+    grid-area: 3 / 1 / 4 / 8;
+  }
+  .home-upcoming-column {
+    grid-area: 3 / 8 / 4 / 13;
+  }
+  :root[data-ui='bento']
+    body
+    .page-content
+    .bento-dashboard
+    > :is(.home-balance-column, .home-month-column, .home-activity-column, .home-upcoming-column)
+    > * {
+    grid-area: auto / 1 / auto / -1;
+    min-width: 0;
+  }
+  :root[data-ui='bento'] body .page-content .bento-dashboard .home-month-column > .income-kpi {
+    grid-column: 1;
+  }
+  :root[data-ui='bento'] body .page-content .bento-dashboard .home-month-column > .expense-kpi {
+    grid-column: 2;
+  }
+  :root[data-ui='bento'] body .page-content .bento-dashboard .home-month-column > .bento-kpi {
+    padding: clamp(12px, 1.4vw, 20px);
+  }
+  :root[data-ui='bento'] body .page-content .wealth-overview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  :root[data-ui='bento'] body .page-content .wealth-overview > .wealth-net-worth {
+    grid-column: 1 / -1;
+  }
+}
+
+:root[data-ui='bento']
+  body
+  .page-content
+  :is(.account-directory-toolbar, .directory-toolbar, .category-toolbar) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  :is(.account-directory-toolbar, .directory-toolbar, .category-toolbar)
+  > .search-field {
+  order: -2;
+  flex: 1 1 calc(100% - 50px);
+  min-width: 0;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  :is(.account-directory-toolbar, .directory-toolbar, .category-toolbar)
+  > .quiet-action {
+  order: -1;
+  flex: 0 0 42px;
+  background: var(--gold-muted);
+  color: var(--gold-soft);
+}
+:root[data-ui='bento'] body .page-content .category-toolbar > .view-switcher {
+  flex: 1 1 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.card-wallet-column {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  min-width: 0;
+}
+@media (max-width: 1023px) {
+  :root[data-ui='bento'] body .page-content .accounts-title {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  :root[data-ui='bento'] body .page-content .cards-workspace {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+}
+
+:root[data-ui='bento'] body .page-content :is(.hero-balance, .planning-result-value) {
+  font-size: var(--text-hero);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  :is(.bento-kpi, .planning-monthly-pair .planning-metric)
+  > strong {
+  font-size: var(--text-kpi);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+.forecast-preview-meta > small {
+  margin: 0;
+}
+.forecast-preview-description {
+  font-size: var(--text-title);
+  font-weight: 600;
+}
+:root[data-ui='bento'] body .page-content .settings-page > .view-switcher {
+  width: fit-content;
+  max-width: 100%;
+  margin-bottom: 12px;
+}
+:root[data-ui='bento'] body .page-content .settings-page > .view-switcher button {
+  white-space: nowrap;
+}
+:root[data-ui='bento'] body .page-content .recognition-page > .inline-actions {
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+@media (min-width: 1024px) {
+  :root[data-ui='bento'] body .premium-app .app-header {
+    min-height: 56px;
+  }
+  :root[data-ui='bento'] body .page-content .bento-dashboard > .bento-welcome {
+    display: flex;
+    grid-area: 1 / 1 / 2 / -1;
+  }
+  :root[data-ui='bento'] body .page-content .bento-dashboard > .bento-month-details {
+    grid-area: 4 / 1 / 5 / -1;
+  }
+  :root[data-ui='bento']
+    body
+    .page-content
+    .bento-dashboard
+    .home-upcoming-column
+    .finance-overview-links {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .home-upcoming-column .finance-overview-links > :last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+.card-wallet-column > .credit-selector {
+  min-width: 0;
+  width: 100%;
+}
+:root[data-ui='bento'] body .page-content .cards-page .card-detail {
+  width: 100%;
+  min-width: 0;
+}
+
+:root[data-ui='bento'] body .page-content .bento-dashboard .finance-overview-links strong {
+  font-size: var(--text-kpi);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+
+.wealth-overview {
+  container: wealth-totals / inline-size;
+}
+
+@container wealth-totals (max-width: 15rem) {
+  :root[data-ui='bento'] body .page-content .wealth-overview > .panel {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  :root[data-ui='bento'] body .page-content .wealth-overview > .wealth-net-worth > strong {
+    font-size: clamp(1.1rem, 12cqi, 1.4rem);
+  }
+}
+
+:root[data-ui='bento'] {
+  --bg-base: #0a0a0c;
+  --bg-surface: #131418;
+  --bg-elevated: #181a20;
+  --input-surface: #1f2128;
+  --action-gold: #e5c158;
+  --success: #22c55e;
+  --danger: #f87171;
+  --amount-neutral: #9ca3af;
+  --disabled-accent: rgba(255, 255, 255, 0.06);
+  --disabled-accent-text: #a1a1aa;
+}
+:root[data-ui='bento'][data-theme='light'] {
+  --bg-base: #f8fafc;
+  --bg-surface: #fff;
+  --bg-elevated: #edf0f4;
+  --input-surface: #fff;
+  --success: #087f5b;
+  --danger: #a6283d;
+  --amount-neutral: #626873;
+  --disabled-accent: #eceef2;
+  --disabled-accent-text: #595e69;
+}
+:root[data-ui='bento'] body .button:not(.secondary, .destructive):not(:disabled) {
+  background: var(--action-gold);
+  color: #0a0a0c;
+  font-weight: 600;
+}
+:root[data-ui='bento'] body .button:disabled {
+  opacity: 1;
+  background: var(--disabled-accent);
+  color: var(--disabled-accent-text);
+  border: var(--border-subtle);
+  box-shadow: none;
+}
+:root[data-ui='bento'] body .button.destructive:not(:disabled) {
+  color: var(--danger);
+  border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  box-shadow: none;
+}
+:root[data-ui='bento'] body .button.destructive:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--danger) 20%, transparent);
+}
+:root[data-ui='bento'] body :is(.forecast-totals, .forecast-preview-totals) .amount-neutral {
+  color: var(--amount-neutral);
+}
+:root[data-ui='bento'] body .forecast-preview-result {
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: 8px;
+  text-align: start;
+}
+:root[data-ui='bento'] body .forecast-preview-totals {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+:root[data-ui='bento'] body .forecast-preview-totals dl {
+  padding: 0;
+  margin: 0;
+  gap: 24px;
+}
+.forecast-preview-totals dl::before {
+  display: none;
+}
+:root[data-ui='bento'] body .recognition-page > .empty-state {
+  margin-top: 16px;
+}
+:root[data-ui='bento'] body .page-content .category-list-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+.category-add-action {
+  grid-column: 1 / -1;
+  justify-self: end;
+}
+:root[data-ui='bento'] body .page-content .category-toolbar {
+  row-gap: 12px;
+}
+.category-color-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.category-color-picker input[type='color'] {
+  width: 32px;
+  height: 32px;
+  padding: 2px;
+}
+.category-color-picker output {
+  font-variant-numeric: tabular-nums;
+}
+.category-color-palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.category-color-palette > button {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--swatch);
+  border: 2px solid var(--bg-surface);
+}
+.category-color-palette > button[aria-pressed='true'] {
+  outline: 2px solid var(--gold-primary);
+}
+:root[data-ui='bento'] body .imports-page .automatic-import-batch > .inline-actions {
+  justify-content: center;
+}
+:root[data-ui='bento']
+  body
+  .dialog-content
+  :is(input:not([type='checkbox'], [type='radio'], [type='color']), textarea, .select-trigger) {
+  background-color: var(--input-surface);
+}
+:root[data-ui='bento'] body :is(time, .forecast-preview-date, .card-bill-status) {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 767px) {
+  :root[data-ui='bento'] body .page-content .commitment-filters {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  :root[data-ui='bento'] body .page-content .commitment-filters > label {
+    width: 100%;
+    min-width: 0;
+  }
+  :root[data-ui='bento'] body .page-content .commitment-filters > .commitment-search {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+}
+@media (min-width: 1024px) {
+  :root[data-ui='bento'] body .dialog-content:not(.dialog-detail) {
+    max-height: min(85dvh, 900px);
+  }
+}
+
+@media (max-width: 1023px) {
+  :root[data-ui='bento'] body .page-content .route-page-header h1 {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  :root[data-ui='bento']
+    body
+    .page-content
+    .route-page-header:not(:has(.page-header-actions, .page-header-copy > p)) {
+    margin: 0;
+    padding: 0;
+    min-height: 0;
+  }
+  :root[data-ui='bento'] body .premium-app .app-header .mobile-settings-link {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    padding: 0;
+    border-radius: 50%;
+  }
+}
+@media (min-width: 1024px) {
+  :root[data-ui='bento'] body .premium-app .app-header .mobile-settings-link {
+    display: none;
+  }
+  :root[data-ui='bento'] body .premium-app .page-content {
+    max-width: 1280px;
+  }
+  :root[data-ui='bento'] body .page-content .route-page-header h1 {
+    font-size: 28px;
+    font-weight: 700;
+  }
+}
+
+@media (max-width: 360px) {
+  :root[data-ui='bento'] body .premium-app .app-header > .header-actions {
+    gap: 3px;
+  }
+  :root[data-ui='bento'] body .premium-app .app-header > .mobile-header-title {
+    gap: 4px;
+  }
+  :root[data-ui='bento'] body .premium-app .app-header .mobile-header-title > strong {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 1023px) {
+  :root[data-ui='bento']
+    body
+    .page-content
+    .bento-dashboard
+    > :is(.home-balance-column, .home-month-column, .home-activity-column, .home-upcoming-column)
+    > * {
+    grid-column: 1 / -1;
+    grid-row: auto;
+    min-width: 0;
+  }
+  :root[data-ui='bento'] body .page-content .bento-dashboard .home-month-column > .income-kpi {
+    grid-column: 1;
+  }
+  :root[data-ui='bento'] body .page-content .bento-dashboard .home-month-column > .expense-kpi {
+    grid-column: 2;
+  }
+}

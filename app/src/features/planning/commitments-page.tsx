@@ -78,6 +78,12 @@ export function CommitmentsPage({ navigation }: { navigation?: ReactNode }) {
   }
   return (
     <div className="commitments-page page-enter">
+      <div className="route-context">
+        <Link className="text-button" to={`/planning?month=${month}`}>
+          ← Planejamento
+        </Link>
+        <strong>Compromissos</strong>
+      </div>
       <PageHeader compact title={<>Contas e recebimentos</>} navigation={navigation}>
         <div className="month-navigation">
           <Tooltip text="Mês anterior dos compromissos">
@@ -167,7 +173,7 @@ export function CommitmentsPage({ navigation }: { navigation?: ReactNode }) {
                 <option value="all">Todos</option>
               </Select>
             </label>
-            <label>
+            <label className="commitment-search">
               <span className="sr-only">Buscar compromisso</span>
               <input
                 type="search"

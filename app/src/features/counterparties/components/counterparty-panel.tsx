@@ -3,7 +3,7 @@ import { CounterpartyRelationForm } from './counterparty-relation-form';
 import { ClassificationRuleEditor } from './classification-rule-editor';
 import { useState } from 'react';
 import type { Account, Category, Counterparty } from '../../../shared/api/resources';
-import { Button } from '../../../shared/ui/primitives';
+import { EmptyState, Button } from '../../../shared/ui/primitives';
 export function CounterpartyPanel({
   agent,
   accounts,
@@ -130,7 +130,7 @@ export function CounterpartyPanel({
               </Button>
             </div>
           ))}
-          {!agent.identifiers.length && <p className="field-help">Nenhuma identificação salva.</p>}
+          {!agent.identifiers.length && <EmptyState title="Nenhuma identificação salva" compact />}
         </section>
       </div>
     </details>

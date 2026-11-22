@@ -300,6 +300,16 @@ export function TransactionForm({
       )}
       <div className="form-actions">
         {' '}
+        {entry && (
+          <Button
+            type="button"
+            className="destructive"
+            disabled={busy}
+            onClick={() => void reverse()}
+          >
+            Desfazer lançamento{entry.transferGroupId ? ' e sua contraparte' : ''}
+          </Button>
+        )}
         <Button
           disabled={
             busy ||
@@ -313,16 +323,6 @@ export function TransactionForm({
           {busy ? 'Salvando…' : entry ? 'Salvar alterações' : 'Registrar movimento'}
         </Button>
       </div>
-      {entry && (
-        <button
-          type="button"
-          className="text-button danger"
-          disabled={busy}
-          onClick={() => void reverse()}
-        >
-          Desfazer lançamento{entry.transferGroupId ? ' e sua contraparte' : ''}
-        </button>
-      )}
     </form>
   );
 }

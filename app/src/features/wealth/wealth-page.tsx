@@ -1,3 +1,5 @@
+import { PageHeader } from '../../shared/ui/page-header';
+import { SearchField } from '../../shared/ui/controls/search-field';
 import { useFinancialVisibility } from '../../shared/privacy/financial-visibility';
 import { IconAction } from '../../shared/ui/icon-action';
 import { ChartNoAxesCombined as EmptyStateIcon } from 'lucide-react';
@@ -6,7 +8,7 @@ import { useNotifications } from '../../shared/feedback/notification-provider';
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, Eye, EyeOff, ArrowUpRight, Camera, Pencil } from 'lucide-react';
+import { Plus, ArrowUpRight, Camera, Pencil } from 'lucide-react';
 import { request } from '../../shared/api/client';
 import { useFinanceWrite } from '../../shared/api/use-finance-write';
 import type { WealthSummary, InvestmentHolding } from '../../shared/api/resources';
@@ -42,7 +44,7 @@ export function WealthPage() {
   });
   const write = useFinanceWrite();
   const [dialog, setDialog] = useState<Dialog | null>(null);
-  const { visible, toggle: toggleVisibility } = useFinancialVisibility();
+  const { visible } = useFinancialVisibility();
   const [archived, setArchived] = useState(false);
   const { success: setMessage } = useNotifications();
   const [captureBusy, setCaptureBusy] = useState(false);
@@ -91,27 +93,14 @@ export function WealthPage() {
       ) : (
         data && (
           <>
-            <section className="wealth-summary">
-              <div className="wealth-summary-toolbar">
-                <h1 className="contextual-page-title" aria-label="Investimentos e patrimônio">
-                  Patrimônio
-                </h1>
+            <section className="wealth-summary wealth-summary-flat">
+              <PageHeader
+                route
+                className="wealth-summary-toolbar"
+                title="Patrimônio"
+                titleLabel="Investimentos e patrimônio"
+              >
                 <div className="inline-actions">
-                  <Tooltip
-                    text={
-                      visible ? 'Ocultar valores do patrimônio' : 'Mostrar valores do patrimônio'
-                    }
-                  >
-                    <button
-                      className="icon-button"
-                      aria-label={
-                        visible ? 'Ocultar valores do patrimônio' : 'Mostrar valores do patrimônio'
-                      }
-                      onClick={toggleVisibility}
-                    >
-                      {visible ? <Eye size={18} /> : <EyeOff size={18} />}
-                    </button>
-                  </Tooltip>
                   {view === 'history' ? (
                     <IconAction
                       label={captureBusy ? 'Salvando posição…' : 'Guardar posição atual'}
@@ -133,7 +122,7 @@ export function WealthPage() {
                     />
                   )}
                 </div>
-              </div>
+              </PageHeader>
               <div className="wealth-overview">
                 <div className="panel wealth-net-worth">
                   <span>
@@ -183,16 +172,13 @@ export function WealthPage() {
                 <div className="section-heading">
                   <h2>Carteira de investimentos</h2>
                 </div>
-                <div className="wealth-filters">
-                  <label>
-                    <span className="sr-only">Buscar investimento</span>
-                    <input
-                      type="search"
-                      placeholder="Buscar investimento ou custódia…"
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                    />
-                  </label>
+                <div className="wealth-filters wealth-directory-toolbar">
+                  <SearchField
+                    aria-label="Buscar investimento"
+                    placeholder="Buscar investimento ou custódia…"
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                  />
                   <label className="finance-checkbox">
                     <input
                       type="checkbox"

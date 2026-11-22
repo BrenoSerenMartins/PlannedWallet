@@ -339,8 +339,9 @@ export function ImportsPage() {
   };
 
   return (
-    <div className="page-enter imports-page">
+    <div className={`page-enter imports-page${importId ? ' imports-review-page' : ''}`}>
       <PageHeader
+        route={!importId}
         title={importId ? 'Revisar importação' : 'Importar extratos e faturas'}
         description={
           importId

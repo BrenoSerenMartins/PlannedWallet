@@ -1,3 +1,5 @@
+import { PageHeader } from '../../shared/ui/page-header';
+import { SearchField } from '../../shared/ui/controls/search-field';
 import { IconAction } from '../../shared/ui/icon-action';
 import { FolderTree as EmptyStateIcon } from 'lucide-react';
 import { useNotifications } from '../../shared/feedback/notification-provider';
@@ -5,7 +7,7 @@ import { DeleteCategoryDialog } from './components/delete-category-dialog';
 import { CategoryGroupPanel } from './components/category-group-panel';
 import { DeleteGroupDialog } from './components/delete-group-dialog';
 import { useState } from 'react';
-import { Plus, Search } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import type { Category, CategoryGroup } from '../../shared/api/resources';
 import { EmptyState, ErrorState, Loading, Modal } from '../../shared/ui/primitives';
 import { ViewSwitcher } from '../../shared/ui/view-switcher';
@@ -42,7 +44,7 @@ export function CategoriesPage() {
   const activeGroup = visibleGroups.find((group) => group.id === selectedGroup) ?? visibleGroups[0];
   return (
     <div className="page-enter categories-page" data-financial-type={type}>
-      <h1 className="contextual-page-title">Categorias</h1>
+      <PageHeader route title="Categorias" />
       <div className="category-toolbar">
         <IconAction
           label="Novo grupo"
@@ -50,7 +52,6 @@ export function CategoriesPage() {
           onClick={() => setEditor({ kind: 'group' })}
         />
         <ViewSwitcher
-          variant="tabs"
           label="Tipo de categoria"
           value={type}
           onChange={(value) => {
@@ -71,15 +72,12 @@ export function CategoriesPage() {
             },
           ]}
         />
-        <label className="search-field">
-          <Search size={18} />
-          <input
-            aria-label="Buscar grupos e categorias"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar…"
-          />
-        </label>
+        <SearchField
+          aria-label="Buscar grupos e categorias"
+          placeholder="Buscar…"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+        />
       </div>
       {categories.isError || groups.isError ? (
         <ErrorState error={categories.error ?? groups.error} />

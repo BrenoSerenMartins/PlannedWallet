@@ -19,11 +19,13 @@ export function FinanceForm({
   onSubmit,
   label = 'Salvar',
   disabled = false,
+  destructive = false,
 }: {
   children: ReactNode;
   onSubmit: () => Promise<void>;
   label?: string;
   disabled?: boolean;
+  destructive?: boolean;
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -50,7 +52,10 @@ export function FinanceForm({
         </p>
       )}
       <div className="form-actions">
-        <Button disabled={busy || disabled || !navigator.onLine}>
+        <Button
+          className={destructive ? 'destructive' : undefined}
+          disabled={busy || disabled || !navigator.onLine}
+        >
           {busy ? 'Salvando…' : label}
         </Button>
       </div>

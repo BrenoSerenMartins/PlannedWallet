@@ -202,7 +202,14 @@ async function chooseTheme(page: Page, theme: string) {
     return;
   }
   const returnUrl = page.url();
-  await page.getByRole('link', { name: 'Preferências', exact: true }).click();
+  let settings = page.getByRole('link', { name: 'Ajustes', exact: true });
+  if (!(await settings.isVisible())) {
+    await openAppMenu(page);
+    settings = page
+      .getByRole('dialog', { name: 'Menu do espaço' })
+      .getByRole('link', { name: 'Ajustes', exact: true });
+  }
+  await settings.click();
   await page.getByRole('button', { name: `Tema ${theme}`, exact: true }).click();
   await page.goBack();
   await expect(page).toHaveURL(returnUrl);
@@ -250,7 +257,7 @@ for (const width of [360, 390, 768, 1440])
     ).toBeVisible();
     await expect(page.getByRole('button', { name: 'Selecionar arquivos' })).toBeEnabled();
     await page.goto('/settings');
-    await expect(page.getByRole('heading', { name: 'Preferências', exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Ajustes', exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
@@ -668,14 +675,21 @@ test('leaving the upload screen stops subsequent submissions', async ({ page }) 
   );
   await page.getByRole('button', { name: /Importar 2 arquivo/ }).click();
   await expect.poll(() => requests).toBe(1);
-  await page.getByRole('link', { name: 'Preferências', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Preferências', exact: true })).toBeVisible();
+  let settings = page.getByRole('link', { name: 'Ajustes', exact: true });
+  if (!(await settings.isVisible())) {
+    await openAppMenu(page);
+    settings = page
+      .getByRole('dialog', { name: 'Menu do espaço' })
+      .getByRole('link', { name: 'Ajustes', exact: true });
+  }
+  await settings.click();
+  await expect(page.getByRole('heading', { name: 'Ajustes', exact: true })).toBeVisible();
   const response = page.waitForResponse(
     (response) => response.url().endsWith('/v1/imports') && response.request().method() === 'POST',
   );
   release();
   await (await response).finished();
-  await expect(page.getByRole('heading', { name: 'Preferências', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Ajustes', exact: true })).toBeVisible();
   expect(requests).toBe(1);
 });
 
@@ -1440,11 +1454,11 @@ for (const width of [390, 1440])
     await expect(page.getByRole('tab', { name: /Casa/ })).toBeFocused();
     await page.keyboard.press('Home');
     await expect(page.getByRole('tab').first()).toHaveAttribute('aria-selected', 'true');
-    await fillControl(page.getByRole('textbox', { name: 'Buscar grupos e categorias' }), 'Luz');
+    await fillControl(page.getByRole('searchbox', { name: 'Buscar grupos e categorias' }), 'Luz');
     await expect(
       page.getByRole('button', { name: 'Editar categoria Luz', exact: true }),
     ).toBeVisible();
-    await fillControl(page.getByRole('textbox', { name: 'Buscar grupos e categorias' }), '');
+    await fillControl(page.getByRole('searchbox', { name: 'Buscar grupos e categorias' }), '');
     await expect(
       page.getByRole('button', { name: 'Editar categoria Luz', exact: true }),
     ).toHaveCount(0);
@@ -3311,7 +3325,7 @@ for (const width of [320, 390, 768, 1440])
     );
     await page.getByRole('button', { name: 'Evolução', exact: true }).click();
     await expect(page.locator('.wealth-chart')).toBeVisible();
-    await page.getByRole('button', { name: 'Ocultar valores do patrimônio', exact: true }).click();
+    await page.getByRole('button', { name: 'Ocultar valores', exact: true }).click();
     await expect(page.locator('.wealth-chart')).toHaveCount(0);
     await expect(page.locator('.wealth-net-worth strong')).toHaveText('••••••');
   });
@@ -3632,7 +3646,7 @@ const redesignedRoutes = [
   ['/counterparties', 'Pessoas e estabelecimentos'],
   ['/cards', 'Cartões e faturas'],
   ['/wealth', 'Investimentos e patrimônio'],
-  ['/settings', 'Preferências'],
+  ['/settings', 'Ajustes'],
   ['/workspaces', 'Seus espaços'],
 ] as const;
 for (const width of [390, 1440])
@@ -3821,16 +3835,22 @@ test('settings retain the chosen section on reload and offer labelled theme prev
 }) => {
   await signedIn(page);
   await page.goto('/settings?view=data');
-  await expectControlValue(page.getByLabel('Seções de preferências', { exact: true }), 'data');
+  await expect(page.getByRole('button', { name: 'Dados', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
   await page.reload();
-  await expectControlValue(page.getByLabel('Seções de preferências', { exact: true }), 'data');
-  await chooseSelect(page.getByLabel('Seções de preferências', { exact: true }), 'appearance');
+  await expect(page.getByRole('button', { name: 'Dados', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await page.getByRole('button', { name: 'Aparência', exact: true }).click();
   await page.getByRole('button', { name: 'Tema claro', exact: true }).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
   await page.getByRole('button', { name: 'Tema escuro', exact: true }).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   await expect(page.locator('.settings-shortcut')).toHaveCount(0);
-  await chooseSelect(page.getByLabel('Seções de preferências', { exact: true }), 'account');
+  await page.getByRole('button', { name: 'Conta', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Sair da conta', exact: true })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Gerenciar espaços', exact: true })).toHaveCount(0);
 });
@@ -3877,7 +3897,7 @@ for (const width of [390, 1440])
     const history = page.getByRole('dialog', { name: 'Notificações', exact: true });
     await expect(history.getByText('Conta salva.', { exact: true })).toBeVisible();
     await history.getByRole('button', { name: 'Limpar notificações', exact: true }).click();
-    await expect(history.getByText('Nenhum aviso por aqui.', { exact: true })).toBeVisible();
+    await expect(history.getByText('Nenhum aviso por aqui', { exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
@@ -3916,7 +3936,7 @@ test('notification history is cleared when switching financial spaces', async ({
   const notifications = page.getByRole('dialog', { name: 'Notificações', exact: true });
   await expect(notifications).toBeVisible();
   await expect(notifications).not.toContainText('Conta salva.');
-  await expect(notifications.getByText('Nenhum aviso por aqui.', { exact: true })).toBeVisible();
+  await expect(notifications.getByText('Nenhum aviso por aqui', { exact: true })).toBeVisible();
 });
 test('keyboard tooltips dismiss before the dialog and preserve its close action', async ({
   page,
@@ -4149,7 +4169,7 @@ test('reduced motion keeps drawers, menus and tab indicators static', async ({ p
   await expect(dialog).toBeVisible();
   expect(await dialog.evaluate((node) => getComputedStyle(node).animationName)).toBe('none');
   await dialog.getByRole('button', { name: 'Fechar', exact: true }).click();
-  await page.goto('/categories');
+  await page.goto('/wealth');
   const indicator = page.locator('.view-switcher-indicator').first();
   expect(await indicator.evaluate((node) => getComputedStyle(node).transitionDuration)).toBe('0s');
 });
@@ -5126,7 +5146,7 @@ for (const width of [390, 1440]) {
     await expect(dialog.getByText('Identificação mantida · categoria Alimentação')).toBeVisible();
     await dialog.getByRole('button', { name: 'Confirmar lote' }).click();
     await expect(dialog).toBeHidden();
-    await expect(page.getByText('Nenhuma sugestão pendente neste momento.')).toBeVisible();
+    await expect(page.getByText('Nenhuma sugestão pendente')).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });
 }

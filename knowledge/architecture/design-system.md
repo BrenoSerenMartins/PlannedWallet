@@ -118,9 +118,9 @@ Use [shared notifications and contextual help](notifications-help.md) for tempor
 
 The compact shared header keeps the financial-visibility control at a minimum 44×44px touch target. Header text can truncate before reducing this target; keyboard names and the privacy behavior remain unchanged.
 
-The card wallet retains a compact PageHeader with an accessible level-one heading, even when the visual header is supplied by the shared app shell.
+The card wallet keeps a semantic level-one heading and uses the shared app shell for the visible route title on mobile.
 
-Planning uses one canonical level-one page title; the visible “Visão futura” subtitle is level two with the existing visual styling preserved.
+Planning uses one canonical level-one page title. The shared route header supplies the visible title on mobile.
 
 ## App opening and loading HUD
 
@@ -129,3 +129,9 @@ The application uses one branded opening across session and workspace initializa
 The shared loading component uses HUD shapes for ledger rows, fields, account balance, planning, cards, summaries and charts. The placeholders reuse semantic surfaces and respect reduced motion. Keep modal descriptions for context the user needs to make a decision.
 
 The Planning hero links to Accounts for balance review. The account-by-account composition remains available from the dashboard's monthly details. In Planning, green bars indicate income progress, gold indicates spending within budget and coral indicates overspending.
+
+## Responsive workspace chrome
+
+Below 1024 px the application uses one sticky route header and an opaque bottom dock. Settings is available from the mobile top bar and workspace menu. At 1024 px the dock gives way to a fixed 240 px sidebar with grouped links and a workspace selector. Home, Planning and Cards use split desktop columns while keeping their mobile reading order. The mobile content reserves 116 px plus the bottom safe area.
+
+Route titles remain available to assistive technology. The account ledger and commitments use contextual back navigation. Settings uses a URL-backed segmented control for Account, Data and Appearance. Surface, accent and disabled control colors resolve through light and dark tokens. Shared empty states and contextual dialog descriptions avoid repeated instructions. Form footers keep mutation actions reachable, and destructive actions use a dedicated treatment. Planning forecasts give zero values a neutral token.

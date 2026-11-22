@@ -5,7 +5,7 @@ import { request } from '../api/client';
 import { getRequestWorkspace } from '../api/workspace-selection';
 import { useFinanceWrite } from '../api/use-finance-write';
 import { FinanceForm } from '../ui/finance-forms';
-import { ErrorState, Loading } from '../ui/primitives';
+import { EmptyState, ErrorState, Loading } from '../ui/primitives';
 import type { components } from '../api/generated';
 type Summary = components['schemas']['AlertsSummaryDto'];
 type Preferences = components['schemas']['AlertPreferencesDto'];
@@ -79,7 +79,7 @@ export function FinancialAlerts({
             ))}
           </ol>
           {!query.data.items.length && (
-            <p className="field-help">Nenhum alerta financeiro ativo.</p>
+            <EmptyState title="Nenhum alerta financeiro ativo" compact />
           )}
           <details>
             <summary>Preferências de alertas</summary>

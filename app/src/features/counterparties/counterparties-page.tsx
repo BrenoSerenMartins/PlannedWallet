@@ -1,8 +1,10 @@
+import { PageHeader } from '../../shared/ui/page-header';
+import { SearchField } from '../../shared/ui/controls/search-field';
 import { IconAction } from '../../shared/ui/icon-action';
 import { UsersRound as EmptyStateIcon } from 'lucide-react';
 import { Select } from '../../shared/ui/controls/select';
 import { useNotifications } from '../../shared/feedback/notification-provider';
-import { Plus, Search } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import './counterparties.css';
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -81,7 +83,7 @@ export function CounterpartiesPage() {
   });
   return (
     <div className="counterparties-page">
-      <h1 className="contextual-page-title">Pessoas e estabelecimentos</h1>
+      <PageHeader route title="Pessoas e estabelecimentos" />
 
       <div className="directory-toolbar">
         <IconAction
@@ -93,16 +95,12 @@ export function CounterpartiesPage() {
           }}
           disabled={!navigator.onLine}
         />
-        <label className="search-field">
-          <Search size={18} />
-          <input
-            aria-label="Buscar pessoa, estabelecimento ou descrição"
-            type="search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar…"
-          />
-        </label>
+        <SearchField
+          aria-label="Buscar pessoa, estabelecimento ou descrição"
+          placeholder="Buscar…"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+        />
         <div className="directory-filter-summary">
           <label className="compact-filter">
             <span className="sr-only">Filtrar automação</span>

@@ -132,7 +132,7 @@ export function CardsPage() {
   };
   return (
     <div className="page-enter cards-page">
-      <PageHeader title="Cartões e faturas" compact />
+      <PageHeader route title="Cartões e faturas" />
       <section className="card-directory-surface" aria-label="Cartões cadastrados">
         {query.isPending ? (
           <Loading layout="cards" />
@@ -176,109 +176,109 @@ export function CardsPage() {
               </div>
             ) : (
               <div className="cards-workspace">
-                <div
-                  ref={selectorRef}
-                  className="credit-selector no-scrollbar"
-                  role="group"
-                  aria-label="Escolher cartão"
-                  onScroll={() => {
-                    if (window.matchMedia('(min-width: 851px)').matches) return;
-                    if (swipeTimer.current) clearTimeout(swipeTimer.current);
-                    swipeTimer.current = setTimeout(() => {
-                      const selector = selectorRef.current;
-                      if (!selector) return;
-                      const center =
-                        selector.getBoundingClientRect().left + selector.clientWidth / 2;
-                      const nearest = Array.from(
-                        selector.querySelectorAll<HTMLButtonElement>('[data-card-id]'),
-                      ).reduce<HTMLButtonElement | null>((closest, item) => {
-                        if (!closest) return item;
-                        const distance = Math.abs(
-                          item.getBoundingClientRect().left + item.offsetWidth / 2 - center,
-                        );
-                        const closestDistance = Math.abs(
-                          closest.getBoundingClientRect().left + closest.offsetWidth / 2 - center,
-                        );
-                        return distance < closestDistance ? item : closest;
-                      }, null);
-                      const id = nearest?.dataset.cardId;
-                      if (id && id !== card?.id) update({ card: id }, true);
-                    }, 100);
-                  }}
-                >
-                  {cards.map((c) => {
-                    const art = cardHudArtwork(c.name, c.artwork);
-                    const invoiceTotal = value(
-                      c.bills.find((item) => item.month === month)?.total ?? 0,
-                    );
-                    return (
-                      <div className="credit-card-frame physical-card-frame" key={c.id}>
-                        <button
-                          type="button"
-                          className="physical-card-picker"
-                          aria-label={c.name}
-                          data-card-id={c.id}
-                          aria-pressed={c.id === card?.id}
-                          onClick={() => update({ card: c.id })}
-                        >
-                          <span className="physical-card-face">
-                            {art ? (
-                              <img
-                                src={art.src}
-                                decoding="async"
-                                loading={c.id === card?.id ? 'eager' : 'lazy'}
-                                alt={art.illustrative ? 'Arte padrão do emissor' : art.label}
-                              />
-                            ) : (
-                              <span className="physical-card-default" aria-hidden="true">
-                                <span>PlannedWallet</span>
-                                <span className="physical-card-default-chip" />
-                                <CreditIcon size={24} />
-                              </span>
-                            )}
-                          </span>
-                        </button>
-                        <div className="physical-card-caption">
-                          <div className="physical-card-caption-heading">
-                            <strong>
-                              {c.name}
-                              {c.archived ? ' · Arquivado' : ''}
-                            </strong>
-                            {c.id === card?.id && (
-                              <Tooltip text="Editar cartão">
-                                <button
-                                  type="button"
-                                  className="physical-card-edit icon-button"
-                                  aria-label="Editar cartão"
-                                  onClick={() => setDialog({ kind: 'edit' })}
-                                  disabled={!navigator.onLine}
-                                >
-                                  <Pencil size={16} />
-                                </button>
-                              </Tooltip>
-                            )}
+                <div className="card-wallet-column">
+                  <div
+                    ref={selectorRef}
+                    className="credit-selector no-scrollbar"
+                    role="group"
+                    aria-label="Escolher cartão"
+                    onScroll={() => {
+                      if (window.matchMedia('(min-width: 851px)').matches) return;
+                      if (swipeTimer.current) clearTimeout(swipeTimer.current);
+                      swipeTimer.current = setTimeout(() => {
+                        const selector = selectorRef.current;
+                        if (!selector) return;
+                        const center =
+                          selector.getBoundingClientRect().left + selector.clientWidth / 2;
+                        const nearest = Array.from(
+                          selector.querySelectorAll<HTMLButtonElement>('[data-card-id]'),
+                        ).reduce<HTMLButtonElement | null>((closest, item) => {
+                          if (!closest) return item;
+                          const distance = Math.abs(
+                            item.getBoundingClientRect().left + item.offsetWidth / 2 - center,
+                          );
+                          const closestDistance = Math.abs(
+                            closest.getBoundingClientRect().left + closest.offsetWidth / 2 - center,
+                          );
+                          return distance < closestDistance ? item : closest;
+                        }, null);
+                        const id = nearest?.dataset.cardId;
+                        if (id && id !== card?.id) update({ card: id }, true);
+                      }, 100);
+                    }}
+                  >
+                    {cards.map((c) => {
+                      const art = cardHudArtwork(c.name, c.artwork);
+                      const invoiceTotal = value(
+                        c.bills.find((item) => item.month === month)?.total ?? 0,
+                      );
+                      return (
+                        <div className="credit-card-frame physical-card-frame" key={c.id}>
+                          <button
+                            type="button"
+                            className="physical-card-picker"
+                            aria-label={c.name}
+                            data-card-id={c.id}
+                            aria-pressed={c.id === card?.id}
+                            onClick={() => update({ card: c.id })}
+                          >
+                            <span className="physical-card-face">
+                              {art ? (
+                                <img
+                                  src={art.src}
+                                  decoding="async"
+                                  loading={c.id === card?.id ? 'eager' : 'lazy'}
+                                  alt={art.illustrative ? 'Arte padrão do emissor' : art.label}
+                                />
+                              ) : (
+                                <span className="physical-card-default" aria-hidden="true">
+                                  <span>PlannedWallet</span>
+                                  <span className="physical-card-default-chip" />
+                                  <CreditIcon size={24} />
+                                </span>
+                              )}
+                            </span>
+                          </button>
+                          <div className="physical-card-caption">
+                            <div className="physical-card-caption-heading">
+                              <strong>
+                                {c.name}
+                                {c.archived ? ' · Arquivado' : ''}
+                              </strong>
+                              {c.id === card?.id && (
+                                <Tooltip text="Editar cartão">
+                                  <button
+                                    type="button"
+                                    className="physical-card-edit icon-button"
+                                    aria-label="Editar cartão"
+                                    onClick={() => setDialog({ kind: 'edit' })}
+                                    disabled={!navigator.onLine}
+                                  >
+                                    <Pencil size={16} />
+                                  </button>
+                                </Tooltip>
+                              )}
+                            </div>
+                            <span>
+                              Fatura do mês <strong>{invoiceTotal}</strong>
+                            </span>
                           </div>
-                          <span>
-                            Fatura do mês <strong>{invoiceTotal}</strong>
-                          </span>
                         </div>
-                      </div>
-                    );
-                  })}
-                  <div className="credit-card-frame credit-card-frame-new physical-card-frame">
-                    <button
-                      type="button"
-                      className="credit-card-new physical-card-face"
-                      onClick={() => setDialog({ kind: 'new' })}
-                      disabled={!navigator.onLine}
-                    >
-                      <Plus size={22} aria-hidden="true" />
-                      <strong>Novo cartão</strong>
-                    </button>
+                      );
+                    })}
+                    <div className="credit-card-frame credit-card-frame-new physical-card-frame">
+                      <button
+                        type="button"
+                        className="credit-card-new physical-card-face"
+                        onClick={() => setDialog({ kind: 'new' })}
+                        disabled={!navigator.onLine}
+                      >
+                        <Plus size={22} aria-hidden="true" />
+                        <strong>Novo cartão</strong>
+                      </button>
+                    </div>
                   </div>
-                </div>
-                {card && (
-                  <section className="card-detail">
+                  {card && (
                     <div className="card-bill-toolbar">
                       <p className="selected-card-metadata">
                         Fecha dia {card.closingDay} <span aria-hidden="true">·</span> vence dia{' '}
@@ -301,52 +301,57 @@ export function CardsPage() {
                         </Button>
                       </div>
                     </div>
-                    {card.limit > 0 &&
-                      (() => {
-                        const current = Math.max(0, bill?.remaining ?? 0);
-                        const future = card.bills
-                          .filter((item) => item.month > month)
-                          .reduce((total, item) => total + Math.max(0, item.remaining), 0);
-                        const total = Math.max(1, card.limit);
-                        const currentWidth = Math.min(100, (current / total) * 100);
-                        const futureWidth = Math.min(100 - currentWidth, (future / total) * 100);
-                        return (
-                          <div className="card-limit-overview">
-                            <div className="card-limit-heading">
-                              <span>Limite cadastrado</span>
-                              <strong>{value(card.limit)}</strong>
-                            </div>
-                            <div
-                              className="card-limit-bar"
-                              role="img"
-                              aria-label={`Fatura do mês ${value(current)}, faturas futuras ${value(future)}, disponível ${value(card.availableLimit)}`}
-                            >
-                              <span style={{ width: `${currentWidth}%` }} />
-                              <span style={{ width: `${futureWidth}%` }} />
-                            </div>
-                            <div className="card-limit-legend">
-                              <span>
-                                <i className="current" />
-                                <span>
-                                  Mês<strong>{value(current)}</strong>
-                                </span>
-                              </span>
-                              <span>
-                                <i className="future" />
-                                <span>
-                                  Futuras<strong>{value(future)}</strong>
-                                </span>
-                              </span>
-                              <span>
-                                <i className="available" />
-                                <span>
-                                  Disponível<strong>{value(card.availableLimit)}</strong>
-                                </span>
-                              </span>
-                            </div>
+                  )}
+                  {card &&
+                    card.limit > 0 &&
+                    (() => {
+                      const current = Math.max(0, bill?.remaining ?? 0);
+                      const future = card.bills
+                        .filter((item) => item.month > month)
+                        .reduce((total, item) => total + Math.max(0, item.remaining), 0);
+                      const total = Math.max(1, card.limit);
+                      const currentWidth = Math.min(100, (current / total) * 100);
+                      const futureWidth = Math.min(100 - currentWidth, (future / total) * 100);
+                      return (
+                        <div className="card-limit-overview">
+                          <div className="card-limit-heading">
+                            <span>Limite cadastrado</span>
+                            <strong>{value(card.limit)}</strong>
                           </div>
-                        );
-                      })()}
+                          <div
+                            className="card-limit-bar"
+                            role="img"
+                            aria-label={`Fatura do mês ${value(current)}, faturas futuras ${value(future)}, disponível ${value(card.availableLimit)}`}
+                          >
+                            <span style={{ width: `${currentWidth}%` }} />
+                            <span style={{ width: `${futureWidth}%` }} />
+                          </div>
+                          <div className="card-limit-legend">
+                            <span>
+                              <i className="current" />
+                              <span>
+                                Mês<strong>{value(current)}</strong>
+                              </span>
+                            </span>
+                            <span>
+                              <i className="future" />
+                              <span>
+                                Futuras<strong>{value(future)}</strong>
+                              </span>
+                            </span>
+                            <span>
+                              <i className="available" />
+                              <span>
+                                Disponível<strong>{value(card.availableLimit)}</strong>
+                              </span>
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                </div>
+                {card && (
+                  <section className="card-detail">
                     {(() => {
                       const sixMonths = Array.from({ length: 6 }, (_, index) =>
                         shiftMonth(month, index - 5),
@@ -680,6 +685,15 @@ export function CardsPage() {
       <Modal
         open={!!dialog}
         onOpenChange={(open) => !open && setDialog(null)}
+        description={
+          dialog?.kind === 'delete' ||
+          dialog?.kind.startsWith('undo') ||
+          dialog?.kind === 'cancelPurchase'
+            ? 'Revise o impacto desta ação antes de confirmar.'
+            : dialog?.kind === 'billTotal' && bill?.imported
+              ? undefined
+              : 'Preencha os dados e confira antes de salvar.'
+        }
         title={
           dialog?.kind === 'billTotal'
             ? 'Total da fatura'
@@ -734,20 +748,17 @@ export function CardsPage() {
           ))}
         {dialog?.kind === 'new' && <CardForm write={write} onSaved={() => saved()} />}
         {dialog?.kind === 'edit' && card && (
-          <>
-            <CardForm card={card} write={write} onSaved={() => saved()} />
-            <Button
-              type="button"
-              className="secondary"
-              onClick={() => setDialog({ kind: 'delete' })}
-            >
-              <Trash2 size={16} /> Excluir cartão
-            </Button>
-          </>
+          <CardForm
+            card={card}
+            write={write}
+            onSaved={() => saved()}
+            onDelete={() => setDialog({ kind: 'delete' })}
+          />
         )}
         {dialog?.kind === 'delete' && card && (
           <FinanceForm
             label="Excluir definitivamente"
+            destructive
             onSubmit={async () => {
               await write(`/cards/${card.id}`, undefined, card.version, 'DELETE');
               saved();

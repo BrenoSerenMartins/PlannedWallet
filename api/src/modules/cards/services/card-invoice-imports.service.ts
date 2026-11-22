@@ -132,7 +132,7 @@ export class CardInvoiceImportsService {
       parsed,
       reconciliation,
     });
-    if (saved.id !== id && saved.status === 'review')
+    if (saved.id !== id && (saved.status === 'review' || saved.status === 'superseded'))
       await this.imports.refreshReview(
         saved.id,
         saved.version,
@@ -160,7 +160,8 @@ export class CardInvoiceImportsService {
   async confirm(id: string, version: string, replacesInvoiceId?: string) {
     const invoice = await this.imports.get(id, true);
     if (!invoice) throw new NotFoundException('Importação de fatura não encontrada.');
-    if (invoice.status === 'confirmed') {
+    const reapply = invoice.status === 'confirmed' && replacesInvoiceId === id;
+    if (invoice.status === 'confirmed' && !reapply) {
       if (invoice.version === Number(version)) {
         const { parsed } = invoice.payload as { parsed: ParsedCardInvoice };
         await this.cardService.reconcileConfirmedInvoice(
@@ -172,7 +173,7 @@ export class CardInvoiceImportsService {
       return this.get(id);
     }
     requireVersion(invoice.version, version);
-    if (invoice.status !== 'review')
+    if (invoice.status !== 'review' && !reapply)
       throw new ConflictException('Esta revisão não está mais disponível.');
     const { parsed } = invoice.payload as { parsed: ParsedCardInvoice };
     if (parsed.summaryOnly)
@@ -189,13 +190,12 @@ export class CardInvoiceImportsService {
       throw new ConflictException(
         'O total a pagar inclui ajustes que ainda precisam ser conciliados.',
       );
-    let replaced: string | null = null;
     await this.cardService.applyInvoice(
       invoice.card_id,
       invoice.bill_month,
       parsed.total,
       parsed.lines,
-      id,
+      `${id}:${invoice.version}`,
       async () => {
         const existing = await this.imports.confirmedForMonth(invoice.card_id, invoice.bill_month);
         if (existing && existing.id !== replacesInvoiceId)
@@ -206,12 +206,11 @@ export class CardInvoiceImportsService {
           throw new ConflictException(
             'A importação confirmada mudou. Reabra a prévia antes de substituir.',
           );
-        replaced = existing?.id ?? null;
         return this.candidates(parsed.lines, invoice.card_id, invoice.bill_month);
       },
       parsed.movements,
     );
-    if (replaced) await this.imports.supersede(replaced);
+    await this.imports.supersedeFrom(invoice.card_id, invoice.bill_month);
     await this.imports.confirm(id);
     return this.get(id);
   }

@@ -7,7 +7,10 @@ export function PlanningCardBills({ plan }: { plan: MonthlyPlan }) {
   const bills = (plan.cardBills ?? []).filter((b) => b.included);
   if (!bills.length) return null;
   return (
-    <div className="planning-future-commitments" aria-label="Compromissos de cartão">
+    <div
+      className="planning-future-commitments bento-soft-card"
+      aria-label="Compromissos de cartão"
+    >
       <div className="planning-future-commitments-heading">
         <h3>Compromissos previstos</h3>
         <span>

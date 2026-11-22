@@ -447,6 +447,33 @@
         "tags": ["Cards"]
       }
     },
+    "/v1/cards/{id}/bills/{month}/total": {
+      "patch": {
+        "operationId": "CardsController_setBillTotal",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CardBillTotalDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": ["Cards"]
+      }
+    },
     "/v1/cards/{id}": {
       "delete": {
         "operationId": "CardsController_remove",
@@ -3866,6 +3893,9 @@
       "CardBillResourceDto": {
         "type": "object",
         "properties": {
+          "imported": {
+            "type": "boolean"
+          },
           "id": {
             "type": "string"
           },
@@ -3911,6 +3941,7 @@
           }
         },
         "required": [
+          "imported",
           "id",
           "cardId",
           "month",
@@ -4186,6 +4217,15 @@
           "version",
           "archived"
         ]
+      },
+      "CardBillTotalDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number"
+          }
+        },
+        "required": ["total"]
       },
       "CardRecurringResourceDto": {
         "type": "object",

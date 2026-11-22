@@ -18,6 +18,13 @@ export class CardsRepository {
       [this.db.userId],
     );
   }
+  async importedBillKeys() {
+    const rows = await this.db.query<{ card_id: string; bill_month: string }>(
+      "SELECT card_id,bill_month FROM wallet.card_invoice_imports WHERE user_id=$1 AND workspace_id=$2 AND status='confirmed'",
+      [this.db.userId, this.db.workspaceId],
+    );
+    return new Set(rows.map((row) => `${row.card_id}:${row.bill_month}`));
+  }
   async snapshot(): Promise<CardsSnapshot> {
     const get = (table: string) =>
       this.db.query(`SELECT * FROM wallet.${table} WHERE user_id=$1 ORDER BY id`, [this.db.userId]);

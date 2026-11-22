@@ -1,3 +1,4 @@
+import { useNotifications } from '../../shared/feedback/notification-provider';
 import { needsPdfPassword } from '../../shared/api/pdf-password';
 import {
   findDestinations,
@@ -43,6 +44,7 @@ export function ImportsPage() {
   const { session } = useAuth();
   const navigate = useNavigate();
   const client = useQueryClient();
+  const notices = useNotifications();
   const input = useRef<HTMLInputElement>(null);
   const automaticSelection = useRef(false);
   const batchPassword = useRef('');
@@ -607,15 +609,19 @@ export function ImportsPage() {
                                         method: 'POST',
                                         headers: {
                                           'If-Match': String(cardPreview.version),
-                                          ...(cardPreview.replacesInvoiceId && replaceConfirmed
-                                            ? {
-                                                'X-Replaces-Invoice': cardPreview.replacesInvoiceId,
-                                              }
-                                            : {}),
+                                          ...(cardPreview.status === 'confirmed'
+                                            ? { 'X-Replaces-Invoice': cardPreview.id }
+                                            : cardPreview.replacesInvoiceId && replaceConfirmed
+                                              ? {
+                                                  'X-Replaces-Invoice':
+                                                    cardPreview.replacesInvoiceId,
+                                                }
+                                              : {}),
                                         },
                                       },
                                     ),
                                   );
+                                  notices.success('Fatura confirmada.', { device: true });
                                   await client.invalidateQueries();
                                 } catch (cause) {
                                   setDetectError(
@@ -631,8 +637,8 @@ export function ImportsPage() {
                               {busy
                                 ? 'Confirmando…'
                                 : cardPreview.status === 'confirmed'
-                                  ? 'Reconciliar saldo'
-                                  : 'Confirmar e substituir compras do ciclo'}
+                                  ? 'Reaplicar fatura deste mês em diante'
+                                  : 'Confirmar e substituir compras deste mês em diante'}
                             </Button>
                           )}
                         <Link

@@ -47,6 +47,8 @@ export class LedgerController {
       try {
         const c = JSON.parse(Buffer.from(q.cursor, 'base64url').toString());
         if (typeof c !== 'string' || c.length !== 46) throw 0;
+        dateOnly(c.slice(0, 10));
+        requireUuid(c.slice(10));
       } catch {
         throw new BadRequestException('Cursor inválido.');
       }

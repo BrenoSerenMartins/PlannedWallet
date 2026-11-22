@@ -162,10 +162,10 @@
   font-size: 14px;
   font-weight: 600;
 }
-.hero-pockets > .text-button {
-  margin-left: auto;
-}
-.hero-pockets > .text-button {
+.hero-pockets > .hero-accounts-toggle {
+  margin-inline-start: auto;
+  flex: none;
+  min-inline-size: 7rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -181,8 +181,8 @@
   text-decoration: none;
   white-space: nowrap;
 }
-.hero-pockets > .text-button:hover,
-.hero-pockets > .text-button:focus-visible {
+.hero-pockets > .hero-accounts-toggle:hover,
+.hero-pockets > .hero-accounts-toggle:focus-visible {
   border-color: rgba(212, 175, 55, 0.45);
   background: rgba(212, 175, 55, 0.18);
   text-decoration: none;
@@ -581,8 +581,20 @@
   list-style: none;
   min-height: 28px;
 }
-.bento-month-details[open] > .monthly-metrics {
-  margin-top: 20px;
+:root[data-ui='bento'] body .bento-dashboard .bento-month-details[open] > .monthly-metrics {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+@media (max-width: 600px) {
+  :root[data-ui='bento'] body .bento-dashboard .bento-month-details[open] > .monthly-metrics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  :root[data-ui='bento'] body .bento-dashboard .bento-month-details .month-metric {
+    min-width: 0;
+    padding: 14px;
+  }
 }
 :root[data-ui='bento'] .bento-month-details .period-budget {
   padding: 16px 0;
@@ -881,9 +893,9 @@
   .hero-pockets strong {
     font-size: 13px;
   }
-  .hero-pockets > .text-button {
-    margin-left: 0;
-    padding: 0;
+  .hero-pockets > .hero-accounts-toggle {
+    min-inline-size: 6.5rem;
+    padding-inline: 8px;
   }
   .hero-pockets {
     justify-content: space-between;

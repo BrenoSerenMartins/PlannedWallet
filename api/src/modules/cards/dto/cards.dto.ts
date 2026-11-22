@@ -47,6 +47,9 @@ export class CardPaymentDto {
   @ApiPropertyOptional({ type: String }) @IsOptional() @IsUUID() transactionId?: string;
   @ApiPropertyOptional({ type: Number }) @IsOptional() @IsInt() @Min(1) transactionVersion?: number;
 }
+export class CardBillTotalDto {
+  @ApiProperty({ type: Number }) @IsInt() @Min(0) @Max(1000000000000) total!: number;
+}
 export class CardOpeningDto {
   @ApiProperty({ type: String }) @IsString() @Length(7, 7) billMonth!: string;
   @ApiProperty({ type: Number }) @IsInt() @Min(1) @Max(1000000000000) amount!: number;

@@ -46,7 +46,9 @@ export function BudgetSection({
               <details
                 className="budget-group"
                 key={id}
-                open={['uncategorized', 'ungrouped'].includes(id) || undefined}
+                open={
+                  (children.length > 1 && ['uncategorized', 'ungrouped'].includes(id)) || undefined
+                }
               >
                 <summary>
                   <span className="budget-group-identity">
@@ -55,7 +57,10 @@ export function BudgetSection({
                       {children.length} {children.length === 1 ? 'cat.' : 'cats.'}
                     </small>
                   </span>
-                  <strong className="budget-group-actual">{money(totals.actual)}</strong>
+                  <strong className="budget-group-actual">
+                    <small>Realizado</small>
+                    {money(totals.actual)}
+                  </strong>
                   <span
                     className={`budget-progress${exceeded ? ' is-exceeded' : ''}`}
                     aria-hidden="true"
@@ -64,7 +69,9 @@ export function BudgetSection({
                   </span>
                   <span className="budget-progress-footer">
                     <span>
-                      Previsto: {totals.planned === null ? 'Sem previsão' : money(totals.planned)}
+                      {totals.planned === null
+                        ? 'Sem previsão'
+                        : `Previsto: ${money(totals.planned)}`}
                     </span>
                     <strong
                       className={
@@ -76,7 +83,7 @@ export function BudgetSection({
                       }
                     >
                       {totals.difference === null
-                        ? 'Sem previsão'
+                        ? null
                         : type === 'income'
                           ? `${totals.difference >= 0 ? 'Acima' : 'Abaixo'}: ${money(Math.abs(totals.difference))}`
                           : `${exceeded ? 'Excedido' : 'Livre'}: ${money(Math.abs(totals.difference))}`}

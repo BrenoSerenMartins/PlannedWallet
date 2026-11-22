@@ -1,3 +1,5 @@
+import { SearchField } from '../../shared/ui/controls/search-field';
+import { accountOptionIcons } from '../../shared/branding/account-icons';
 import { ExportMovements } from './components/export-movements';
 import { Search as EmptyStateIcon } from 'lucide-react';
 import { DatePicker } from '../../shared/ui/controls/date-picker';
@@ -16,7 +18,7 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
-import { Plus, Search, SlidersHorizontal } from 'lucide-react';
+import { Plus, SlidersHorizontal } from 'lucide-react';
 import { useAuth } from '../auth/auth-provider';
 import { request } from '../../shared/api/client';
 import type { Account, Category, Collection, Transaction } from '../../shared/api/resources';
@@ -204,15 +206,12 @@ export function TransactionsPage() {
       {requestedTransaction.isError && <ErrorState error={requestedTransaction.error} />}
       <section className="movements-workbench" aria-label="Lista de movimentações">
         <div className="movement-toolbar">
-          <label className="search-field">
-            <Search size={17} />
-            <input
-              aria-label="Buscar movimentos"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar…"
-            />
-          </label>
+          <SearchField
+            aria-label="Buscar movimentos"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar…"
+          />
           <Tooltip text="Filtrar período, conta, categoria e conciliação">
             <button
               type="button"
@@ -242,7 +241,6 @@ export function TransactionsPage() {
         </div>
         <div className="movement-typebar">
           <ViewSwitcher
-            variant="tabs"
             label="Tipos de movimentos"
             value={kind}
             onChange={(value) => {
@@ -269,107 +267,111 @@ export function TransactionsPage() {
           open={filtersOpen}
           onOpenChange={setFiltersOpen}
           title="Filtros avançados"
-          description="O período segue a competência dos benefícios. Os demais lançamentos seguem a data original."
+          description="Escolha o período e refine os resultados."
         >
-          <div className="movement-period">
-            <label className="movement-preset">
-              <span className="sr-only">Período</span>
-              <Select
-                aria-label="Período dos movimentos"
-                value={period}
-                onChange={(e) => changePeriod(e.target.value)}
-              >
-                <option value="all">Todo o período</option>
-                <option value="current">Mês atual</option>
-                <option value="previous">Mês anterior</option>
-                <option value="custom">Personalizado</option>
-              </Select>
-            </label>
-            <label className="movement-date">
-              <span>De</span>
-              <DatePicker
-                ref={fromInput}
-                value={from}
-                onChange={(e) => setFrom(e.target.value)}
-                aria-invalid={rangeInvalid}
-                aria-describedby={rangeInvalid ? rangeErrorId : undefined}
-              />
-            </label>
-            <label className="movement-date">
-              <span>Até</span>
-              <DatePicker
-                value={to}
-                onChange={(e) => setTo(e.target.value)}
-                aria-invalid={rangeInvalid}
-                aria-describedby={rangeInvalid ? rangeErrorId : undefined}
-              />
-            </label>
-          </div>
+          <div className="movement-filter-form">
+            <div className="movement-period">
+              <label className="movement-preset">
+                <span>Período</span>
+                <Select
+                  aria-label="Período dos movimentos"
+                  value={period}
+                  onChange={(e) => changePeriod(e.target.value)}
+                >
+                  <option value="all">Todo o período</option>
+                  <option value="current">Mês atual</option>
+                  <option value="previous">Mês anterior</option>
+                  <option value="custom">Personalizado</option>
+                </Select>
+              </label>
+              <label className="movement-date">
+                <span>De</span>
+                <DatePicker
+                  ref={fromInput}
+                  value={from}
+                  onChange={(e) => setFrom(e.target.value)}
+                  aria-invalid={rangeInvalid}
+                  aria-describedby={rangeInvalid ? rangeErrorId : undefined}
+                />
+              </label>
+              <label className="movement-date">
+                <span>Até</span>
+                <DatePicker
+                  value={to}
+                  onChange={(e) => setTo(e.target.value)}
+                  aria-invalid={rangeInvalid}
+                  aria-describedby={rangeInvalid ? rangeErrorId : undefined}
+                />
+              </label>
+            </div>
 
-          <div className="expanded-filters">
-            <label>
-              Conciliação
-              <Select
-                aria-label="Filtrar conciliação"
-                value={reconciliation}
-                onChange={(event) => setReconciliation(event.target.value)}
+            <div className="movement-filter-fields">
+              <label>
+                Conciliação
+                <Select
+                  aria-label="Filtrar conciliação"
+                  value={reconciliation}
+                  onChange={(event) => setReconciliation(event.target.value)}
+                >
+                  <option value="">Todas</option>
+                  <option value="pending">Pendentes</option>
+                  <option value="reconciled">Conferidas por arquivo</option>
+                </Select>
+              </label>
+              <label>
+                Conta
+                <Select
+                  aria-label="Filtrar conta"
+                  optionIcons={accountOptionIcons(accounts.data ?? [])}
+                  value={account}
+                  onChange={(e) => setAccount(e.target.value)}
+                >
+                  <option value="">Todas as contas</option>
+                  {accounts.data?.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.name}
+                    </option>
+                  ))}
+                </Select>
+              </label>
+              <label>
+                Categoria
+                <CategorySelect
+                  aria-label="Filtrar categoria"
+                  emptyLabel="Todas as categorias"
+                  categories={categories.data ?? []}
+                  type={kind || undefined}
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                />
+              </label>
+            </div>
+            <div className="movement-filter-tools">
+              <button
+                className="text-button"
+                onClick={() => {
+                  const next = new URLSearchParams(params);
+                  for (const key of ['from', 'to', 'accountId', 'categoryId', 'reconciliation'])
+                    next.delete(key);
+                  setCustomPeriod(false);
+                  setParams(next, { replace: true, preventScrollReset: true });
+                }}
               >
-                <option value="">Todas</option>
-                <option value="pending">Pendentes</option>
-                <option value="reconciled">Conferidas por arquivo</option>
-              </Select>
-            </label>
-            <label>
-              Conta
-              <Select
-                aria-label="Filtrar conta"
-                value={account}
-                onChange={(e) => setAccount(e.target.value)}
-              >
-                <option value="">Todas as contas</option>
-                {accounts.data?.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.name}
-                  </option>
-                ))}
-              </Select>
-            </label>
-            <label>
-              Categoria
-              <CategorySelect
-                aria-label="Filtrar categoria"
-                emptyLabel="Todas as categorias"
+                Limpar filtros
+              </button>
+              <ExportMovements
+                query={query.toString()}
+                accounts={accounts.data ?? []}
                 categories={categories.data ?? []}
-                type={kind || undefined}
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
+                disabled={rangeInvalid}
               />
-            </label>
-
-            <button
-              className="text-button"
-              onClick={() => {
-                const next = new URLSearchParams(params);
-                for (const key of ['from', 'to', 'accountId', 'categoryId', 'reconciliation'])
-                  next.delete(key);
-                setCustomPeriod(false);
-                setParams(next, { replace: true, preventScrollReset: true });
-              }}
-            >
-              Limpar filtros
-            </button>
+            </div>
+            {rangeInvalid && (
+              <p id={rangeErrorId} className="form-error" role="alert">
+                A data inicial deve ser anterior ou igual à data final.
+              </p>
+            )}
           </div>
-          {rangeInvalid && (
-            <p id={rangeErrorId} className="form-error" role="alert">
-              A data inicial deve ser anterior ou igual à data final.
-            </p>
-          )}
-          <ExportMovements
-            query={query.toString()}
-            accounts={accounts.data ?? []}
-            categories={categories.data ?? []}
-            disabled={rangeInvalid}
-          />
           <div className="form-actions">
             <Button disabled={rangeInvalid} onClick={() => setFiltersOpen(false)}>
               Ver movimentos

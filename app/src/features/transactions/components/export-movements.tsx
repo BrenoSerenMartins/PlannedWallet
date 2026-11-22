@@ -97,10 +97,6 @@ export function ExportMovements({
       >
         {busy ? 'Exportando…' : 'Exportar consulta CSV'}
       </button>
-      <p className="field-help">
-        Inclui todas as páginas dos filtros aplicados. O período segue a competência; a data
-        original do extrato é preservada em outra coluna.
-      </p>
       {error && <p role="alert">{error}</p>}
     </div>
   );

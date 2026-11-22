@@ -66,3 +66,15 @@ self.addEventListener('fetch', (event) => {
       ),
     );
 });
+
+self.addEventListener('notificationclick', (event) => {
+  if (event.notification.tag !== 'invoice-imported') return;
+  event.notification.close();
+  event.waitUntil(
+    (async () => {
+      const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      if (windows[0]) await windows[0].focus();
+      else await self.clients.openWindow('/cards');
+    })(),
+  );
+});

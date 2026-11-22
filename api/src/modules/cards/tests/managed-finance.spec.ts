@@ -1865,6 +1865,35 @@ it('replaces an omitted manual purchase and uses the disclosed invoice balance a
   const { card } = await makeCard('Invoice replacement');
   await run(() => cards.opening(card.id, '2026-11', 3000, String(card.version), randomUUID()));
   const omitted = await purchase(card.id, (await currentCard(card.id)).version, 2500, 1);
+  const future = await run(async () =>
+    cards.purchase(
+      card.id,
+      {
+        description: 'Compra futura fora do PDF',
+        purchaseDate: '2026-11-12',
+        amount: 7500,
+        installments: 2,
+        firstBillMonth: '2026-12',
+      },
+      String((await currentCard(card.id)).version),
+      randomUUID(),
+    ),
+  );
+  await run(async () =>
+    cards.setBillTotal(card.id, '2026-11', 9000, String((await currentCard(card.id)).version)),
+  );
+  await run(async () =>
+    cards.setBillTotal(card.id, '2026-11', 8000, String((await currentCard(card.id)).version)),
+  );
+  const manuallyAdjusted = (await currentCard(card.id)).bills.find(
+    (bill) => bill.month === '2026-11',
+  );
+  expect(manuallyAdjusted?.total).toBe(8000);
+  expect(
+    manuallyAdjusted?.entries.filter(
+      (entry) => entry.active && entry.description === 'Ajuste manual da fatura',
+    ),
+  ).toHaveLength(1);
   await run(() =>
     cards.applyInvoice(
       card.id,
@@ -1886,6 +1915,10 @@ it('replaces an omitted manual purchase and uses the disclosed invoice balance a
   const result = await currentCard(card.id);
   const bill = result.bills.find((item) => item.month === '2026-11');
   expect(result.purchases.find((item) => item.id === omitted.id)?.canceled).toBe(true);
+  expect(result.purchases.find((item) => item.id === future.id)?.canceled).toBe(true);
+  expect(
+    result.bills.filter((item) => item.month > '2026-11').every((item) => item.total === 0),
+  ).toBe(true);
   expect(bill?.total).toBe(3000);
   expect(bill?.paid).toBe(0);
   expect(

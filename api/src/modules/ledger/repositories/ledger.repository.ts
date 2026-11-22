@@ -282,15 +282,22 @@ export class LedgerRepository {
       values.push(value);
       where.push(expression.replace('?', `$${values.length}`));
     };
-    if (filter.from) add(`(${reportingDateSql()})>=?`, filter.from);
-    if (filter.to) add(`(${reportingDateSql()})<?`, filter.to);
+    if (filter.from) {
+      add("transaction_date >= (?::date - interval '1 month')", filter.from);
+      add(`(${reportingDateSql()})>=?`, filter.from);
+    }
+    if (filter.to) {
+      add('transaction_date<?', filter.to);
+      add(`(${reportingDateSql()})<?`, filter.to);
+    }
     if (filter.accountId) add('account_id=?', filter.accountId);
     if (filter.categoryId) add('category_id=?', filter.categoryId);
     if (filter.type) add('transaction_type=?', filter.type);
     if (filter.search) add('description ILIKE ?', `%${filter.search}%`);
     if (filter.cursor) {
       const cursor = JSON.parse(Buffer.from(filter.cursor, 'base64url').toString());
-      add('(transaction_date::text || id::text) < ?', cursor);
+      values.push(cursor.slice(0, 10), cursor.slice(10));
+      where.push(`(transaction_date,id) < ($${values.length - 1}::date,$${values.length}::uuid)`);
     }
     values.push(filter.limit + 1);
     const rows = await this.db.query(
@@ -378,7 +385,8 @@ export class LedgerRepository {
             WHERE other.transfer_group_id=t.transfer_group_id AND other.account_id<>t.account_id AND other.user_id=t.user_id AND other.workspace_id=t.workspace_id AND other.reversed_at IS NULL AND destination.type IN ('reserve','investment'))),0) AS reserved,
         coalesce(sum(t.amount_minor) FILTER(WHERE t.transaction_date <cut.start_date AND (${reportingDateSql('t')}) >=cut.start_date),0) AS deferred_opening,
         coalesce(sum(t.amount_minor) FILTER(WHERE t.transaction_date <cut.end_date AND (${reportingDateSql('t')}) >=cut.end_date),0) AS deferred_closing
-       FROM unnest($2::date[], $3::date[]) AS cut(start_date,end_date) JOIN wallet.transactions t ON t.transaction_date<cut.end_date WHERE t.user_id=$1 AND t.reversed_at IS NULL AND t.transaction_date <cut.end_date
+       FROM unnest($2::date[], $3::date[]) AS cut(start_date,end_date) JOIN wallet.transactions t ON t.transaction_date >= (date_trunc('month',cut.start_date) - interval '1 month')
+         AND t.transaction_date < cut.end_date WHERE t.user_id=$1 AND t.reversed_at IS NULL
        GROUP BY cut.start_date,cut.end_date,t.account_id`,
       [this.db.userId, periods.map((p) => p.from), periods.map((p) => p.to)],
     );
@@ -401,13 +409,13 @@ export class LedgerRepository {
   async monthlySummary(from: string, to: string) {
     const rows = await this.db.query(
       `WITH totals AS (
-        SELECT date_trunc('month',(${reportingDateSql()}))::date AS month,
+        SELECT date_trunc('month',(${reportingDateSql('t')}))::date AS month,
           coalesce(sum(amount_minor) FILTER(WHERE transaction_type='income'),0) AS income,
           coalesce(-sum(amount_minor) FILTER(WHERE transaction_type='expense'),0) AS expense,
-          count(*) FILTER(WHERE transaction_type IN ('income','expense')) AS count,
-          count(*) FILTER(WHERE transaction_type='unclassified') AS unclassified
-        FROM wallet.transactions
-        WHERE user_id=$1 AND reversed_at IS NULL AND (${reportingDateSql()})>=$2 AND (${reportingDateSql()})<$3
+          sum(entry_count) FILTER(WHERE transaction_type IN ('income','expense')) AS count,
+          sum(entry_count) FILTER(WHERE transaction_type='unclassified') AS unclassified
+        FROM wallet.ledger_daily_totals t
+        WHERE t.user_id=$1 AND t.transaction_date >= ($2::date - interval '1 month') AND t.transaction_date < $3 AND (${reportingDateSql('t')})>=$2 AND (${reportingDateSql('t')})<$3
         GROUP BY 1
       )
       SELECT to_char(m.month,'YYYY-MM') AS month,coalesce(t.income,0) AS income,
@@ -426,28 +434,26 @@ export class LedgerRepository {
   }
   async summary(from: string, to: string) {
     const [r] = await this.db.query(
-      `SELECT coalesce(sum(amount_minor) FILTER(WHERE transaction_type='income'),0) income,coalesce(-sum(amount_minor) FILTER(WHERE transaction_type='expense'),0) expense,count(*) FILTER(WHERE transaction_type='unclassified') unclassified FROM wallet.transactions WHERE user_id=$1 AND reversed_at IS NULL AND (${reportingDateSql()})>=$2 AND (${reportingDateSql()})<$3`,
+      `SELECT coalesce(sum(amount_minor) FILTER(WHERE transaction_type='income'),0) income,coalesce(-sum(amount_minor) FILTER(WHERE transaction_type='expense'),0) expense,coalesce(sum(entry_count) FILTER(WHERE transaction_type='unclassified'),0) unclassified FROM wallet.ledger_daily_totals t WHERE t.user_id=$1 AND transaction_date >= ($2::date - interval '1 month') AND transaction_date < $3 AND (${reportingDateSql('t')})>=$2 AND (${reportingDateSql('t')})<$3`,
       [this.db.userId, from, to],
     );
     const groups = await this.db.query(
       `SELECT g.id AS group_id, coalesce(g.name,'Outros') AS name,
-        -sum(t.amount_minor) AS amount, count(*) AS count
-       FROM wallet.transactions t
+        -sum(t.amount_minor) AS amount, sum(t.entry_count) AS count
+       FROM wallet.ledger_daily_totals t
        LEFT JOIN wallet.categories c ON c.id=t.category_id AND c.type='expense'
        LEFT JOIN wallet.category_groups g ON g.id=c.group_id
-       WHERE t.user_id=$1 AND t.reversed_at IS NULL AND t.transaction_type='expense'
-         AND (${reportingDateSql('t')})>=$2 AND (${reportingDateSql('t')})<$3
+       WHERE t.user_id=$1 AND t.transaction_type='expense' AND t.transaction_date >= $2 AND t.transaction_date < $3
        GROUP BY g.id,g.name ORDER BY amount DESC, name, g.id`,
       [this.db.userId, from, to],
     );
     const categories = await this.db.query(
       `SELECT c.id AS category_id,coalesce(c.name,'Outros') AS name,g.name AS group_name,
-        -sum(t.amount_minor) AS amount,count(*) AS count
-       FROM wallet.transactions t
+        -sum(t.amount_minor) AS amount,sum(t.entry_count) AS count
+       FROM wallet.ledger_daily_totals t
        LEFT JOIN wallet.categories c ON c.id=t.category_id AND c.type='expense'
        LEFT JOIN wallet.category_groups g ON g.id=c.group_id
-       WHERE t.user_id=$1 AND t.reversed_at IS NULL AND t.transaction_type='expense'
-         AND (${reportingDateSql('t')})>=$2 AND (${reportingDateSql('t')})<$3
+       WHERE t.user_id=$1 AND t.transaction_type='expense' AND t.transaction_date >= $2 AND t.transaction_date < $3
        GROUP BY c.id,c.name,g.name ORDER BY amount DESC,name,c.id`,
       [this.db.userId, from, to],
     );
@@ -479,12 +485,13 @@ export class LedgerRepository {
     const planningDate = reportingDateSql('t');
     const rows = await this.db.query(
       `SELECT t.category_id,t.transaction_type,
-      coalesce(sum(t.amount_minor),0) AS total,count(*) AS count,
-      coalesce(sum(t.amount_minor) FILTER(WHERE t.amount_minor>0),0) AS inflow,
-      coalesce(-sum(t.amount_minor) FILTER(WHERE t.amount_minor<0),0) AS outflow
-      FROM wallet.transactions t JOIN wallet.financial_accounts a
+      coalesce(sum(t.amount_minor),0) AS total,sum(t.entry_count) AS count,
+      coalesce(sum(t.inflow_minor),0) AS inflow,
+      coalesce(sum(t.outflow_minor),0) AS outflow
+      FROM wallet.ledger_daily_totals t JOIN wallet.financial_accounts a
         ON a.user_id=t.user_id AND a.workspace_id=t.workspace_id AND a.id=t.account_id
-      WHERE t.user_id=$1 AND t.reversed_at IS NULL AND t.transaction_type <> 'transfer'
+      WHERE t.user_id=$1 AND t.transaction_type <> 'transfer'
+      AND t.transaction_date >= ($2::date - interval '1 month') AND t.transaction_date < $3::date
       AND (${planningDate}) >= $2::date AND (${planningDate}) < $3::date
       AND (NOT $5::boolean OR a.type <> 'credit_card')
       AND ($4='all' OR CASE WHEN $4='benefits' THEN a.type IN ('benefit_food','benefit_meal') ELSE a.type NOT IN ('benefit_food','benefit_meal') END)

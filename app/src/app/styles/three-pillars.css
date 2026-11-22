@@ -3,10 +3,9 @@
   display: flex;
   align-items: center;
   min-width: 0;
-  padding: 4px;
+  padding: 0;
   border: 0;
-  border-radius: var(--radius-pill);
-  background: var(--bg-surface);
+  background: transparent;
 }
 :root[data-ui='bento'] body .page-content .transactions-page .movement-typebar .view-switcher {
   display: flex;
@@ -16,11 +15,12 @@
   max-width: 100%;
   align-items: center;
   gap: 4px;
-  overflow-x: auto;
-  padding: 4px 16px 4px 4px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: var(--radius-pill);
-  background: #121215;
+  flex-wrap: wrap;
+  overflow: visible;
+  padding: 4px;
+  border: var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
   scrollbar-width: none;
   overscroll-behavior-x: contain;
 }
@@ -42,7 +42,7 @@
   flex: 0 0 auto;
   height: 36px;
   min-height: 36px;
-  padding: 8px 16px;
+  padding: 6px 10px;
   white-space: nowrap;
   border: 1px solid transparent;
   border-bottom: 1px solid transparent;
@@ -2347,5 +2347,143 @@
     width: auto;
     justify-content: center;
     white-space: nowrap;
+  }
+}
+
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-page
+  .planning-result-footer-row:has(.period-budget-details[open]) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-page
+  .period-budget-hero:has(.period-budget-details[open]) {
+  width: 100%;
+  text-align: start;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-page
+  .period-budget-hero
+  .period-budget-details {
+  width: 100%;
+  min-width: 0;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-page
+  .period-budget-hero
+  .period-budget-flows
+  > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 4px 10px;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-page
+  .period-budget-hero
+  .period-budget-flows
+  dd {
+  margin: 0;
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-page
+  .planning-future-commitments.bento-soft-card {
+  padding: var(--bento-card-padding, 16px);
+  margin: 0;
+  gap: 12px;
+  text-align: start;
+}
+:root[data-ui='bento'] body .page-content .planning-page .metric-contribution {
+  text-align: start;
+  justify-items: stretch;
+}
+:root[data-ui='bento'] body .page-content .planning-page .planning-contribution-heading {
+  width: 100%;
+  justify-content: space-between;
+}
+:root[data-ui='bento'] body .page-content .planning-page .budget-lines {
+  gap: 0;
+}
+:root[data-ui='bento'] body .page-content .planning-page .budget-group {
+  padding: 12px 0;
+  border: 0;
+  border-bottom: var(--border-subtle);
+  border-radius: 0;
+  box-shadow: none;
+  background: none;
+}
+:root[data-ui='bento'] body .page-content .planning-page .budget-group > summary {
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-page
+  .budget-group[open]
+  > .budget-group-content {
+  padding-inline: 12px 0;
+  border: 0;
+  box-shadow: none;
+  background: none;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-page
+  :is(.budget-group-actual, .budget-line-actual) {
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .planning-page
+  :is(.budget-group-actual, .budget-line-actual)
+  small {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.header-settings.icon-button {
+  display: grid;
+  place-items: center;
+  text-decoration: none;
+}
+
+.header-settings[aria-current='page'] {
+  color: var(--gold-primary);
+  background: var(--gold-muted);
+}
+
+@media (max-width: 1050px) {
+  :root[data-ui='bento'] body .premium-app .app-header .header-settings.icon-button {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    padding: 0;
+    border-radius: 50%;
   }
 }

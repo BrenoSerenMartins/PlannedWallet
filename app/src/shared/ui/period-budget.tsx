@@ -64,33 +64,13 @@ export function PeriodBudget({
             'Detalhes'
           )}
         </summary>
-        {variant === 'hero' && (
-          <div className="period-budget-head">
-            {budget.carried != null && (
-              <div>
-                <span>Saldo trazido</span>
-                <strong>{display(budget.carried)}</strong>
-              </div>
-            )}
-            {budget.available != null && (
-              <div>
-                <span>Disponível</span>
-                <strong>{display(budget.available)}</strong>
-              </div>
-            )}
-            {budget.carried == null && budget.available == null && (
-              <span className="period-budget-unavailable">Saldo trazido ainda não disponível</span>
-            )}
-          </div>
-        )}
-        <p className="field-help">
-          Reservas ficam fora do disponível. Benefícios antecipados entram no mês configurado, sem
-          duplicar o saldo trazido.
-        </p>
-        {budget.coverage !== 'complete' && (
+        {variant !== 'hero' && (
           <p className="field-help">
-            Falta uma referência de saldo para completar este período. Confira as contas abaixo.
+            Reservas ficam fora do disponível. Benefícios antecipados entram no mês configurado.
           </p>
+        )}
+        {budget.coverage !== 'complete' && (
+          <p className="field-help">Saldo incompleto · confira as contas abaixo</p>
         )}
         {forecast && budget.carried != null && forecast.result != null && (
           <p className="field-help">
@@ -117,7 +97,7 @@ export function PeriodBudget({
           ))}
           {!!budget.reserved && (
             <div>
-              <dt>Guardado no período (incluído nas transferências)</dt>
+              <dt>Guardado no período</dt>
               <dd>{display(budget.reserved)}</dd>
             </div>
           )}
@@ -131,7 +111,7 @@ export function PeriodBudget({
                 <dd>{display(account.openingBankBalance)}</dd>
               </div>
               <div>
-                <dt>Créditos antecipados excluídos do saldo trazido</dt>
+                <dt>Créditos antecipados</dt>
                 <dd>{display(account.deferredOpening)}</dd>
               </div>
               <div>
@@ -139,7 +119,7 @@ export function PeriodBudget({
                 <dd>{display(account.carried)}</dd>
               </div>
               <div>
-                <dt>Créditos recebidos para períodos futuros</dt>
+                <dt>Créditos para meses futuros</dt>
                 <dd>{display(account.deferredClosing)}</dd>
               </div>
               <div>

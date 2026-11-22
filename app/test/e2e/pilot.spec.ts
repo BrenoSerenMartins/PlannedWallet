@@ -202,11 +202,7 @@ async function chooseTheme(page: Page, theme: string) {
     return;
   }
   const returnUrl = page.url();
-  await openAppMenu(page);
-  await page
-    .getByRole('dialog', { name: 'Menu do espaço' })
-    .getByRole('link', { name: 'Preferências', exact: true })
-    .click();
+  await page.getByRole('link', { name: 'Preferências', exact: true }).click();
   await page.getByRole('button', { name: `Tema ${theme}`, exact: true }).click();
   await page.goBack();
   await expect(page).toHaveURL(returnUrl);
@@ -2481,8 +2477,6 @@ for (const width of [390, 1440]) {
     await trigger.focus();
     await page.keyboard.press('Enter');
     const menu = page.getByRole('dialog', { name: 'Menu do espaço' });
-    await expect(menu.getByRole('link', { name: 'Importar extrato', exact: true })).toBeVisible();
-    await expect(menu.getByRole('link', { name: 'Preferências', exact: true })).toBeVisible();
     await expect(menu.getByRole('button', { name: /^Tema / })).toHaveCount(0);
     await expect(menu.getByRole('button', { name: 'Sair da conta', exact: true })).toHaveCount(0);
     const wealth = menu.getByRole('link', { name: 'Investimentos e patrimônio', exact: true });
@@ -3239,7 +3233,7 @@ function wealthFixture(populated = true) {
 async function financeFixtures(page: Page) {
   const cards = cardsFixture();
   const wealth = wealthFixture();
-  await page.route('**/v1/cards?*', (r) => r.fulfill({ json: cards }));
+  await page.route('**/v1/cards', (r) => r.fulfill({ json: cards }));
   await page.route('**/v1/cards', (r) => r.fulfill({ json: cards }));
   await page.route('**/v1/wealth', (r) => r.fulfill({ json: wealth }));
   await page.route('**/v1/wealth/overview', (r) => r.fulfill({ json: wealth }));

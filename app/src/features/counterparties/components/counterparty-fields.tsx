@@ -1,3 +1,4 @@
+import { ToggleField } from '../../../shared/ui/controls/toggle-field';
 import { Select } from '../../../shared/ui/controls/select';
 import '../counterparties.css';
 import { useEffect, useState, type ReactNode } from 'react';
@@ -90,7 +91,7 @@ export function CounterpartyFields({
               }}
               disabled={query.isPending || query.isError}
             >
-              <option value="">Reconhecer automaticamente quando possível</option>
+              <option value="">Reconhecimento automático</option>
               {(query.data ?? [])
                 .filter((a) => a.enabled || a.id === agent)
                 .map((a) => (
@@ -114,30 +115,23 @@ export function CounterpartyFields({
               />
             </label>
           )}
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              checked={rememberIdentity}
-              disabled={!agent || sourceKind === 'settlement'}
-              onChange={(event) => onRememberIdentity(event.target.checked)}
-            />
-            Reconhecer esta descrição no histórico e nos próximos movimentos desta conta
-          </label>
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              checked={remember}
-              disabled={!category || !agent}
-              onChange={(e) => onRemember(e.target.checked)}
-            />
-            Usar esta categoria para esta pessoa ou estabelecimento neste tipo de movimento
-          </label>
-          <p className="field-help">
-            O vínculo será salvo junto com o lançamento ou a confirmação do extrato. A identidade
-            vale para receitas e despesas; a regra de categoria é separada por tipo. Escolhas
-            manuais são preservadas.{' '}
-            <Link to="/counterparties">Gerenciar pessoas e estabelecimentos</Link>
-          </p>
+          {agent && (
+            <div className="form-stack">
+              {sourceKind !== 'settlement' && (
+                <ToggleField checked={rememberIdentity} onChange={onRememberIdentity}>
+                  Reconhecer esta descrição nesta conta
+                </ToggleField>
+              )}
+              {category && (
+                <ToggleField checked={remember} onChange={onRemember}>
+                  Usar esta categoria em lançamentos do mesmo tipo
+                </ToggleField>
+              )}
+            </div>
+          )}
+          <Link className="text-button" to="/counterparties">
+            Gerenciar cadastros
+          </Link>
           {children}
           {query.isError && (
             <p className="form-error">

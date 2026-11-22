@@ -412,3 +412,23 @@ body .transactions-page .movement-new-button:hover {
   font-size: 13px;
   color: var(--muted);
 }
+
+.movement-filter-form,
+.movement-filter-fields {
+  display: grid;
+  gap: 14px;
+}
+body .dialog-content .movement-filter-form .movement-period {
+  margin: 0;
+}
+.movement-filter-fields {
+  padding-block: 14px;
+  border-block: 1px solid var(--border);
+}
+.movement-filter-tools {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}

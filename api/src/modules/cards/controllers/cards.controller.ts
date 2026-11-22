@@ -40,6 +40,7 @@ import {
   CardPaymentDto,
   CardTransactionPaymentDto,
   CardOpeningDto,
+  CardBillTotalDto,
   CardRefundDto,
   CardCategoryDto,
 } from '../dto/cards.dto.js';
@@ -141,6 +142,20 @@ export class CardsController {
   ) {
     const dto = await validateInput(SaveCardDto, body);
     return this.db.forUser(r.identity.id, () => this.cards.create(dto, key));
+  }
+  @Patch(':id/bills/:month/total')
+  @ApiBody({ type: CardBillTotalDto })
+  async setBillTotal(
+    @Req() r: AuthenticatedRequest,
+    @Param('id') id: string,
+    @Param('month') month: string,
+    @Body() body: unknown,
+    @Headers('if-match') version: string,
+  ) {
+    const dto = await validateInput(CardBillTotalDto, body);
+    return this.db.forUser(r.identity.id, () =>
+      this.cards.setBillTotal(requireUuid(id), month, dto.total, version),
+    );
   }
   @Delete(':id')
   remove(

@@ -14,13 +14,16 @@ export function BudgetLine({ line, type }: { line: PlanningLine; type: 'income' 
           <span style={{ background: line.color }} />
           <strong>{line.name}</strong>
         </div>
-        <strong className="budget-line-actual">{money(line.actual)}</strong>
+        <strong className="budget-line-actual">
+          <small>Realizado</small>
+          {money(line.actual)}
+        </strong>
       </div>
       <div className="budget-progress" aria-hidden="true">
         <i style={{ width: `${progress}%` }} />
       </div>
       <div className="budget-progress-footer">
-        <span>Previsto: {line.planned === null ? 'Sem previsão' : money(line.planned)}</span>
+        <span>{line.planned === null ? 'Sem previsão' : `Previsto: ${money(line.planned)}`}</span>
         <strong
           className={
             exceeded
@@ -31,7 +34,7 @@ export function BudgetLine({ line, type }: { line: PlanningLine; type: 'income' 
           }
         >
           {difference === null
-            ? 'Sem previsão'
+            ? null
             : type === 'income'
               ? `${difference >= 0 ? 'Acima' : 'Abaixo'}: ${money(Math.abs(difference))}`
               : `${exceeded ? 'Excedido' : 'Livre'}: ${money(Math.abs(difference))}`}

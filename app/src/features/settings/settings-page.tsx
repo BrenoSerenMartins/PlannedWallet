@@ -1,3 +1,9 @@
+import { useState } from 'react';
+import {
+  deviceNotificationsEnabled,
+  setDeviceNotifications,
+  supportsDeviceNotifications,
+} from '../../shared/feedback/device-notifications';
 import { Select } from '../../shared/ui/controls/select';
 import { useSearchParams } from 'react-router-dom';
 import { ShieldCheck } from 'lucide-react';
@@ -7,6 +13,8 @@ import { Button, ThemeSwitcher } from '../../shared/ui/primitives';
 import { DataSettings } from './data-settings';
 export function SettingsPage() {
   const { session } = useAuth();
+  const [deviceNotices, setDeviceNotices] = useState(deviceNotificationsEnabled);
+  const [noticeStatus, setNoticeStatus] = useState('');
   const [params, setParams] = useSearchParams();
   const view = ['appearance', 'data', 'account'].includes(params.get('view') ?? '')
     ? params.get('view')!
@@ -45,6 +53,36 @@ export function SettingsPage() {
                 </p>
               </div>
             </section>
+            {supportsDeviceNotifications() && (
+              <section className="panel settings-panel">
+                <h2>Notificações do dispositivo</h2>
+                <p>Avisos de faturas importadas quando o app estiver em segundo plano.</p>
+                <Button
+                  className="secondary"
+                  aria-pressed={deviceNotices}
+                  onClick={async () => {
+                    try {
+                      const enabled = await setDeviceNotifications(!deviceNotices);
+                      setDeviceNotices(enabled);
+                      setNoticeStatus(
+                        !deviceNotices && !enabled
+                          ? 'Autorize as notificações nas configurações do navegador.'
+                          : '',
+                      );
+                    } catch {
+                      setNoticeStatus(
+                        'Não foi possível alterar as notificações neste dispositivo.',
+                      );
+                    }
+                  }}
+                >
+                  {deviceNotices
+                    ? 'Desativar avisos neste dispositivo'
+                    : 'Ativar avisos neste dispositivo'}
+                </Button>
+                {noticeStatus && <p role="status">{noticeStatus}</p>}
+              </section>
+            )}
           </>
         )}
         {view === 'data' && <DataSettings />}

@@ -1,3 +1,4 @@
+import { notifyDevice } from './device-notifications';
 import { Tooltip } from '../ui/tooltip';
 import {
   createContext,
@@ -17,6 +18,7 @@ export interface NoticeOptions {
   id?: string;
   title?: string;
   duration?: number;
+  device?: boolean;
   action?: { label: string; run: () => void };
 }
 export interface Notice extends NoticeOptions {
@@ -104,7 +106,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       tone,
       createdAt: Date.now(),
       revision: ++sequence.current,
-      active: true,
+      active: tone !== 'info' || !!options.action,
       read: false,
       duration:
         options.duration ??
@@ -113,7 +115,8 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
           : Math.max(7000, Math.min(18000, message.length * 65))),
     };
     setItems((current) => [...current.filter((n) => n.id !== item.id), item].slice(-40));
-    setAnnouncement(item);
+    if (item.active) setAnnouncement(item);
+    if (options.device) void notifyDevice();
   }, []);
   const dismiss = useCallback((id: string) => {
     setItems((current) => current.map((n) => (n.id === id ? { ...n, active: false } : n)));
@@ -172,12 +175,9 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
             aria-relevant="additions"
             aria-live="off"
           >
-            {active.slice(0, 3).map((item) => (
+            {active.slice(-1).map((item) => (
               <Toast key={`${item.id}:${item.revision}`} item={item} onDismiss={dismiss} />
             ))}
-            {active.length > 3 && (
-              <p className="notification-pending">Mais {active.length - 3} avisos na fila</p>
-            )}
           </section>
         </>,
         document.body,

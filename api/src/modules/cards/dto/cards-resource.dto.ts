@@ -58,6 +58,7 @@ export class CardPaymentResourceDto {
   @ApiPropertyOptional({ type: Boolean }) active?: boolean;
 }
 export class CardBillResourceDto {
+  @ApiProperty({ type: Boolean }) imported!: boolean;
   @ApiProperty({ type: String }) id!: string;
   @ApiProperty({ type: String }) cardId!: string;
   @ApiProperty({ type: String }) month!: string;

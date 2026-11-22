@@ -173,7 +173,8 @@ export function DashboardPage() {
                 <strong>{display(snapshot.data.reserveBalance)}</strong>
               </div>
               <button
-                className="text-button"
+                type="button"
+                className="hero-accounts-toggle"
                 onClick={() => setDetails(!details)}
                 aria-expanded={details}
               >

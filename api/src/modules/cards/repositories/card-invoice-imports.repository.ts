@@ -81,7 +81,7 @@ export class CardInvoiceImportsRepository {
       payload,
     );
     await this.db.query(
-      "UPDATE wallet.card_invoice_imports SET payload_ciphertext=$4::jsonb, bill_month=$6, version=version+1 WHERE user_id=$1 AND workspace_id=$2 AND id=$3 AND status='review' AND version=$5",
+      "UPDATE wallet.card_invoice_imports SET payload_ciphertext=$4::jsonb, bill_month=$6, status='review', version=version+1 WHERE user_id=$1 AND workspace_id=$2 AND id=$3 AND status IN ('review','superseded') AND version=$5",
       [this.db.userId, this.db.workspaceId, id, JSON.stringify(ciphertext), version, month],
     );
   }
@@ -117,10 +117,10 @@ export class CardInvoiceImportsRepository {
       .map(([id]) => id);
   }
 
-  async supersede(id: string) {
+  async supersedeFrom(cardId: string, month: string) {
     await this.db.query(
-      "UPDATE wallet.card_invoice_imports SET status='superseded', version=version+1 WHERE user_id=$1 AND workspace_id=$2 AND id=$3 AND status='confirmed'",
-      [this.db.userId, this.db.workspaceId, id],
+      "UPDATE wallet.card_invoice_imports SET status='superseded', version=version+1 WHERE user_id=$1 AND workspace_id=$2 AND card_id=$3 AND bill_month >= $4 AND status='confirmed'",
+      [this.db.userId, this.db.workspaceId, cardId, month],
     );
   }
 

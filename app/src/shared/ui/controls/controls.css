@@ -395,3 +395,51 @@ body .text-button {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+body .shared-search-field:focus-within {
+  outline: 2px solid var(--gold-primary, var(--accent));
+  outline-offset: 2px;
+}
+body .shared-search-field input:focus {
+  outline: none;
+  box-shadow: none;
+}
+body label.toggle-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: var(--control-hit);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+}
+body .toggle-field input[role='switch'] {
+  appearance: none;
+  flex: none;
+  display: grid;
+  align-items: center;
+  width: 38px;
+  height: 22px;
+  min-height: 0;
+  margin: 0;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+}
+.toggle-field input[role='switch']::before {
+  content: '';
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: currentColor;
+}
+body .toggle-field input[role='switch']:checked {
+  background: var(--gold-muted);
+  color: var(--gold-primary);
+}
+.toggle-field input[role='switch']:checked::before {
+  justify-self: end;
+}

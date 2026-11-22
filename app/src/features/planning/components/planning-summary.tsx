@@ -178,15 +178,15 @@ export function PlanningSummary({
             )}
           </div>
           {plan.contribution === null ? (
-            <p className="planning-contribution-empty">Nenhum aporte definido para este mês</p>
+            <p className="planning-contribution-empty">Sem meta de aporte</p>
           ) : (
             <>
               <strong>{display(plan.contribution)}</strong>
               <small>Resultado após aporte: {display(t.afterContribution)}</small>
             </>
           )}
-          {commitments}
         </article>
+        {commitments}
         {navigation && <div className="summary-navigation">{navigation}</div>}
       </section>
     </>

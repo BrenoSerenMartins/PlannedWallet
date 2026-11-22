@@ -40,7 +40,7 @@ import { CardPaymentForm } from './components/card-payment-form';
 import { CardRecurring } from './components/card-recurring';
 import './cards.css';
 type Dialog =
-  | { kind: 'new' | 'edit' | 'purchase' | 'opening' | 'pay' | 'invoice' | 'delete' }
+  | { kind: 'new' | 'edit' | 'purchase' | 'opening' | 'pay' | 'invoice' | 'delete' | 'billTotal' }
   | { kind: 'refund' | 'undoRefund' | 'undoOpening'; entry: CardEntry }
   | { kind: 'undoPayment'; payment: CardPayment }
   | { kind: 'category' | 'cancelPurchase'; purchase: CardPurchase };
@@ -53,13 +53,14 @@ export function CardsPage() {
   const [params, setParams] = useSearchParams();
   const month = validMonth(params.get('month')) ? params.get('month')! : dateToday().slice(0, 7);
   const query = useQuery({
-    queryKey: ['cards', month],
-    queryFn: () => request<CardsSummary>(`/cards?month=${month}`),
+    queryKey: ['cards'],
+    queryFn: () => request<CardsSummary>('/cards'),
   });
   const write = useFinanceWrite();
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const { visible } = useFinancialVisibility();
   const [showArchived, setShowArchived] = useState(false);
+  const billTotalInput = useRef<HTMLInputElement>(null);
   const selectorRef = useRef<HTMLDivElement>(null);
   const swipeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { success: setMessage } = useNotifications();
@@ -68,6 +69,21 @@ export function CardsPage() {
   const cards = all.filter((c) => showArchived || !c.archived);
   const card = cards.find((c) => c.id === params.get('card')) ?? cards[0];
   const bill = card?.bills.find((b) => b.month === month);
+  const billTotalAction = card && !card.archived && (
+    <Tooltip
+      text={bill?.imported ? 'Total definido pela fatura importada' : 'Editar total da fatura'}
+    >
+      <button
+        type="button"
+        className="icon-button card-bill-edit"
+        aria-label="Editar total da fatura"
+        aria-disabled={bill?.imported || undefined}
+        onClick={() => setDialog({ kind: 'billTotal' })}
+      >
+        <Pencil size={14} aria-hidden="true" />
+      </button>
+    </Tooltip>
+  );
   const activeEntries = bill?.entries.filter((entry) => entry.active) ?? [];
   const activePurchaseIds = new Set(
     activeEntries.filter((entry) => entry.kind === 'purchase').map((entry) => entry.purchaseId),
@@ -208,6 +224,8 @@ export function CardsPage() {
                             {art ? (
                               <img
                                 src={art.src}
+                                decoding="async"
+                                loading={c.id === card?.id ? 'eager' : 'lazy'}
                                 alt={art.illustrative ? 'Arte padrão do emissor' : art.label}
                               />
                             ) : (
@@ -458,7 +476,7 @@ export function CardsPage() {
                       <>
                         <div className="card-bill-stats">
                           <div>
-                            <span>Total da fatura</span>
+                            <span>Total da fatura {billTotalAction}</span>
                             <strong>{value(bill.total)}</strong>
                           </div>
                           <div>
@@ -516,7 +534,9 @@ export function CardsPage() {
                                   {entry.kind === 'opening'
                                     ? 'Dívida anterior'
                                     : entry.kind === 'invoice_adjustment'
-                                      ? 'Ajuste da fatura importada'
+                                      ? entry.description === 'Ajuste manual da fatura'
+                                        ? 'Ajuste manual'
+                                        : 'Ajuste da fatura importada'
                                       : entry.kind === 'refund'
                                         ? 'Estorno'
                                         : (() => {
@@ -597,7 +617,9 @@ export function CardsPage() {
                         )}
                       </>
                     ) : (
-                      <p className="card-empty-line">Nenhuma compra neste vencimento</p>
+                      <p className="card-empty-line">
+                        Nenhuma compra neste vencimento {billTotalAction}
+                      </p>
                     )}
                     {!!cyclePurchases.length && (
                       <details className="finance-disclosure card-purchases-disclosure">
@@ -665,28 +687,60 @@ export function CardsPage() {
         open={!!dialog}
         onOpenChange={(open) => !open && setDialog(null)}
         title={
-          dialog?.kind === 'new'
-            ? 'Novo cartão'
-            : dialog?.kind === 'delete'
-              ? 'Excluir cartão'
-              : dialog?.kind === 'edit'
-                ? 'Editar cartão'
-                : dialog?.kind === 'purchase'
-                  ? 'Compra no cartão'
-                  : dialog?.kind === 'invoice'
-                    ? 'Importar fatura'
-                    : dialog?.kind === 'pay'
-                      ? 'Pagamento da fatura'
-                      : dialog?.kind === 'opening'
-                        ? 'Dívida anterior'
-                        : dialog?.kind === 'refund'
-                          ? 'Estorno no cartão'
-                          : dialog?.kind === 'category'
-                            ? 'Categoria da compra'
-                            : 'Revisar correção'
+          dialog?.kind === 'billTotal'
+            ? 'Total da fatura'
+            : dialog?.kind === 'new'
+              ? 'Novo cartão'
+              : dialog?.kind === 'delete'
+                ? 'Excluir cartão'
+                : dialog?.kind === 'edit'
+                  ? 'Editar cartão'
+                  : dialog?.kind === 'purchase'
+                    ? 'Compra no cartão'
+                    : dialog?.kind === 'invoice'
+                      ? 'Importar fatura'
+                      : dialog?.kind === 'pay'
+                        ? 'Pagamento da fatura'
+                        : dialog?.kind === 'opening'
+                          ? 'Dívida anterior'
+                          : dialog?.kind === 'refund'
+                            ? 'Estorno no cartão'
+                            : dialog?.kind === 'category'
+                              ? 'Categoria da compra'
+                              : 'Revisar correção'
         }
         description="Confira os valores antes de confirmar."
       >
+        {dialog?.kind === 'billTotal' &&
+          card &&
+          (bill?.imported ? (
+            <p>Esta fatura foi importada. Para corrigir o total, importe a fatura atualizada.</p>
+          ) : (
+            <FinanceForm
+              label="Salvar total"
+              onSubmit={async () => {
+                await write(
+                  `/cards/${card.id}/bills/${month}/total`,
+                  { total: parseMoney(billTotalInput.current?.value ?? '') },
+                  card.version,
+                  'PATCH',
+                );
+                saved();
+                setMessage('Total da fatura atualizado.');
+              }}
+            >
+              <label>
+                Total da fatura (R$)
+                <input
+                  ref={billTotalInput}
+                  required
+                  inputMode="decimal"
+                  maxLength={20}
+                  defaultValue={moneyInput(bill?.total ?? 0)}
+                />
+              </label>
+            </FinanceForm>
+          ))}
         {dialog?.kind === 'new' && <CardForm write={write} onSaved={() => saved()} />}
         {dialog?.kind === 'edit' && card && (
           <>
@@ -725,7 +779,7 @@ export function CardsPage() {
             onConfirmed={(billMonth) => {
               setDialog(null);
               update({ month: billMonth });
-              setMessage('Fatura confirmada.');
+              setMessage('Fatura confirmada.', { device: true });
             }}
           />
         )}
@@ -974,8 +1028,8 @@ function CardInvoiceImportForm({
                 checked={replaceConfirmed}
                 onChange={(event) => setReplaceConfirmed(event.target.checked)}
               />
-              Substituir a importação já confirmada neste mês. Os lançamentos do ciclo serão
-              revisados e o histórico anterior será preservado.
+              Substituir a importação já confirmada neste mês. Os lançamentos deste vencimento em
+              diante serão revisados e o histórico anterior será preservado.
             </label>
           )}
           <p>
@@ -1058,9 +1112,11 @@ function CardInvoiceImportForm({
                         method: 'POST',
                         headers: {
                           'If-Match': String(preview.version),
-                          ...(preview.replacesInvoiceId && replaceConfirmed
-                            ? { 'X-Replaces-Invoice': preview.replacesInvoiceId }
-                            : {}),
+                          ...(preview.status === 'confirmed'
+                            ? { 'X-Replaces-Invoice': preview.id }
+                            : preview.replacesInvoiceId && replaceConfirmed
+                              ? { 'X-Replaces-Invoice': preview.replacesInvoiceId }
+                              : {}),
                         },
                       }),
                     );
@@ -1080,8 +1136,8 @@ function CardInvoiceImportForm({
                 {busy
                   ? 'Confirmando…'
                   : preview.status === 'confirmed'
-                    ? 'Reconciliar saldo'
-                    : 'Confirmar e substituir compras do ciclo'}
+                    ? 'Reaplicar fatura deste mês em diante'
+                    : 'Confirmar e substituir compras deste mês em diante'}
               </Button>
             )}
         </section>

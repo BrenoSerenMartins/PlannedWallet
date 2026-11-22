@@ -1,3 +1,4 @@
+import { accountOptionIcons } from '../../../shared/branding/account-icons';
 import { DatePicker } from '../../../shared/ui/controls/date-picker';
 import { Select } from '../../../shared/ui/controls/select';
 import { CounterpartyFields } from '../../counterparties/components/counterparty-fields';
@@ -25,6 +26,7 @@ export function TransactionForm({
   onSaved: () => void;
 }) {
   const write = useFinanceWrite();
+  const accountIcons = accountOptionIcons(accounts);
   const cardsQuery = useQuery({
     queryKey: ['cards', 'transaction-picker'],
     queryFn: () => request<CardsSummary>('/cards'),
@@ -185,6 +187,7 @@ export function TransactionForm({
           <Select
             required
             value={account}
+            optionIcons={accountIcons}
             disabled={!!entry}
             onChange={(e) => {
               setAccount(e.target.value);
@@ -209,7 +212,12 @@ export function TransactionForm({
       {kind === 'transfer' ? (
         <label>
           Conta de destino
-          <Select required value={destination} onChange={(e) => setDestination(e.target.value)}>
+          <Select
+            required
+            optionIcons={accountIcons}
+            value={destination}
+            onChange={(e) => setDestination(e.target.value)}
+          >
             <option value="">Selecione uma conta</option>
             {accounts
               .filter((a) => a.id !== account)

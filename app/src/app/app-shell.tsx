@@ -22,7 +22,7 @@ import {
   ChevronDown,
   House,
   Landmark,
-  Settings2,
+  Settings,
   Ellipsis,
   Upload,
   WifiOff,
@@ -49,7 +49,7 @@ const navigation = [
   },
   { to: '/recognition', label: 'Revisão assistida', mobile: 'Revisão', Icon: ScanSearch },
   { to: '/goals', label: 'Metas e reservas', mobile: 'Metas', Icon: Target },
-  { to: '/imports', label: 'Importar extrato', mobile: 'Importar', Icon: Upload },
+  { to: '/imports', label: 'Importações', mobile: 'Importações', Icon: Upload },
   { to: '/categories', label: 'Grupos e categorias', mobile: 'Categorias', Icon: FolderTree },
   {
     to: '/counterparties',
@@ -57,9 +57,9 @@ const navigation = [
     mobile: 'Pessoas',
     Icon: UsersRound,
   },
-  { to: '/settings', label: 'Preferências', mobile: 'Mais', Icon: Settings2 },
+  { to: '/settings', label: 'Preferências', mobile: 'Ajustes', Icon: Settings },
 ];
-const primaryPaths = ['/', '/planning', '/cards', '/transactions', '/settings'];
+const primaryPaths = ['/', '/planning', '/cards', '/transactions', '/imports'];
 export function AppShell() {
   return (
     <FinancialVisibilityProvider>
@@ -253,6 +253,15 @@ function ShellContent() {
             <span className="header-notifications">
               <NotificationCenter />
             </span>
+            <Tooltip text="Preferências">
+              <NavLink
+                to="/settings"
+                className="icon-button header-settings"
+                aria-label="Preferências"
+              >
+                <Settings size={19} aria-hidden="true" />
+              </NavLink>
+            </Tooltip>
             {!online && (
               <span className="connection-chip" aria-label="Sem conexão">
                 <WifiOff size={16} />
@@ -260,7 +269,7 @@ function ShellContent() {
             )}
             <button
               type="button"
-              className={`header-more header-space-menu ${navigation.filter((n) => !primaryPaths.includes(n.to)).some((n) => location.pathname.startsWith(n.to)) ? 'active' : ''}`}
+              className={`header-more header-space-menu ${navigation.filter((n) => !primaryPaths.includes(n.to) && n.to !== '/settings').some((n) => location.pathname.startsWith(n.to)) ? 'active' : ''}`}
               onClick={(event) => {
                 menuTrigger.current = event.currentTarget;
                 setMore(true);
@@ -287,7 +296,7 @@ function ShellContent() {
             { to: '/planning', label: 'Planejar', Icon: CalendarDays },
             { to: '/cards', label: 'Cartões', Icon: CreditCard },
             { to: '/transactions', label: 'Extrato', Icon: ArrowDownUp },
-            { to: '/settings', label: 'Ajustes', Icon: Settings2 },
+            { to: '/imports', label: 'Importar', Icon: Upload },
           ].map(({ to, label, Icon }) => (
             <NavLink key={to} to={to} end={to === '/'}>
               <Icon size={21} strokeWidth={1.7} aria-hidden="true" />
@@ -315,11 +324,11 @@ function ShellContent() {
           {[
             {
               title: 'Seu dinheiro',
-              paths: ['/accounts', '/planning', '/cards', '/wealth', '/imports'],
+              paths: ['/accounts', '/planning', '/cards', '/wealth'],
             },
             {
               title: 'Organização',
-              paths: ['/goals', '/recognition', '/categories', '/counterparties', '/settings'],
+              paths: ['/goals', '/recognition', '/categories', '/counterparties'],
             },
           ].map((group) => (
             <div className="more-menu-group" key={group.title}>

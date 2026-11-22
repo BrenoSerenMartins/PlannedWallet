@@ -1,9 +1,10 @@
-import mercadoPagoMark from './mercado-pago-mark.webp';
+import { issuerLogos } from '../../../shared/branding/account-icons';
+export { issuerLogos };
 import itauAzulPlatinum from './itau-azul-platinum-hud.webp';
 import c6Carbon from './c6-carbon-hud.webp';
-import c6Mark from './c6-bank-mark.webp';
-import itauMark from './itau-mark.webp';
-import interMark from './inter-mark.webp';
+import c6Mark from '../../../shared/branding/c6-bank-mark.webp';
+import itauMark from '../../../shared/branding/itau-mark.webp';
+import interMark from '../../../shared/branding/inter-mark.webp';
 import mercadoPagoVisa from './mercado-pago-visa-hud.webp';
 import interGold from './inter-gold-hud.webp';
 import interPlatinum from './inter-platinum-hud.webp';
@@ -84,13 +85,6 @@ export function cardArtworkIssuer(id: CardArtworkId | '' | null | undefined): Ca
   if (id === 'c6-bank' || id === 'c6-carbon') return 'c6';
   return 'inter';
 }
-
-export const issuerLogos: Readonly<Partial<Record<string, string>>> = {
-  mercado_pago: mercadoPagoMark,
-  inter: interMark,
-  itau: itauMark,
-  c6: c6Mark,
-};
 
 export const artworkIssuerLogos = Object.fromEntries(
   (Object.keys(cardArtwork) as CardArtworkId[]).map((id) => [

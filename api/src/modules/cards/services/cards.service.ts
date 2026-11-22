@@ -41,6 +41,7 @@ import {
   cardDay,
   validCardMonth,
 } from './card-calendar.js';
+const manualBillAdjustment = 'Ajuste manual da fatura';
 const sum = (values: number[]) => exactAmount(Number(values.reduce((a, b) => a + BigInt(b), 0n)));
 @Injectable()
 export class CardsService implements CardForecast, ManagedBackup<CardsSnapshot> {
@@ -276,55 +277,34 @@ export class CardsService implements CardForecast, ManagedBackup<CardsSnapshot> 
   ) {
     let card = await this.card(id);
     card = await this.lockedCard(id, String(card.version));
-    const { cards, live } = await this.calculated();
-    const bill = cards.find((item) => item.id === id)?.bills.find((item) => item.month === month);
+    const { cards, live, data } = await this.calculated();
     const matches = await resolve();
-    const matched = matches.flatMap((item) => (item.purchaseId ? [item.purchaseId] : []));
-    if (
-      matches.some((item) => item.confidence === 'ambiguous') ||
-      new Set(matched).size !== matched.length ||
-      matched.some(
-        (purchaseId) =>
-          !bill?.entries.some((entry) => entry.active && entry.purchaseId === purchaseId),
-      )
-    )
-      throw new ConflictException(
-        'Há compras com correspondência ambígua entre o PDF e o cartão. Confira nomes, valores e parcelas no ciclo selecionado.',
-      );
-    const omitted = new Set(
-      bill?.entries.flatMap((entry) =>
-        entry.active &&
-        entry.kind === 'purchase' &&
-        entry.purchaseId &&
-        !matched.includes(entry.purchaseId)
-          ? [entry.purchaseId]
-          : [],
-      ),
-    );
     const currentCard = cards.find((item) => item.id === id)!;
+    const replacedPurchases = new Set<string>();
+    const historicalPurchases = new Set<string>();
     for (const cycle of currentCard.bills) {
-      if (cycle.month < month) continue;
-      for (const row of cycle.entries) {
+      for (const row of [...cycle.entries].sort(
+        (a, b) => Number(b.kind === 'refund') - Number(a.kind === 'refund'),
+      )) {
         if (!row.active || !row.transactionId) continue;
-        const replace =
-          (cycle.month === month && row.kind !== 'purchase') ||
-          (row.purchaseId !== null && omitted.has(row.purchaseId));
-        if (!replace) continue;
+        if (cycle.month < month) {
+          if (row.purchaseId) historicalPurchases.add(row.purchaseId);
+          continue;
+        }
         const entry = live.get(row.transactionId)!;
         await this.ledger.reverseManaged(entry.id, entry.version, 'card');
+        if (row.purchaseId) replacedPurchases.add(row.purchaseId);
       }
     }
-    for (const purchaseId of omitted) {
-      const hasHistory = currentCard.bills.some(
-        (cycle) =>
-          cycle.month < month &&
-          cycle.entries.some((row) => row.active && row.purchaseId === purchaseId),
-      );
-      if (!hasHistory) await this.repo.cancelPurchase(purchaseId);
+    for (const purchaseId of replacedPurchases) {
+      if (!historicalPurchases.has(purchaseId)) await this.repo.cancelPurchase(purchaseId);
     }
 
+    const activeCategories = new Set((await this.categories.list()).map((category) => category.id));
+    const purchasesById = new Map(data.purchases.map((purchase) => [purchase.id, purchase]));
     for (const [index, line] of lines.entries()) {
-      if (matches[index].purchaseId) continue;
+      const matchedId = matches[index].purchaseId;
+      const categoryId = matchedId ? purchasesById.get(matchedId)?.categoryId : null;
       const installments = line.installmentCount ?? 1;
       const current = line.installmentNumber ?? 1;
       const firstBillMonth = shiftCardMonth(month, 1 - current);
@@ -351,6 +331,7 @@ export class CardsService implements CardForecast, ManagedBackup<CardsSnapshot> 
         id,
         {
           description: line.description,
+          categoryId: categoryId && activeCategories.has(categoryId) ? categoryId : undefined,
           purchaseDate: line.date,
           amount,
           installments,
@@ -432,6 +413,36 @@ export class CardsService implements CardForecast, ManagedBackup<CardsSnapshot> 
     await this.repo.bump(id);
   }
 
+  async setBillTotal(id: string, month: string, total: number, version: string) {
+    validCardMonth(month);
+    exactAmount(total);
+    if (total < 0)
+      throw new UnprocessableEntityException('Informe um total maior ou igual a zero.');
+    const card = await this.lockedCard(id, version);
+    if ((await this.repo.importedBillKeys()).has(`${id}:${month}`))
+      throw new ConflictException(
+        'Esta fatura foi importada. Para corrigir o total, importe a fatura atualizada.',
+      );
+    const { cards, live } = await this.calculated();
+    const bill = cards.find((item) => item.id === id)?.bills.find((item) => item.month === month);
+    let baseTotal = bill?.total ?? 0;
+    for (const row of bill?.entries ?? []) {
+      if (
+        !row.active ||
+        row.kind !== 'invoice_adjustment' ||
+        row.description !== manualBillAdjustment
+      )
+        continue;
+      const entry = live.get(row.transactionId!)!;
+      baseTotal += entry.amount;
+      await this.ledger.reverseManaged(entry.id, entry.version, 'card');
+    }
+    const delta = exactAmount(total - baseTotal);
+    if (delta) await this.recordInvoiceAdjustment(card, month, delta, manualBillAdjustment);
+    await this.repo.bump(id);
+    return { id, month, total };
+  }
+
   private async recordInvoiceAdjustment(
     card: CreditCard,
     month: string,
@@ -498,34 +509,54 @@ export class CardsService implements CardForecast, ManagedBackup<CardsSnapshot> 
       ...data.entries.flatMap((e) => (e.transactionId ? [e.transactionId] : [])),
       ...data.payments.flatMap((p) => [p.debitId, p.creditId].filter((v): v is string => !!v)),
     ];
-    const live = new Map((await this.ledger.managedEntries(ids)).map((e) => [e.id, e]));
-    const accounts = new Map((await this.accounts.list()).map((a) => [a.id, a]));
+    const [ledgerEntries, accountList] = await Promise.all([
+      this.ledger.managedEntries(ids),
+      this.accounts.list(),
+    ]);
+    const live = new Map(ledgerEntries.map((entry) => [entry.id, entry]));
+    const accounts = new Map(accountList.map((account) => [account.id, account]));
+    const today = financeToday();
+    const cycleKey = (row: { cardId: string; billMonth: string }) =>
+      `${row.cardId}:${row.billMonth}`;
+    function groupBy<T>(rows: T[], keyFor: (row: T) => string) {
+      const groups = new Map<string, T[]>();
+      for (const row of rows) {
+        const key = keyFor(row);
+        const group = groups.get(key);
+        if (group) group.push(row);
+        else groups.set(key, [row]);
+      }
+      return groups;
+    }
+    const entriesByCycle = groupBy(data.entries, cycleKey);
+    const paymentsByCycle = groupBy(data.payments, cycleKey);
+    const billsByCard = groupBy(data.bills, (bill) => bill.cardId);
     const cards = data.cards.map((card) => {
-      const bills = data.bills
-        .filter((b) => b.cardId === card.id)
-        .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+      const bills = (billsByCard.get(card.id) ?? []).sort((a, b) =>
+        a.dueDate.localeCompare(b.dueDate),
+      );
       const computed = bills.map((bill) => {
-        const entries = data.entries
-          .filter((e) => e.cardId === card.id && e.billMonth === bill.month)
-          .map((e) => ({ ...e, active: !!e.transactionId && live.has(e.transactionId) }));
-        const payments = data.payments
-          .filter((p) => p.cardId === card.id && p.billMonth === bill.month)
-          .map((p) => {
-            const debit = p.debitId ? live.get(p.debitId) : null;
-            const credit = p.creditId ? live.get(p.creditId) : null;
-            const active =
-              !p.voided &&
-              !!debit &&
-              !!credit &&
-              debit.managedKind === 'card' &&
-              credit.managedKind === 'card' &&
-              credit.accountId === card.accountId &&
-              debit.amount === -p.amount &&
-              credit.amount === p.amount &&
-              debit.transferGroupId !== null &&
-              debit.transferGroupId === credit.transferGroupId;
-            return { ...p, active };
-          });
+        const key = `${card.id}:${bill.month}`;
+        const entries = (entriesByCycle.get(key) ?? []).map((e) => ({
+          ...e,
+          active: !!e.transactionId && live.has(e.transactionId),
+        }));
+        const payments = (paymentsByCycle.get(key) ?? []).map((p) => {
+          const debit = p.debitId ? live.get(p.debitId) : null;
+          const credit = p.creditId ? live.get(p.creditId) : null;
+          const active =
+            !p.voided &&
+            !!debit &&
+            !!credit &&
+            debit.managedKind === 'card' &&
+            credit.managedKind === 'card' &&
+            credit.accountId === card.accountId &&
+            debit.amount === -p.amount &&
+            credit.amount === p.amount &&
+            debit.transferGroupId !== null &&
+            debit.transferGroupId === credit.transferGroupId;
+          return { ...p, active };
+        });
         const total = -sum(
           entries.filter((e) => e.active).map((e) => live.get(e.transactionId!)!.amount),
         );
@@ -550,9 +581,9 @@ export class CardsService implements CardForecast, ManagedBackup<CardsSnapshot> 
         bill.state =
           bill.remaining === 0
             ? 'paid'
-            : bill.dueDate < financeToday()
+            : bill.dueDate < today
               ? 'overdue'
-              : bill.closingDate <= financeToday()
+              : bill.closingDate <= today
                 ? 'closed'
                 : 'open';
       }
@@ -571,11 +602,18 @@ export class CardsService implements CardForecast, ManagedBackup<CardsSnapshot> 
   }
   async summary(month?: string) {
     if (month) validCardMonth(month);
-    const { cards, data } = await this.calculated();
+    const [{ cards, data }, imported] = await Promise.all([
+      this.calculated(),
+      this.repo.importedBillKeys(),
+    ]);
     return {
       today: financeToday(),
       cards: cards.map((card) => ({
         ...card,
+        bills: card.bills.map((bill) => ({
+          ...bill,
+          imported: imported.has(`${card.id}:${bill.month}`),
+        })),
         selectedMonth: month ?? financeToday().slice(0, 7),
         purchases: data.purchases.filter((p) => p.cardId === card.id),
       })),

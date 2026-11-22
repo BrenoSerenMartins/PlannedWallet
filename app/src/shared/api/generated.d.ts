@@ -244,6 +244,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/cards/{id}/bills/{month}/total': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch: operations['CardsController_setBillTotal'];
+    trace?: never;
+  };
   '/v1/cards/{id}': {
     parameters: {
       query?: never;
@@ -1829,6 +1845,7 @@ export interface components {
       active?: boolean;
     };
     CardBillResourceDto: {
+      imported: boolean;
       id: string;
       cardId: string;
       month: string;
@@ -1935,6 +1952,9 @@ export interface components {
       limit: number;
       version: number;
       archived: boolean;
+    };
+    CardBillTotalDto: {
+      total: number;
     };
     CardRecurringResourceDto: {
       confirmedMonths: string[];
@@ -3273,6 +3293,27 @@ export interface operations {
         content: {
           'application/json': components['schemas']['CreditCardDto'];
         };
+      };
+    };
+  };
+  CardsController_setBillTotal: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CardBillTotalDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };

@@ -32,10 +32,10 @@ export function AutomaticImportBatch({
   const ready = batch.rows.filter((row) => row.status === 'ready').length;
   return (
     <section className="panel automatic-import-batch" aria-label="Importação automática em lote">
-      <h2>Importar vários arquivos</h2>
+      <h2>Selecione seus arquivos</h2>
       <p>
-        Selecione extratos e faturas de bancos e meses diferentes. Identificamos o tipo, o banco, o
-        período e o destino antes de confirmar o lote.
+        Envie um arquivo ou um lote. Identificamos o banco, o mês e se é extrato ou fatura. Você
+        confere o resultado antes de importar.
       </p>
       {batch.rows.some((row) => needsPdfPassword(row.message)) && (
         <>
@@ -90,6 +90,9 @@ export function AutomaticImportBatch({
           </Button>
         )}
       </div>
+      <p className="field-help">
+        PDF com texto, CSV ou XLSX · até 20 arquivos · 10 MB por arquivo · 100 MB por lote.
+      </p>
       {batch.error && <p role="alert">{batch.error}</p>}
       <ul className="automatic-import-rows" aria-live="polite">
         {batch.rows.map((row) => (

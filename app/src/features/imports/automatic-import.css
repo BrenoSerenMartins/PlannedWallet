@@ -36,3 +36,87 @@
   vertical-align: middle;
   background: #fff;
 }
+
+/* Scope to this workspace so global panel/mobile rules cannot remove its gutters. */
+body .imports-page .automatic-import-batch {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  max-width: 920px;
+  margin: 0 auto 24px;
+  padding: clamp(20px, 4vw, 32px);
+  text-align: left;
+}
+body .imports-page .automatic-import-batch h2,
+body .imports-page .automatic-import-batch > p {
+  margin: 0;
+}
+body .imports-page .automatic-import-batch > p {
+  color: var(--muted);
+  line-height: 1.65;
+  max-width: 65ch;
+}
+body .imports-page .automatic-import-batch h2 {
+  font-size: 20px;
+  line-height: 1.35;
+}
+body .imports-page .automatic-import-rows {
+  margin: 0;
+  min-width: 0;
+}
+body .imports-page .automatic-import-rows:empty {
+  display: none;
+}
+body .imports-page .view-content,
+body .imports-page .upload-panel,
+body .imports-page .automatic-import-batch > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+body .imports-page .button {
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
+  height: auto;
+  min-height: 44px;
+}
+body .imports-page .upload-panel[hidden] {
+  display: none;
+}
+body .imports-page .view-content[hidden] {
+  display: none;
+}
+.imports-view-tabs {
+  display: flex;
+  gap: 24px;
+  max-width: 920px;
+  margin: 0 auto 24px;
+  border-bottom: 1px solid var(--border);
+}
+.imports-view-tabs button {
+  padding: 12px 0;
+  background: transparent;
+  color: var(--muted);
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  font: inherit;
+  cursor: pointer;
+}
+.imports-view-tabs button[aria-pressed='true'] {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+.imports-view-tabs button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+@media (max-width: 480px) {
+  body .imports-page .automatic-import-batch .inline-actions > .button {
+    width: 100%;
+  }
+  .import-stepper li {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+}

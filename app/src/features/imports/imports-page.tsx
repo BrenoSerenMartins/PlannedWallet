@@ -24,7 +24,7 @@ import { MonthPicker } from '../../shared/ui/controls/month-picker';
 import { PageHeader } from '../../shared/ui/page-header';
 import { CheckCircle2 } from 'lucide-react';
 import { ImportReview } from './components/import-review';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useStatementUploads } from './hooks/use-statement-uploads';
 import { UploadResults } from './components/upload-results';
 import { Link, useNavigate, useParams } from 'react-router-dom';
@@ -119,6 +119,12 @@ export function ImportsPage() {
     reconciliation: Array<{ confidence: string; purchaseId: string | null }>;
   } | null>(null);
   const [view, setView] = useState('upload');
+  const [reviewRequest, setReviewRequest] = useState(0);
+  useEffect(() => {
+    if (!reviewRequest) return;
+    individualReview.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
+    individualReview.current?.focus({ preventScroll: true });
+  }, [reviewRequest]);
   const uploads = useStatementUploads((rows) => {
     void client.invalidateQueries({ queryKey: [session?.user.id, 'imports'] });
     if (rows.length === 1 && rows[0].result) navigate('/imports/' + rows[0].result.id);
@@ -260,8 +266,7 @@ export function ImportsPage() {
       setDetecting(false);
       setDetectError(row.message ?? 'Revise as credenciais e tente ler o arquivo novamente.');
     }
-    individualReview.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
-    individualReview.current?.focus({ preventScroll: true });
+    setReviewRequest((request) => request + 1);
   };
   const continueStatement = async () => {
     if (!selectedFile || !detected || busy) return;
@@ -336,11 +341,11 @@ export function ImportsPage() {
   return (
     <div className="page-enter imports-page">
       <PageHeader
-        title={importId ? 'Revise seu extrato' : 'Importar extrato'}
+        title={importId ? 'Revisar importação' : 'Importar extratos e faturas'}
         description={
           importId
             ? (batch.data?.fileName ?? 'Confira os movimentos antes de concluir.')
-            : undefined
+            : 'Envie arquivos de bancos e meses diferentes e confira os dados antes de confirmar.'
         }
       >
         {importId && (
@@ -350,25 +355,27 @@ export function ImportsPage() {
           </Link>
         )}
       </PageHeader>
-      <ol className="import-stepper" aria-label="Etapas da importação">
-        {['Enviar arquivo', 'Revisar movimentos', 'Concluir'].map((label, index) => {
-          const current = !importId
-            ? 0
-            : ['confirmed', 'history'].includes(batch.data?.status ?? '')
-              ? 2
-              : 1;
-          return (
-            <li
-              key={label}
-              aria-current={index === current ? 'step' : undefined}
-              data-complete={index < current}
-            >
-              <span aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
-              {label}
-            </li>
-          );
-        })}
-      </ol>
+      {importId && (
+        <ol className="import-stepper" aria-label="Etapas da importação">
+          {['Enviar arquivo', 'Revisar movimentos', 'Concluir'].map((label, index) => {
+            const current = !importId
+              ? 0
+              : ['confirmed', 'history'].includes(batch.data?.status ?? '')
+                ? 2
+                : 1;
+            return (
+              <li
+                key={label}
+                aria-current={index === current ? 'step' : undefined}
+                data-complete={index < current}
+              >
+                <span aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+                {label}
+              </li>
+            );
+          })}
+        </ol>
+      )}
       {importId ? (
         batch.isPending ? (
           <Loading />
@@ -396,17 +403,21 @@ export function ImportsPage() {
         )
       ) : (
         <>
-          <label className="workspace-section-select">
-            <span className="sr-only">Seções de importação</span>
-            <Select
-              aria-label="Seções de importação"
-              value={view}
-              onChange={(event) => setView(event.target.value)}
-            >
-              <option value="upload">Enviar arquivos</option>
-              <option value="history">Histórico</option>
-            </Select>
-          </label>
+          <nav className="imports-view-tabs" aria-label="Seções de importação">
+            {[
+              ['upload', 'Enviar arquivos'],
+              ['history', 'Histórico'],
+            ].map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={view === value}
+                onClick={() => setView(value)}
+              >
+                {label}
+              </button>
+            ))}
+          </nav>
           <div hidden={view !== 'upload'} className="view-content">
             <AutomaticImportBatch
               batch={automaticBatch}
@@ -420,6 +431,7 @@ export function ImportsPage() {
             />
             <div className="import-grid">
               <section
+                hidden={!selectedFile}
                 ref={individualReview}
                 tabIndex={-1}
                 aria-label="Revisão individual de importação"
@@ -429,7 +441,7 @@ export function ImportsPage() {
                 <span className="file-icon">
                   <FileText size={28} />
                 </span>
-                <h2>Selecione seus extratos</h2>
+                <h2>Revisar arquivo</h2>
                 {selectedFile && (
                   <p role="status">
                     Arquivo em revisão: <strong>{selectedFile.name}</strong>
@@ -915,8 +927,8 @@ export function ImportsPage() {
                   {[
                     {
                       n: '01',
-                      title: 'Envie seu extrato',
-                      text: 'Escolha o PDF, CSV ou XLSX e a conta à qual ele pertence.',
+                      title: 'Envie extratos e faturas',
+                      text: 'Selecione um ou vários arquivos PDF, CSV ou XLSX. Identificamos o banco, o período e o destino.',
                     },
                     {
                       n: '02',

@@ -462,7 +462,7 @@ export function TransactionsPage() {
                 </Link>
               ) : (
                 <Link to="/imports" className="button secondary">
-                  Importar extrato
+                  Importar extratos e faturas
                 </Link>
               )
             }

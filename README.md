@@ -187,6 +187,10 @@ Em um serviço já criado, confira **Environment → PORT = 10000** e **Settings
 
 O plano gratuito pode adormecer após inatividade; a primeira abertura pode demorar. O worker separado do Cloudflare não é necessário nesse caminho. Se houver um deploy frontend antigo, utilize a URL do Render para acessar a aplicação completa.
 
+#### Publicação automatizada na main
+
+Use `./deploy.sh --prepare`, revise as mudanças da main e `knowledge/`, atualize a documentação e prepare os arquivos com `git add <caminhos>`. Depois rode `./deploy.sh "Mensagem do commit" --reviewed=<SHA completo da origin/main>`. O comando valida testes/build, aplica migrations pendentes, faz commit/push e aguarda o Render e a saúde da produção, com uma linha por etapa. Falhas interrompem o fluxo e indicam o log. Consulte [o procedimento completo](knowledge/architecture/deployment.md), incluindo autenticação e retomada.
+
 #### Configuração ausente no deploy
 
 Se o processo parar em `Supabase configuration is required.` (versões anteriores) ou `Missing Supabase environment variables: ...`, abra **Environment** no serviço que está sendo implantado e confira:

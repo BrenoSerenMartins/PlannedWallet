@@ -2129,9 +2129,9 @@ it('moves an unconfirmed invoice review to the explicitly selected month and pre
   await expect(run(() => service.confirm(first.id, String(first.version)))).rejects.toThrow();
   await run(() => service.confirm(moved.id, String(moved.version)));
   expect((await currentCard(card.id)).bills.map((bill) => bill.month)).toEqual(['2026-10']);
-  await expect(run(() => service.import(card.id, '2026-11', file))).rejects.toThrow(
-    'já foi confirmado em 2026-10',
-  );
+  const existing = await run(() => service.import(card.id, '2026-11', file));
+  expect(existing).toMatchObject({ id: moved.id, billMonth: '2026-10', status: 'confirmed' });
+  expect((await currentCard(card.id)).bills.map((bill) => bill.month)).toEqual(['2026-10']);
 });
 
 it('requires explicit replacement of the confirmed source, preserves its audit and rejects stale replacement intents', async () => {

@@ -1,73 +1,75 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
-
+umask 077
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
-if [[ $# -gt 1 || ${1:-} == --help ]]; then
-  printf 'Uso: ./deploy.sh "Mensagem do commit"\n'
+
+if [[ ${1:-} == --help || $# -gt 2 ]]; then
+  printf 'Uso: ./deploy.sh --prepare | ./deploy.sh "Mensagem" --reviewed=SHA_DA_MAIN\n'
   exit 0
 fi
-
-log_dir=$(mktemp -d "${TMPDIR:-/tmp}/plannedwallet-deploy.XXXXXX")
+mkdir -p .verification
+export npm_config_cache="${npm_config_cache:-$PWD/.verification/npm-cache}"
+log_dir=$(mktemp -d .verification/deploy.XXXXXX)
 run() {
-  local label=$1 log
+  local label=$1 log="$log_dir/$1.log"
   shift
-  log=$(mktemp "$log_dir/step.XXXXXX")
   if "$@" >"$log" 2>&1; then
     printf '%s --- OK\n' "$label"
   else
-    printf '%s --- FALHOU (%s)\n' "$label" "$log" >&2
-    tail -n 16 "$log" >&2
+    printf '%s --- FALHOU. Detalhes: %s\n' "$label" "$log" >&2
     exit 1
   fi
 }
-
-if [[ $(git branch --show-current) != main ]]; then
-  printf 'Branch --- FALHOU: execute na main.\n' >&2
-  exit 1
-fi
+fail() { printf '%s --- PENDENTE: %s\n' "$1" "$2" >&2; exit 2; }
+[[ $(git branch --show-current) == main ]] || fail Branch 'Execute na main.'
+[[ ! -e $(git rev-parse --git-path MERGE_HEAD) && ! -d $(git rev-parse --git-path rebase-merge) && ! -d $(git rev-parse --git-path rebase-apply) ]] || fail Conflitos 'Resolva o merge/rebase e revise o resultado antes de continuar.'
 
 before=$(git rev-parse HEAD)
-local_changes=$(git status --porcelain --untracked-files=normal)
-run 'Pull da main' git pull --ff-only origin main
-after=$(git rev-parse HEAD)
-
-if [[ $before != "$after" && -n $local_changes ]]; then
-  printf 'Revisão --- PENDENTE: a main avançou de %.8s para %.8s. Revise as mudanças locais contra a nova base antes de rodar novamente.\n' "$before" "$after"
-  exit 2
-fi
-
-if [[ -n $(git status --porcelain --untracked-files=normal) && -z ${1:-} ]]; then
-  printf 'Commit --- FALHOU: informe a mensagem em ./deploy.sh "mensagem".\n' >&2
-  exit 1
-fi
-
-if [[ -z $(git status --porcelain --untracked-files=normal) && $(git rev-parse origin/main) == "$after" ]]; then
-  printf 'Deploy --- Sem mudanças locais para publicar.\n'
+run Pull git pull --ff-only origin main
+base=$(git rev-parse origin/main)
+{
+  printf 'Main revisada: %s\nBase anterior: %s\n' "$base" "$before"
+  git log --oneline "$before..$base"
+  git diff "$before" "$base" -- knowledge/
+  git diff "$base"
+  git diff "$base" -- knowledge/
+  git ls-files --others --exclude-standard
+} > "$log_dir/review.txt"
+if [[ ${1:-} == --prepare ]]; then
+  printf 'Revisão --- PENDENTE: leia knowledge/, diferenças e %s/review.txt; atualize a documentação e prepare explicitamente os arquivos com git add.\n' "$log_dir"
+  printf 'Após revisar: ./deploy.sh "Mensagem" --reviewed=%s\n' "$base"
   exit 0
 fi
-
-run 'Diff' git diff --check HEAD
-run 'Contratos da API' npm run contracts
-run 'Limites entre módulos' npm run arch:boundaries
-run 'Build e typecheck' npm run build
-run 'Verificação de segredos' node scripts/check-secrets.mjs
-
-migration_changes=$(
-  git diff --name-only origin/main -- supabase/migrations
-  git ls-files --others --exclude-standard -- supabase/migrations
-  git diff --name-only "$before" "$after" -- supabase/migrations
-)
-if [[ -n $migration_changes ]]; then
-  run 'Migrações' npm run db:migrate
+[[ ${2:-} == "--reviewed=$base" ]] || fail Revisão "Execute --prepare e revise a main $base antes de continuar."
+[[ -n ${1:-} ]] || fail Commit 'Informe uma mensagem.'
+[[ -z $(git diff --name-only) && -z $(git ls-files --others --exclude-standard) ]] || fail Arquivos 'Prepare somente os arquivos revisados com git add (nenhum arquivo será adicionado automaticamente).'
+# Include knowledge in this release, whether staged or already committed locally.
+if ! { git diff --cached --name-only; git diff --name-only "$base" HEAD; } | grep -q '^knowledge/'; then
+  fail Knowledge 'Atualize e inclua knowledge/ no commit da publicação.'
+fi
+printf 'Revisão e knowledge --- OK\n'
+run Diff git diff --cached --check
+run Autenticacao gh api user --silent
+run Automacao node --test scripts/tests/release.test.mjs
+run Dependencias npm ci --no-audit --no-fund
+run Contratos npm run contracts:check
+for stage in lint types boundaries unit build; do
+  run "$stage" node scripts/check-quiet.mjs "--only=$stage"
+done
+run secrets node scripts/check-secrets.mjs
+run browser npm run test:e2e -- --max-failures=1 --reporter=line
+# A check must not silently change the reviewed/staged tree.
+[[ -z $(git diff --name-only) && -z $(git ls-files --others --exclude-standard) ]] || fail Arquivos 'Uma validação alterou arquivos; revise e prepare novamente.'
+run Atualidade git fetch origin main
+[[ $(git rev-parse origin/main) == "$base" ]] || fail Atualidade 'A main avançou durante os testes. Faça --prepare, integre e revise novamente.'
+# Always consult the database ledger, even when SQL files did not change locally.
+run Migrations npm run db:migrate
+if ! git diff --cached --quiet; then
+  run Commit git commit -m "$1"
 else
-  printf 'Migrações --- Sem alterações\n'
+  printf 'Commit existente --- OK\n'
 fi
-
-if [[ -n $(git status --porcelain --untracked-files=normal) ]]; then
-  run 'Preparar commit' git add -A
-  run 'Diff do commit' git diff --cached --check
-  run 'Commit' git commit -m "${1:-Atualizar contratos do PlannedWallet}"
-fi
-run 'Push da main' git push origin main
-
-printf 'Commit enviado --- %s\n' "$(git rev-parse --short HEAD)"
+sha=$(git rev-parse HEAD)
+run Push git push origin main
+run Render node scripts/verify-production.mjs "$sha"
+printf 'Deploy completo --- OK (%s)\n' "$sha"

@@ -224,7 +224,7 @@ for (const width of [360, 390, 768, 1440])
     await signedIn(page);
     await page.setViewportSize({ width, height: 1000 });
     await page.goto('/');
-    await expect(page.getByRole('heading', { name: 'Visão geral', exact: true })).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Saldos atuais', exact: true })).toBeVisible();
     await expect(page.getByText('R$ 3.456,78').first()).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
@@ -246,10 +246,9 @@ for (const width of [360, 390, 768, 1440])
     );
     await page.goto('/imports');
     await expect(
-      page.getByRole('heading', { name: 'Importar extrato', exact: true }),
+      page.getByRole('heading', { name: 'Importar extratos e faturas', exact: true }),
     ).toBeVisible();
-    await chooseSelect(page.getByLabel('Conta de destino'), account.id);
-    await expect(page.getByRole('button', { name: 'Selecionar extratos' })).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Selecionar arquivos em lote' })).toBeEnabled();
     await page.goto('/settings');
     await expect(page.getByRole('heading', { name: 'Preferências', exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
@@ -282,7 +281,7 @@ test('workspace cards open a space and creation uses its scope', async ({ page }
   await page.goto('/workspaces');
   await expect(page.getByRole('heading', { name: 'Seus espaços' })).toBeVisible();
   await page.getByRole('link', { name: 'Abrir espaço Pessoal' }).click();
-  await expect(page.getByRole('heading', { name: 'Visão geral', exact: true })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Saldos atuais', exact: true })).toBeVisible();
   await openWorkspaceSwitcher(page);
   await page.getByRole('button', { name: 'Criar espaço', exact: true }).click();
   await fillControl(page.getByLabel('Nome do espaço'), 'Meu negócio');
@@ -294,7 +293,7 @@ test('workspace cards open a space and creation uses its scope', async ({ page }
   );
   await page.getByRole('button', { name: 'Criar e abrir espaço' }).click();
   await selectedRequest;
-  await expect(page.getByRole('heading', { name: 'Visão geral', exact: true })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Saldos atuais', exact: true })).toBeVisible();
   const scope = await page.evaluate(() =>
     localStorage.getItem('plannedwallet-workspace:11111111-1111-4111-8111-111111111111'),
   );
@@ -397,8 +396,9 @@ for (const width of [360, 1440])
     await expect(
       page.getByRole('heading', { name: 'Planejamento mensal', exact: true }),
     ).toBeVisible();
+    await page.locator('.budget-group').last().locator(':scope > summary').click();
     await expect(
-      page.locator('.budget-line').getByText('-R$ 50,00', { exact: true }),
+      page.locator('.budget-line').getByText('Excedido: R$ 50,00', { exact: true }),
     ).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
@@ -410,7 +410,10 @@ for (const width of [360, 1440])
     await page.getByRole('button', { name: 'Salvar planejamento', exact: true }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     expect(saved).toBe(true);
-    await expect(page.getByText('Notas preservadas', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Mais ações do planejamento', exact: true }).click();
+    await page.getByRole('button', { name: 'Editar planejamento', exact: true }).click();
+    await expect(page.getByLabel('Notas do mês')).toHaveValue('Notas preservadas');
+    await page.getByRole('dialog').getByRole('button', { name: 'Fechar', exact: true }).click();
     await page.getByRole('button', { name: 'Mais ações do planejamento', exact: true }).click();
     await page.getByRole('button', { name: 'Copiar mês anterior', exact: true }).click();
     await expect(page.getByRole('dialog')).toContainText('substituídos');
@@ -484,6 +487,19 @@ test('old statement can be retained for consultation and searched without confir
   await expect(page.getByText(transaction.description, { exact: true })).toBeVisible();
 });
 
+async function automaticStatementFixture(page: Page) {
+  await page.route('**/v1/imports/detect', (route) =>
+    route.fulfill({
+      json: {
+        kind: 'account_statement',
+        institution: 'mercado_pago',
+        itemCount: 1,
+        sourceFormat: 'csv',
+      },
+    }),
+  );
+}
+
 test('CSV statement upload uses the same review and history workflow', async ({ page }) => {
   await signedIn(page);
   const batch = {
@@ -523,7 +539,7 @@ test('CSV statement upload uses the same review and history workflow', async ({ 
   });
   await page.route(`**/v1/imports/${batch.id}`, (route) => route.fulfill({ json: batch }));
   await page.goto('/imports');
-  await chooseSelect(page.getByLabel('Conta de destino'), account.id);
+  await automaticStatementFixture(page);
   await expect(page.locator('input[type=file]')).toHaveAttribute('accept', /\.csv.*\.xlsx/);
   await page.locator('input[type=file]').setInputFiles({
     name: 'synthetic.csv',
@@ -532,7 +548,9 @@ test('CSV statement upload uses the same review and history workflow', async ({ 
       'INITIAL_BALANCE;CREDITS;DEBITS;FINAL_BALANCE\n100,00;0,00;-10,00;90,00\n\nRELEASE_DATE;TRANSACTION_TYPE;REFERENCE_ID;TRANSACTION_NET_AMOUNT;PARTIAL_BALANCE\n01-10-2026;Pagamento;123456;-10,00;90,00',
     ),
   });
-  await expect(page.getByRole('heading', { name: 'Revise seu extrato' })).toBeVisible();
+  await chooseSelect(page.getByLabel('Conta de destino'), account.id);
+  await page.getByRole('button', { name: 'Continuar para revisar' }).click();
+  await expect(page.getByRole('heading', { name: 'Revisar importação' })).toBeVisible();
   await expect(page.getByText(/Arquivo e conciliação · CSV/)).toBeVisible();
   await page.getByText('Guardar apenas para consulta', { exact: true }).click();
   await expect(page.getByRole('button', { name: 'Salvar apenas como histórico' })).toBeVisible();
@@ -542,6 +560,7 @@ test('batch uploads run sequentially, keep successful files after errors and lin
   page,
 }) => {
   await signedIn(page);
+  await automaticStatementFixture(page);
   await page.setViewportSize({ width: 390, height: 1000 });
   const id = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
   let count = 0,
@@ -562,42 +581,39 @@ test('batch uploads run sequentially, keep successful files after errors and lin
     active--;
     if (count === 2)
       return route.fulfill({ status: 422, json: { title: 'Relatório de teste não suportado.' } });
-    return route.fulfill({ status: 201, json: { id, status: 'draft' } });
+    return route.fulfill({ status: 201, json: { id, status: 'confirmed' } });
   });
   await page.goto('/imports');
-  await chooseSelect(page.getByLabel('Conta de destino'), account.id);
-  await page.locator('input[type=file]').setInputFiles([
-    { name: 'month.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-synthetic') },
-    {
-      name: 'invalid.xlsx',
-      mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      buffer: Buffer.from('synthetic'),
-    },
-    { name: 'same-month.csv', mimeType: 'text/csv', buffer: Buffer.from('synthetic') },
-  ]);
-  await expect(page.getByText('Lendo e conferindo…', { exact: true })).toBeVisible();
-  await expect(
-    page.getByRole('combobox', { name: 'Conta de destino', exact: true }),
-  ).toBeDisabled();
-  expect(count).toBe(1);
+  await page
+    .locator('input[type=file]')
+    .setInputFiles(
+      ['month.pdf', 'invalid.xlsx', 'same-month.csv'].map((name) => ({
+        name,
+        mimeType: 'text/csv',
+        buffer: Buffer.from(name),
+      })),
+    );
+  await page.getByRole('button', { name: /Importar 3 arquivo/ }).click();
+  await expect.poll(() => count).toBe(1);
+  await expect(page.getByRole('button', { name: 'Selecionar arquivos em lote' })).toBeDisabled();
   releaseFirst();
-  const results = page.getByRole('region', { name: 'Resultado do envio de extratos' });
+  const results = page.getByRole('region', { name: 'Importação automática em lote' });
   await expect(
     results.getByText('Relatório de teste não suportado.', { exact: true }),
   ).toBeVisible();
-  await expect(results.getByText('Mesmo extrato de outro arquivo deste lote')).toBeVisible();
-  await expect(results.getByRole('link', { name: 'Revisar', exact: true })).toHaveCount(2);
+  await expect(results.getByText('Extrato já confirmado; nenhuma duplicação.')).toHaveCount(2);
+  await expect(results.getByRole('link', { name: 'Ver importação', exact: true })).toHaveCount(2);
   expect(count).toBe(3);
   expect(maximum).toBe(1);
   await expect(page).toHaveURL(/\/imports$/);
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  await page.screenshot({ path: '/tmp/plannedwallet-batch-390.png', fullPage: true });
+  await expectNoHorizontalOverflow(page);
 });
 
 test('stopping the queue finishes only the active file and skips the remaining files', async ({
   page,
 }) => {
   await signedIn(page);
+  await automaticStatementFixture(page);
   let count = 0;
   let release!: () => void;
   const pending = new Promise<void>((resolve) => {
@@ -609,28 +625,30 @@ test('stopping the queue finishes only the active file and skips the remaining f
     await pending;
     return route.fulfill({
       status: 201,
-      json: { id: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', status: 'draft' },
+      json: { id: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', status: 'confirmed' },
     });
   });
   await page.goto('/imports');
-  await chooseSelect(page.getByLabel('Conta de destino'), account.id);
-  await page.locator('input[type=file]').setInputFiles(
-    ['first.csv', 'second.csv'].map((name) => ({
-      name,
-      mimeType: 'text/csv',
-      buffer: Buffer.from('synthetic'),
-    })),
-  );
-  await expect(page.getByText('Lendo e conferindo…', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Parar após este arquivo', exact: true }).click();
+  await page
+    .locator('input[type=file]')
+    .setInputFiles(
+      ['first.csv', 'second.csv'].map((name) => ({
+        name,
+        mimeType: 'text/csv',
+        buffer: Buffer.from(name),
+      })),
+    );
+  await page.getByRole('button', { name: /Importar 2 arquivo/ }).click();
+  await expect.poll(() => count).toBe(1);
+  await page.getByRole('button', { name: 'Pausar lote', exact: true }).click();
   release();
-  await expect(page.getByText('Não enviado', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Importar 1 arquivo/ })).toBeEnabled();
   expect(count).toBe(1);
-  await expect(page.getByRole('combobox', { name: 'Conta de destino', exact: true })).toBeEnabled();
 });
 
 test('leaving the upload screen stops subsequent submissions', async ({ page }) => {
   await signedIn(page);
+  await automaticStatementFixture(page);
   let requests = 0;
   let release!: () => void;
   const pending = new Promise<void>((resolve) => {
@@ -640,29 +658,31 @@ test('leaving the upload screen stops subsequent submissions', async ({ page }) 
     if (route.request().method() !== 'POST') return route.fulfill({ json: [] });
     requests++;
     await pending;
-    return route.fulfill({ json: { id: 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee', status: 'draft' } });
+    return route.fulfill({
+      json: { id: 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee', status: 'confirmed' },
+    });
   });
   await page.goto('/imports');
-  await chooseSelect(page.getByLabel('Conta de destino'), account.id);
-  await page.locator('input[type=file]').setInputFiles(
-    ['first.csv', 'second.csv'].map((name) => ({
-      name,
-      mimeType: 'text/csv',
-      buffer: Buffer.from('synthetic'),
-    })),
-  );
-  await expect(page.getByText('Lendo e conferindo…', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Contas', exact: true }).click();
-  await page.getByRole('link', { name: 'Contas e saldos', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Minhas contas', exact: true })).toBeVisible();
+  await page
+    .locator('input[type=file]')
+    .setInputFiles(
+      ['first.csv', 'second.csv'].map((name) => ({
+        name,
+        mimeType: 'text/csv',
+        buffer: Buffer.from(name),
+      })),
+    );
+  await page.getByRole('button', { name: /Importar 2 arquivo/ }).click();
+  await expect.poll(() => requests).toBe(1);
+  await page.getByRole('link', { name: 'Preferências', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Preferências', exact: true })).toBeVisible();
   const response = page.waitForResponse(
     (response) => response.url().endsWith('/v1/imports') && response.request().method() === 'POST',
   );
   release();
   await (await response).finished();
-  await page.waitForTimeout(200);
+  await expect(page.getByRole('heading', { name: 'Preferências', exact: true })).toBeVisible();
   expect(requests).toBe(1);
-  await expect(page).toHaveURL(/\/accounts$/);
 });
 
 for (const outcome of ['normal', 'lost-response', 'refresh-failure', 'rejected'] as const)
@@ -1635,7 +1655,17 @@ for (const width of [390, 1440])
     await expect(page.getByRole('dialog', { name: 'Corrigir saldo atual' })).toHaveCount(0);
     expect(posted).toBe(1);
     await page.goto('/imports');
-    await chooseSelect(page.getByLabel('Conta de destino'), benefit.id);
+    await page.route('**/v1/imports/detect', (route) =>
+      route.fulfill({
+        json: {
+          kind: 'account_statement',
+          institution: 'alelo',
+          reportType: 'benefit_statement',
+          itemCount: 1,
+          sourceFormat: 'pdf',
+        },
+      }),
+    );
     const batchId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
     const batch = {
       id: batchId,
@@ -1688,6 +1718,8 @@ for (const width of [390, 1440])
       mimeType: 'application/pdf',
       buffer: Buffer.from('%PDF-synthetic'),
     });
+    await chooseSelect(page.getByLabel('Conta de destino'), benefit.id);
+    await page.getByRole('button', { name: 'Continuar para revisar' }).click();
     await expect(
       page.getByText('Alelo Alimentação · histórico parcial', { exact: true }),
     ).toBeVisible();
@@ -2387,7 +2419,7 @@ for (const width of [360, 390, 768, 1440]) {
       }),
     );
     await page.goto('/?month=2026-09');
-    await expect(page.getByRole('heading', { name: 'Visão geral', exact: true })).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Saldos atuais', exact: true })).toBeVisible();
     await expect(page.locator('.sidebar')).toHaveCount(0);
     await expect(page.locator('.hero-balance')).toHaveText('R$ 59,12');
     await expect(page.getByRole('region', { name: 'Saldos atuais' })).toContainText('R$ 230,00');
@@ -2546,7 +2578,7 @@ test('a sole active space opens automatically without a saved selection; multipl
 }) => {
   await signedIn(page, false);
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Visão geral', exact: true })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Saldos atuais', exact: true })).toBeVisible();
   await openWorkspaceSwitcher(page);
   await expect(page.getByRole('heading', { name: 'Seus espaços' })).toBeVisible();
   await page.route('**/v1/workspaces', (route) =>
@@ -3616,7 +3648,7 @@ const redesignedRoutes = [
   ['/accounts', 'Minhas contas'],
   ['/planning', 'Planejamento mensal'],
   ['/planning?view=commitments', 'Contas e recebimentos'],
-  ['/imports', 'Importar extrato'],
+  ['/imports', 'Importar extratos e faturas'],
   ['/categories', 'Categorias'],
   ['/counterparties', 'Pessoas e estabelecimentos'],
   ['/cards', 'Cartões e faturas'],
@@ -3642,7 +3674,11 @@ for (const width of [390, 1440])
           name: title,
           exact: title !== 'Seus espaços',
         });
-        await expect(heading).toBeVisible();
+        if (path === '/' || path.startsWith('/?')) {
+          await expect(page.getByRole('region', { name: 'Saldos atuais' })).toBeVisible();
+        } else {
+          await expect(heading).toBeVisible();
+        }
         await expect(page.locator('h1')).toHaveCount(1);
         expect(
           await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
@@ -4952,16 +4988,18 @@ for (const width of [390, 1440])
       .locator('.budget-group')
       .filter({ has: page.getByText('Assinaturas', { exact: true }) });
     const header = group.locator(':scope > summary');
-    const metrics = header.locator('.budget-group-metric');
+    const planned = header.locator('.budget-progress-footer > span');
+    const actual = header.locator('.budget-group-actual');
+    const remaining = header.locator('.budget-progress-footer > strong');
     for (const open of [false, true, false]) {
       await expect(group).toHaveJSProperty('open', open);
-      await expect(metrics.nth(0)).toBeVisible();
-      await expect(metrics.nth(0)).toContainText('Previsto');
-      await expect(metrics.nth(0)).toContainText('238,69');
-      await expect(metrics.nth(1)).toContainText('Realizado');
-      await expect(metrics.nth(1)).toContainText('0,00');
-      await expect(metrics.nth(2)).toContainText('Disponível / excedido');
-      await expect(metrics.nth(2)).toContainText('238,69');
+      await expect(planned).toBeVisible();
+      await expect(actual).toBeVisible();
+      await expect(remaining).toBeVisible();
+      await expect(planned).toContainText('Previsto: R$ 238,69');
+      await expect(actual).toContainText('Realizado');
+      await expect(actual).toContainText('0,00');
+      await expect(remaining).toContainText('Livre: R$ 238,69');
       await expectNoHorizontalOverflow(page);
       await header.click();
     }
@@ -5201,67 +5239,39 @@ test('Banco do Brasil detection proposes its own account rather than a Mercado P
   await expectNoHorizontalOverflow(page);
 });
 
-test('card invoice dialog uses the cycle identified in the file and requires consent to replace a confirmed source', async ({
-  page,
-}) => {
-  await signedIn(page);
-  await financeFixtures(page);
-  const importId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
-  const previousId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
-  let confirmed = false;
-  const preview = {
-    id: importId,
-    billMonth: '2026-10',
-    replacesInvoiceId: previousId,
-    version: 1,
-    status: 'review',
-    parsed: {
-      billMonth: '2026-10',
-      total: 5000,
-      warnings: [],
-      lines: [
-        {
-          date: '2026-09-01',
-          description: 'Compra exemplo',
-          amount: 5000,
-          installmentNumber: null,
-          installmentCount: null,
-        },
-      ],
-    },
-    reconciliation: [{ lineIndex: 0, purchaseId: null, confidence: 'unmatched' }],
-  };
-  await page.route(`**/v1/cards/${financeCardId}/invoices/import`, (route) => {
-    expect(route.request().postData()).toContain('2026-11');
-    return route.fulfill({ json: preview });
-  });
-  await page.route(`**/v1/cards/invoices/${importId}/confirm`, (route) => {
-    expect(route.request().headers()['x-replaces-invoice']).toBe(previousId);
-    confirmed = true;
-    return route.fulfill({
-      json: { ...preview, status: 'confirmed', replacesInvoiceId: null, version: 2 },
+for (const width of [360, 654, 1440])
+  test(`card invoice shortcut opens unified imports without duplicate upload panels at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 1000 });
+    await signedIn(page);
+    await financeFixtures(page);
+    await page.goto(`/cards?card=${financeCardId}&month=2026-11`);
+    await page.getByRole('link', { name: 'Importar extratos e faturas', exact: true }).click();
+    await expect(page).toHaveURL(/\/imports$/);
+    await expect(
+      page.getByRole('heading', { name: 'Importar extratos e faturas', exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('region', { name: 'Revisão individual de importação' }),
+    ).toBeHidden();
+    await expect(page.getByRole('button', { name: 'Selecionar arquivos em lote' })).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+    const panel = page.getByRole('region', { name: 'Importação automática em lote' });
+    const layout = await panel.evaluate((element) => {
+      const bounds = element.getBoundingClientRect();
+      return Array.from(element.querySelectorAll('h2, p, button')).every((child) => {
+        const box = child.getBoundingClientRect();
+        return box.left >= bounds.left + 16 && box.right <= bounds.right - 16;
+      });
     });
+    expect(layout).toBe(true);
+    await page.getByRole('button', { name: 'Histórico', exact: true }).click();
+    await expect(panel).toBeHidden();
+    await page.getByRole('button', { name: 'Enviar arquivos', exact: true }).click();
+    await expect(panel).toBeVisible();
+    await page.screenshot({ path: `.verification/imports-${width}.png`, fullPage: true });
   });
-  await page.goto(`/cards?card=${financeCardId}&month=2026-11`);
-  await page.getByRole('button', { name: 'Importar fatura', exact: true }).click();
-  const dialog = page.getByRole('dialog');
-  await dialog
-    .locator('input[type=file]')
-    .setInputFiles({ name: 'invoice.csv', mimeType: 'text/csv', buffer: Buffer.from('synthetic') });
-  await dialog.getByRole('button', { name: 'Ler fatura', exact: true }).click();
-  await expect(dialog.getByText('Destino: outubro de 2026')).toBeVisible();
-  const confirm = dialog.getByRole('button', { name: 'Confirmar e substituir compras do ciclo' });
-  await expect(confirm).toBeDisabled();
-  await dialog.getByRole('button', { name: 'Alterar mês ou arquivo' }).click();
-  await dialog.getByRole('button', { name: 'Ler fatura', exact: true }).click();
-  await dialog.getByRole('checkbox', { name: /Substituir a importação já confirmada/ }).check();
-  await expect(confirm).toBeEnabled();
-  await confirm.click();
-  await expect(page).toHaveURL(/month=2026-10/);
-  await expect(dialog).toHaveCount(0);
-  expect(confirmed).toBe(true);
-  await expectNoHorizontalOverflow(page);
-});
 
 for (const width of [390, 1440])
   test(`automatic batch separates mixed banks and months while isolating duplicates and invalid files at ${width}px`, async ({

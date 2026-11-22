@@ -1,5 +1,5 @@
 import { needsPdfPassword } from '../../shared/api/pdf-password';
-import { cardArtwork } from './art/catalog';
+import { cardHudArtwork } from './art/catalog';
 import '../../shared/ui/card-invoice-preview.css';
 import { useFinancialVisibility } from '../../shared/privacy/financial-visibility';
 import { MonthPicker } from '../../shared/ui/controls/month-picker';
@@ -190,56 +190,42 @@ export function CardsPage() {
                   }}
                 >
                   {cards.map((c) => {
-                    const art = c.artwork ? cardArtwork[c.artwork] : undefined;
+                    const art = cardHudArtwork(c.name, c.artwork);
+                    const invoiceTotal = value(
+                      c.bills.find((item) => item.month === month)?.total ?? 0,
+                    );
                     return (
-                      <div className="credit-card-frame" key={c.id}>
+                      <div className="credit-card-frame physical-card-frame" key={c.id}>
                         <button
                           type="button"
-                          className={`panel credit-selector-item ${c.id === card?.id ? 'selected' : ''} ${art ? 'has-artwork' : ''}`}
+                          className="physical-card-picker"
                           data-card-id={c.id}
                           aria-pressed={c.id === card?.id}
                           onClick={() => update({ card: c.id })}
                         >
-                          <span>
-                            {art?.src ? (
+                          <span className="physical-card-face">
+                            {art ? (
                               <img
-                                className="credit-card-artwork"
                                 src={art.src}
-                                alt={art.label}
-                                width={60}
-                                height={60}
+                                alt={art.illustrative ? 'Arte padrão do emissor' : art.label}
                               />
                             ) : (
-                              <CreditIcon size={20} aria-hidden="true" />
-                            )}
-                            <strong>{c.name}</strong>
-                            {c.archived && <small>Arquivado</small>}
-                          </span>
-                          <span>
-                            Fatura do mês
-                            <strong>
-                              {value(c.bills.find((item) => item.month === month)?.total ?? 0)}
-                            </strong>
-                          </span>
-                          {c.limit > 0 ? (
-                            <>
-                              <span className="credit-limit">
-                                <span
-                                  style={{
-                                    width: visible
-                                      ? `${Math.min(100, (c.debt / c.limit) * 100)}%`
-                                      : '0%',
-                                  }}
-                                />
+                              <span className="physical-card-default" aria-hidden="true">
+                                <span>PlannedWallet</span>
+                                <span className="physical-card-default-chip" />
+                                <CreditIcon size={24} />
                               </span>
-                              <small>
-                                Disponível {value(c.availableLimit)} de {value(c.limit)}
-                              </small>
-                            </>
-                          ) : (
-                            <small>Limite não informado</small>
-                          )}
-                          {c.credit > 0 && <small>Crédito no cartão {value(c.credit)}</small>}
+                            )}
+                          </span>
+                          <span className="physical-card-caption">
+                            <strong>
+                              {c.name}
+                              {c.archived ? ' · Arquivado' : ''}
+                            </strong>
+                            <span>
+                              Fatura do mês <strong>{invoiceTotal}</strong>
+                            </span>
+                          </span>
                         </button>
                         {c.id === card?.id && (
                           <Tooltip text="Editar cartão">

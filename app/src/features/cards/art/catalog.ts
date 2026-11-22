@@ -1,14 +1,14 @@
 import mercadoPagoMark from './mercado-pago-mark.webp';
-import itauAzulPlatinum from './itau-azul-platinum.webp';
-import c6Carbon from './c6-carbon.webp';
+import itauAzulPlatinum from './itau-azul-platinum-hud.webp';
+import c6Carbon from './c6-carbon-hud.webp';
 import c6Mark from './c6-bank-mark.webp';
 import itauMark from './itau-mark.webp';
 import interMark from './inter-mark.webp';
-import mercadoPagoVisa from './mercado-pago-visa.webp';
-import interGold from './inter-gold.webp';
-import interPlatinum from './inter-platinum.webp';
-import interPrime from './inter-prime.webp';
-import interWin from './inter-win.webp';
+import mercadoPagoVisa from './mercado-pago-visa-hud.webp';
+import interGold from './inter-gold-hud.webp';
+import interPlatinum from './inter-platinum-hud.webp';
+import interPrime from './inter-prime-hud.webp';
+import interWin from './inter-win-hud.webp';
 
 export const cardArtwork: Record<CardArtworkId, { label: string; src: string }> = {
   inter: { label: 'Inter · modelo não identificado', src: interMark },
@@ -103,4 +103,20 @@ export function cardArtworksForIssuer(issuer?: CardIssuer | null): CardArtworkId
   return (Object.keys(cardArtwork) as CardArtworkId[]).filter(
     (id) => !issuer || cardArtworkIssuer(id) === issuer,
   );
+}
+
+const defaultPhysicalArtwork: Record<CardIssuer, CardArtworkId> = {
+  mercado_pago: 'mercado-pago-visa',
+  inter: 'inter-gold',
+  itau: 'itau-azul-platinum',
+  c6: 'c6-carbon',
+};
+
+export function cardHudArtwork(name: string, configured?: CardArtworkId | null) {
+  const artwork = configured ?? suggestCardArtwork(name);
+  const issuer = cardArtworkIssuer(artwork);
+  if (!artwork || !issuer) return undefined;
+  if (artwork === 'inter' || artwork === 'itau' || artwork === 'c6-bank')
+    return { ...cardArtwork[defaultPhysicalArtwork[issuer]], illustrative: true };
+  return { ...cardArtwork[artwork], illustrative: false };
 }

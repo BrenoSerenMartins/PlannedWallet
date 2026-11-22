@@ -398,7 +398,7 @@
   position: relative;
   flex: 0 0 min(84vw, 370px);
   min-width: 280px;
-  aspect-ratio: 1.586 / 1;
+  aspect-ratio: 856 / 540;
   scroll-snap-align: center;
 }
 @media (min-width: 851px) {
@@ -2174,10 +2174,84 @@
   > span:first-child {
   padding-inline: 32px;
 }
-:root[data-ui='bento'] body .page-content .cards-page .credit-card-artwork {
-  width: 52px;
-  height: 52px;
-  flex: none;
-  object-fit: contain;
-  border-radius: 8px;
+:root[data-ui='bento'] body .page-content .cards-page .physical-card-frame {
+  aspect-ratio: auto;
+}
+.physical-card-picker {
+  display: grid;
+  grid-template-rows: auto auto;
+  gap: 10px;
+  width: 100%;
+  padding: 4px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: start;
+}
+.physical-card-face {
+  display: grid;
+  place-items: center;
+  inline-size: 100%;
+  aspect-ratio: 856 / 540;
+  overflow: hidden;
+  border-radius: 16px;
+  background: var(--grad-card);
+  color: var(--gold-soft);
+}
+.physical-card-face img {
+  grid-area: 1 / 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: cover;
+}
+.physical-card-picker[aria-pressed='true'] .physical-card-face {
+  outline: 1px solid var(--gold-primary);
+  outline-offset: 2px;
+}
+.physical-card-caption {
+  display: grid;
+  gap: 4px;
+  padding-inline: 6px;
+  overflow-wrap: anywhere;
+}
+.physical-card-caption > span {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 10px;
+  color: var(--text-secondary);
+}
+.physical-card-caption strong {
+  font-variant-numeric: tabular-nums;
+}
+.physical-card-picker[aria-pressed='true'] .physical-card-caption > strong {
+  color: var(--gold-soft);
+}
+
+.physical-card-default {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto 1fr;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  padding: clamp(12px, 4vw, 24px);
+  background: var(--grad-hero);
+  text-align: start;
+}
+.physical-card-default > span:first-child {
+  grid-column: 1 / -1;
+  font-weight: 700;
+}
+.physical-card-default-chip {
+  width: 32px;
+  height: 23px;
+  border: 1px solid var(--gold-primary);
+  border-radius: 5px;
+  background: var(--gold-muted);
+}
+.physical-card-default svg {
+  align-self: end;
 }

@@ -4,7 +4,7 @@ import type { ParsedStatement, StatementRow, TextCell } from '../../contracts/st
 import { parseAmount } from './statement-values.js';
 export { parseAmount } from './statement-values.js';
 import { reconcileStatement } from './reconcile-statement.js';
-import { readStatementWorker } from '../files/worker-reader.js';
+import { readStatementWorker } from '../../../../core/financial-files/worker-reader.js';
 function summary(cells: TextCell[], label: string): number {
   const heading = cells.find((c) => c.text === label);
   if (!heading) throw new UnprocessableEntityException('Resumo do extrato não encontrado.');
@@ -59,7 +59,7 @@ export function parseMercadoPagoPages(pages: TextCell[][]): ParsedStatement {
 
 export async function extractStatement(buffer: Buffer): Promise<ParsedStatement> {
   const result = await readStatementWorker<{ pages: TextCell[][] }>(
-    new URL('./pdf-worker.mjs', import.meta.url),
+    new URL('../../../../core/financial-files/pdf-worker.mjs', import.meta.url),
     buffer,
   );
   return parseMercadoPagoPages(result.pages);

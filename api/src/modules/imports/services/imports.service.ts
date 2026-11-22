@@ -39,6 +39,7 @@ import {
   mercadoPagoSourceFormat,
 } from '../mappers/mercado-pago/statement.mapper.js';
 import type { ParsedStatement } from '../contracts/statement.js';
+import { readCardInvoice } from '../../../core/financial-files/card-invoice-reader.js';
 import type { ReviewItemDto } from '../dto/import.dto.js';
 @Injectable()
 export class ImportsService {
@@ -56,6 +57,49 @@ export class ImportsService {
       const statement = await extractInstitutionStatement(institution, buffer, fileName);
       this.assertConsumerStatement(statement.reportType);
       return statement;
+    } finally {
+      this.activeExtractions.delete(userId);
+    }
+  }
+  async detect(
+    userId: string,
+    buffer: Buffer,
+    fileName = 'statement.pdf',
+    billMonth = new Date().toISOString().slice(0, 7),
+  ) {
+    if (this.activeExtractions.has(userId))
+      throw new ConflictException('Já existe uma leitura em andamento.');
+    this.activeExtractions.add(userId);
+    try {
+      let lastError: unknown;
+      for (const institution of ['alelo', 'mercado_pago']) {
+        try {
+          const statement = await extractInstitutionStatement(institution, buffer, fileName);
+          this.assertConsumerStatement(statement.reportType);
+          return {
+            kind: 'account_statement',
+            institution,
+            reportType: statement.reportType ?? 'account_statement',
+            itemCount: statement.items.length,
+            sourceFormat: statement.sourceFormat ?? 'pdf',
+          };
+        } catch (error) {
+          lastError = error;
+        }
+      }
+      try {
+        const invoice = await readCardInvoice(buffer, fileName, billMonth);
+        return {
+          kind: 'card_invoice',
+          institution: invoice.institution ?? null,
+          reportType: 'card_invoice',
+          itemCount: invoice.lines.length,
+          sourceFormat: invoice.sourceFormat,
+          billMonth: invoice.dueDate?.slice(0, 7) ?? invoice.billMonth,
+        };
+      } catch (error) {
+        throw error ?? lastError ?? new UnprocessableEntityException('Formato não reconhecido.');
+      }
     } finally {
       this.activeExtractions.delete(userId);
     }

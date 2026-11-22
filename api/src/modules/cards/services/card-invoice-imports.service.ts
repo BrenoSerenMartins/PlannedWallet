@@ -1,14 +1,15 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { createHash, randomUUID } from 'node:crypto';
 import { CardsRepository } from '../repositories/cards.repository.js';
 import { CardInvoiceImportsRepository } from '../repositories/card-invoice-imports.repository.js';
 import { FinancialCryptoService } from '../../../core/crypto/financial-crypto.js';
-import { DatabaseService } from '../../../core/database/index.js';
+import { CardsService } from './cards.service.js';
+import { requireVersion } from '../../../core/rest/index.js';
 import {
   readCardInvoice,
   type CardInvoiceLine,
   type ParsedCardInvoice,
-} from './card-invoice-reader.js';
+} from '../../../core/financial-files/card-invoice-reader.js';
 
 function normalized(value: string) {
   return value
@@ -24,31 +25,39 @@ export class CardInvoiceImportsService {
     @Inject(CardsRepository) private readonly cards: CardsRepository,
     @Inject(CardInvoiceImportsRepository) private readonly imports: CardInvoiceImportsRepository,
     @Inject(FinancialCryptoService) private readonly crypto: FinancialCryptoService,
-    @Inject(DatabaseService) private readonly db: DatabaseService,
+    @Inject(CardsService) private readonly cardService: CardsService,
   ) {}
 
   private candidates(lines: CardInvoiceLine[], cardId: string, month: string) {
     return this.cards.snapshot().then((data) =>
       lines.map((line, index) => {
-        const matches = data.purchases.filter((purchase) => {
-          if (
-            purchase.cardId !== cardId ||
-            purchase.canceled ||
-            purchase.purchaseDate !== line.date
-          )
-            return false;
-          const entry = data.entries.find(
-            (e) => e.purchaseId === purchase.id && e.billMonth === month,
-          );
-          if (!entry || Math.abs(entry.amount) !== line.amount) return false;
-          const a = normalized(purchase.description),
-            b = normalized(line.description);
-          return a === b || a.includes(b) || b.includes(a);
-        });
+        const description = normalized(
+          line.description.replace(/\s+\d{1,3}\s*\/\s*\d{1,3}\s*$/, ''),
+        );
+        const possible = data.purchases.filter(
+          (purchase) =>
+            purchase.cardId === cardId &&
+            !purchase.canceled &&
+            purchase.purchaseDate === line.date &&
+            !!description &&
+            normalized(purchase.description) === description,
+        );
+        const matches = possible.filter((purchase) =>
+          data.entries.some(
+            (entry) =>
+              entry.purchaseId === purchase.id &&
+              entry.billMonth === month &&
+              entry.kind === 'purchase' &&
+              -entry.amount === line.amount &&
+              (line.installmentNumber === null ||
+                (entry.installmentNumber === line.installmentNumber &&
+                  purchase.installments === line.installmentCount)),
+          ),
+        );
         return {
           lineIndex: index,
           purchaseId: matches.length === 1 ? matches[0].id : null,
-          confidence: matches.length === 1 ? 'exact' : matches.length ? 'ambiguous' : 'unmatched',
+          confidence: matches.length === 1 ? 'exact' : possible.length ? 'ambiguous' : 'unmatched',
         };
       }),
     );
@@ -71,7 +80,31 @@ export class CardInvoiceImportsService {
       parsed,
       reconciliation,
     });
-    return { ...saved, cardId };
+    return this.get(saved.id);
+  }
+
+  async confirm(id: string, version: string) {
+    const invoice = await this.imports.get(id, true);
+    if (!invoice) throw new NotFoundException('Importação de fatura não encontrada.');
+    if (invoice.status === 'confirmed') return this.get(id);
+    requireVersion(invoice.version, version);
+    if (invoice.status !== 'review')
+      throw new ConflictException('Esta revisão não está mais disponível.');
+    const { parsed } = invoice.payload as { parsed: ParsedCardInvoice };
+    await this.cardService.applyInvoice(
+      invoice.card_id,
+      invoice.bill_month,
+      parsed.total,
+      parsed.lines,
+      id,
+      async () => {
+        if (await this.imports.hasConfirmed(invoice.card_id, invoice.bill_month))
+          throw new ConflictException('Já existe uma fatura confirmada para este cartão e mês.');
+        return this.candidates(parsed.lines, invoice.card_id, invoice.bill_month);
+      },
+    );
+    await this.imports.confirm(id);
+    return this.get(id);
   }
 
   async get(id: string) {

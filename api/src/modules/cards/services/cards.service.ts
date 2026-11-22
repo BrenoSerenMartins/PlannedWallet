@@ -132,7 +132,13 @@ export class CardsService implements CardForecast, ManagedBackup<CardsSnapshot> 
       throw new ConflictException('Reative o cartão antes de registrar novos movimentos.');
     return card;
   }
-  async purchase(id: string, input: CardPurchaseDto, version: string, key: string) {
+  async purchase(
+    id: string,
+    input: CardPurchaseDto,
+    version: string,
+    key: string,
+    firstRecordedInstallment = 1,
+  ) {
     return this.receipts.execute('card.purchase', key, { id, input, version }, async () => {
       const card = await this.lockedCard(id, version);
       dateOnly(input.purchaseDate);
@@ -179,7 +185,7 @@ export class CardsService implements CardForecast, ManagedBackup<CardsSnapshot> 
           this.repo.actorId,
         );
       }
-      for (let i = 0; i < amounts.length; i++) {
+      for (let i = firstRecordedInstallment - 1; i < amounts.length; i++) {
         const month = shiftCardMonth(first, i);
         const bill = await this.ensureBill(card, month);
         const description = `${purchase.description} · ${i + 1}/${amounts.length}`;
@@ -209,6 +215,64 @@ export class CardsService implements CardForecast, ManagedBackup<CardsSnapshot> 
       await this.repo.bump(id);
       return purchase;
     });
+  }
+  async applyInvoice(
+    id: string,
+    month: string,
+    total: number,
+    lines: import('../../../core/financial-files/card-invoice-reader.js').CardInvoiceLine[],
+    importId: string,
+    resolve: () => Promise<Array<{ purchaseId: string | null; confidence: string }>>,
+  ) {
+    let card = await this.card(id);
+    card = await this.lockedCard(id, String(card.version));
+    const { cards } = await this.calculated();
+    const bill = cards.find((item) => item.id === id)?.bills.find((item) => item.month === month);
+    const matches = await resolve();
+    const matched = matches.flatMap((item) => (item.purchaseId ? [item.purchaseId] : []));
+    if (
+      matches.some((item) => item.confidence === 'ambiguous') ||
+      new Set(matched).size !== matched.length ||
+      matched.some(
+        (purchaseId) =>
+          !bill?.entries.some((entry) => entry.active && entry.purchaseId === purchaseId),
+      ) ||
+      bill?.entries.some(
+        (entry) => entry.active && (!entry.purchaseId || !matched.includes(entry.purchaseId)),
+      ) ||
+      (bill?.total ?? 0) +
+        sum(lines.filter((_, i) => !matches[i].purchaseId).map((line) => line.amount)) !==
+        total
+    )
+      throw new ConflictException(
+        'A fatura diverge dos lançamentos registrados. Confira os valores e as parcelas antes de confirmar.',
+      );
+
+    for (const [index, line] of lines.entries()) {
+      if (matches[index].purchaseId) continue;
+      const installments = line.installmentCount ?? 1;
+      const current = line.installmentNumber ?? 1;
+      const firstBillMonth = shiftCardMonth(month, 1 - current);
+      const amount = line.amount * installments;
+      if (line.amount <= 0 || line.description.length > 120 || amount > 1_000_000_000_000)
+        throw new UnprocessableEntityException(
+          'Esta fatura tem ajustes ou compras que exigem revisão manual.',
+        );
+      await this.purchase(
+        id,
+        {
+          description: line.description,
+          purchaseDate: line.date,
+          amount,
+          installments,
+          firstBillMonth,
+        },
+        String(card.version),
+        `${importId}:${index}`,
+        current,
+      );
+      card = await this.card(id);
+    }
   }
   async opening(id: string, month: string, amount: number, version: string, key: string) {
     return this.receipts.execute('card.opening', key, { id, month, amount, version }, async () => {

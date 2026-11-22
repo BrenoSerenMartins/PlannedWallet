@@ -299,6 +299,23 @@
         "tags": ["Cards"]
       }
     },
+    "/v1/cards/invoices/{importId}/confirm": {
+      "post": {
+        "operationId": "CardsController_confirmInvoice",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": ["Cards"]
+      }
+    },
     "/v1/cards/invoices/{importId}": {
       "get": {
         "operationId": "CardsController_getInvoiceImport",
@@ -2553,6 +2570,23 @@
                 }
               }
             }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": ["Imports"]
+      }
+    },
+    "/v1/imports/detect": {
+      "post": {
+        "operationId": "ImportsController_detect",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
           }
         },
         "security": [

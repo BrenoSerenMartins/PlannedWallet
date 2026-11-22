@@ -5,6 +5,7 @@ export function readStatementWorker<T>(url: URL, data: unknown): Promise<T> {
     let received = false;
     const worker = new Worker(url, {
       workerData: data,
+      execArgv: [],
       resourceLimits: { maxOldGenerationSizeMb: 128 },
     });
     const timer = setTimeout(() => {

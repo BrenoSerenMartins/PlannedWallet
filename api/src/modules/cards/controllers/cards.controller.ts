@@ -75,6 +75,16 @@ export class CardsController {
       this.invoiceImports.import(requireUuid(id), billMonth, file),
     );
   }
+  @Post('invoices/:importId/confirm')
+  confirmInvoice(
+    @Req() r: AuthenticatedRequest,
+    @Param('importId') id: string,
+    @Headers('if-match') version: string,
+  ) {
+    return this.db.forUser(r.identity.id, () =>
+      this.invoiceImports.confirm(requireUuid(id), version),
+    );
+  }
   @Get('invoices/:importId')
   getInvoiceImport(@Req() r: AuthenticatedRequest, @Param('importId') id: string) {
     return this.db.forUser(r.identity.id, () => this.invoiceImports.get(requireUuid(id)), true);

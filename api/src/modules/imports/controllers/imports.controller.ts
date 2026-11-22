@@ -95,6 +95,19 @@ export class ImportsController {
       this.imports.upload(accountId, file.buffer, file.originalname, statement),
     );
   }
+  @Post('detect')
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024, files: 1, fields: 1 } }),
+  )
+  async detect(
+    @Req() r: AuthenticatedRequest,
+    @Body('billMonth') billMonth: string | undefined,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) throw new UnprocessableEntityException('Selecione um arquivo para identificar.');
+    return this.imports.detect(r.identity.id, file.buffer, file.originalname, billMonth);
+  }
   @Patch(':id/items/:itemId')
   @ApiOkResponse({ type: ImportBatchResourceDto })
   @ApiBody({ type: ReviewItemDto })

@@ -4,7 +4,7 @@ import { HelpTip, Tooltip } from '../../shared/ui/tooltip';
 import { useNotifications } from '../../shared/feedback/notification-provider';
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   CreditCard as CreditIcon,
   Plus,
@@ -756,9 +756,11 @@ export function CardsPage() {
 
 type InvoiceImportPreview = {
   id: string;
+  version: number;
   status: string;
   parsed: {
     total: number;
+    dueDate?: string;
     billMonth: string;
     warnings: string[];
     lines: Array<{
@@ -777,6 +779,7 @@ type InvoiceImportPreview = {
 };
 
 function CardInvoiceImportForm({ cardId, month }: { cardId: string; month: string }) {
+  const client = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<InvoiceImportPreview | null>(null);
   const [error, setError] = useState('');
@@ -837,16 +840,18 @@ function CardInvoiceImportForm({ cardId, month }: { cardId: string; month: strin
             Total lido · <strong className="tabular-nums">{money(preview.parsed.total)}</strong>
           </p>
           <p className="field-help">
-            A fatura foi salva como revisão criptografada. Nenhum lançamento foi confirmado ou
-            alterado.
+            {preview.status === 'confirmed'
+              ? 'Fatura confirmada.'
+              : 'Confira os lançamentos antes de aplicar a fatura ao cartão.'}
           </p>
+          {preview.parsed.dueDate && <p>Vence em {shortDate(preview.parsed.dueDate)}</p>}
           {preview.parsed.warnings.map((warning) => (
             <p className="field-help" key={warning}>
               {warning}
             </p>
           ))}
           <ul className="card-invoice-import-preview">
-            {preview.parsed.lines.slice(0, 20).map((line, index) => {
+            {preview.parsed.lines.map((line, index) => {
               const match = preview.reconciliation[index];
               return (
                 <li key={`${line.date}-${index}`}>
@@ -871,8 +876,37 @@ function CardInvoiceImportForm({ cardId, month }: { cardId: string; month: strin
               );
             })}
           </ul>
-          {preview.parsed.lines.length > 20 && (
-            <p className="field-help">Mostrando 20 de {preview.parsed.lines.length} lançamentos.</p>
+          {error && (
+            <p role="alert" className="field-error">
+              {error}
+            </p>
+          )}
+          {preview.status === 'review' && (
+            <Button
+              type="button"
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                setError('');
+                try {
+                  setPreview(
+                    await request<InvoiceImportPreview>(`/cards/invoices/${preview.id}/confirm`, {
+                      method: 'POST',
+                      headers: { 'If-Match': String(preview.version) },
+                    }),
+                  );
+                  await client.invalidateQueries();
+                } catch (cause) {
+                  setError(
+                    cause instanceof Error ? cause.message : 'Não foi possível confirmar a fatura.',
+                  );
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              {busy ? 'Confirmando…' : 'Confirmar fatura'}
+            </Button>
           )}
         </section>
       )}

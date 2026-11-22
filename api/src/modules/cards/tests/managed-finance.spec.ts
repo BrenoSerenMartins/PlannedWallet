@@ -1,3 +1,7 @@
+import { CardInvoiceImportsService } from '../services/card-invoice-imports.service.js';
+import { CardInvoiceImportsRepository } from '../repositories/card-invoice-imports.repository.js';
+import { FinancialCryptoService } from '../../../core/crypto/financial-crypto.js';
+import type { Configuration } from '../../../core/config/index.js';
 import { ImportsService } from '../../imports/services/imports.service.js';
 import { ImportsRepository } from '../../imports/repositories/imports.repository.js';
 import { ImportReconciliationService } from '../../imports/services/import-reconciliation.service.js';
@@ -1828,4 +1832,31 @@ it('persists alert preferences, read/dismiss state and condition deduplication s
   await db.forUser(db.other, async () =>
     expect((await alerts.list()).preferences.bills).toBe(true),
   );
+});
+
+it('confirms an encrypted invoice once and projects only current and remaining installments', async () => {
+  const { card } = await makeCard('Invoice import');
+  const repository = new CardsRepository(db.service);
+  const crypto = new FinancialCryptoService(db.service, {
+    financialDataKek: Buffer.alloc(32, 42).toString('base64'),
+  } as Configuration);
+  const service = new CardInvoiceImportsService(
+    repository,
+    new CardInvoiceImportsRepository(db.service, crypto),
+    crypto,
+    cards,
+  );
+  const file = {
+    originalname: 'fatura.csv',
+    buffer: Buffer.from('Data;Descrição;Parcela;Valor\n10/10/2026;Loja Teste;2/3;30,00'),
+  } as Express.Multer.File;
+  const preview = await run(() => service.import(card.id, '2026-11', file));
+  expect((await currentCard(card.id)).bills).toEqual([]);
+  const confirmed = await run(() => service.confirm(preview.id, String(preview.version)));
+  expect(confirmed.status).toBe('confirmed');
+  expect(await run(() => service.confirm(preview.id, String(preview.version)))).toEqual(confirmed);
+  expect((await currentCard(card.id)).bills.map((bill) => [bill.month, bill.total])).toEqual([
+    ['2026-11', 3000],
+    ['2026-12', 3000],
+  ]);
 });

@@ -47,7 +47,7 @@ export class CardInvoiceImportsRepository {
     );
     return this.present(rows[0]);
   }
-  async get(id: string) {
+  async get(id: string, lock = false) {
     const rows = await this.db.query<{
       id: string;
       card_id: string;
@@ -58,7 +58,8 @@ export class CardInvoiceImportsRepository {
       source_name: string;
       created_at: string;
     }>(
-      'SELECT id,card_id,payload_ciphertext,status,version,bill_month,source_name,created_at FROM wallet.card_invoice_imports WHERE user_id=$1 AND workspace_id=$2 AND id=$3',
+      'SELECT id,card_id,payload_ciphertext,status,version,bill_month,source_name,created_at FROM wallet.card_invoice_imports WHERE user_id=$1 AND workspace_id=$2 AND id=$3' +
+        (lock ? ' FOR UPDATE' : ''),
       [this.db.userId, this.db.workspaceId, id],
     );
     if (!rows[0]) return null;
@@ -72,6 +73,21 @@ export class CardInvoiceImportsRepository {
       ),
     };
   }
+  async hasConfirmed(cardId: string, month: string) {
+    const rows = await this.db.query(
+      "SELECT 1 FROM wallet.card_invoice_imports WHERE user_id=$1 AND workspace_id=$2 AND card_id=$3 AND bill_month=$4 AND status='confirmed'",
+      [this.db.userId, this.db.workspaceId, cardId, month],
+    );
+    return rows.length > 0;
+  }
+
+  async confirm(id: string) {
+    await this.db.query(
+      "UPDATE wallet.card_invoice_imports SET status='confirmed', version=version+1, confirmed_at=now() WHERE user_id=$1 AND workspace_id=$2 AND id=$3",
+      [this.db.userId, this.db.workspaceId, id],
+    );
+  }
+
   private async present(row: {
     id: string;
     payload_ciphertext: object;

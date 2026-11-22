@@ -2,7 +2,7 @@ import { UnprocessableEntityException } from '@nestjs/common';
 import { dateOnly } from '../../../../core/rest/index.js';
 import type { ParsedStatement, StatementRow, TextCell } from '../../contracts/statement.js';
 import { parseAmount } from '../files/statement-values.js';
-import { readStatementWorker } from '../files/worker-reader.js';
+import { readStatementWorker } from '../../../../core/financial-files/worker-reader.js';
 export function parseAleloPages(pages: TextCell[][]): ParsedStatement {
   if (
     !pages.length ||
@@ -74,7 +74,7 @@ export function parseAleloPages(pages: TextCell[][]): ParsedStatement {
 }
 export async function extractAleloStatement(buffer: Buffer) {
   const result = await readStatementWorker<{ pages: TextCell[][] }>(
-    new URL('../mercado-pago/pdf-worker.mjs', import.meta.url),
+    new URL('../../../../core/financial-files/pdf-worker.mjs', import.meta.url),
     buffer,
   );
   return parseAleloPages(result.pages);

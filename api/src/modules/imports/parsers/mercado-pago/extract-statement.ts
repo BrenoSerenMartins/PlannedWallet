@@ -1,6 +1,6 @@
 import { extractStatement } from './statement.parser.js';
 import { statementFileFormat } from '../files/file-format.js';
-import { readStatementWorker } from '../files/worker-reader.js';
+import { readStatementWorker } from '../../../../core/financial-files/worker-reader.js';
 import { parseMercadoPagoTable, type StatementCell } from './tabular-statement.parser.js';
 import { isSettlementHeader } from './settlement.parser.js';
 import { UnprocessableEntityException } from '@nestjs/common';

@@ -714,3 +714,19 @@ it('reprocesses and confirms BB CSV without merging repeated documents or accept
   );
   expect(repeated.id).toBe(updated.id);
 });
+
+it('detects mixed source periods and invoice months independently from the selected UI month', async () => {
+  const csv = Buffer.from(
+    'Data de Compra;Nome no Cartão;Final do Cartão;Categoria;Descrição;Parcela;Valor (em US$);Cotação (em R$);Valor (em R$)\n01/10/2026;Exemplo;1234;-;Compra exemplo;Única;0;0;50.00',
+  );
+  const invoice = await imports.detect(db.user, csv, 'Fatura_2026-11-05.csv', '2026-01');
+  expect(invoice).toMatchObject({
+    kind: 'card_invoice',
+    institution: 'c6',
+    automaticMonth: '2026-11',
+    monthSource: 'filename',
+  });
+  const statement = await imports.detect(db.user, csvFixture(sampleRows), 'account.csv', '2026-01');
+  expect(statement).toMatchObject({ kind: 'account_statement', institution: 'mercado_pago' });
+  expect('months' in statement ? statement.months : []).toEqual(['2026-10']);
+});

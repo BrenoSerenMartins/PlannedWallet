@@ -22,6 +22,7 @@ import {
   ApiCreatedResponse,
   ApiConsumes,
   ApiOkResponse,
+  ApiHeader,
   ApiTags,
 } from '@nestjs/swagger';
 import { AuthenticatedUserGuard, type AuthenticatedRequest } from '../../../core/auth/index.js';
@@ -59,6 +60,14 @@ export class CardsController {
     @Inject(CardsService) private readonly cards: CardsService,
     @Inject(CardInvoiceImportsService) private readonly invoiceImports: CardInvoiceImportsService,
   ) {}
+  @Get('invoice-destinations')
+  invoiceDestinations(@Req() r: AuthenticatedRequest, @Query('institution') institution: string) {
+    return this.db.forUser(
+      r.identity.id,
+      () => this.invoiceImports.destinations(institution),
+      true,
+    );
+  }
   @Post(':id/invoices/import')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
@@ -77,13 +86,23 @@ export class CardsController {
     );
   }
   @Post('invoices/:importId/confirm')
+  @ApiHeader({
+    name: 'X-Replaces-Invoice',
+    required: false,
+    description: 'Confirmed invoice import ID from the preview; explicitly authorizes replacement.',
+  })
   confirmInvoice(
     @Req() r: AuthenticatedRequest,
     @Param('importId') id: string,
     @Headers('if-match') version: string,
+    @Headers('x-replaces-invoice') replacesInvoiceId: string | undefined,
   ) {
     return this.db.forUser(r.identity.id, () =>
-      this.invoiceImports.confirm(requireUuid(id), version),
+      this.invoiceImports.confirm(
+        requireUuid(id),
+        version,
+        replacesInvoiceId ? requireUuid(replacesInvoiceId) : undefined,
+      ),
     );
   }
   @Get('invoices/:importId')

@@ -1,0 +1,24 @@
+.automatic-import-batch {
+  margin-bottom: 1rem;
+}
+.automatic-import-rows {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+.automatic-import-rows li {
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  overflow-wrap: anywhere;
+}
+.automatic-import-rows li > span {
+  display: block;
+}
+.automatic-import-rows p {
+  margin: 0.4rem 0;
+}
+.automatic-import-batch .inline-actions {
+  flex-wrap: wrap;
+}

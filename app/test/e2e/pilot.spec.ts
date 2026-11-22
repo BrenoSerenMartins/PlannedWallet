@@ -5160,13 +5160,11 @@ test('protected invoice upload keeps the password transient through detection an
   await page.goto('/imports');
   const passwordField = page.getByLabel('Senha do PDF (se houver)');
   await passwordField.fill(password);
-  await page
-    .locator('input[type=file]')
-    .setInputFiles({
-      name: 'fatura.pdf',
-      mimeType: 'application/pdf',
-      buffer: Buffer.from('%PDF-synthetic'),
-    });
+  await page.locator('input[type=file]').setInputFiles({
+    name: 'fatura.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from('%PDF-synthetic'),
+  });
   await expect(page.getByText('Fatura de cartão Inter · 1 compras reconhecidas')).toBeVisible();
   await page.getByRole('button', { name: 'Ler e conciliar fatura' }).click();
   await expect(page.getByRole('region', { name: 'Prévia da fatura importada' })).toBeVisible();
@@ -5204,3 +5202,189 @@ test('Banco do Brasil detection proposes its own account rather than a Mercado P
   await expect(page.getByLabel('Nome da nova conta')).toHaveValue('Banco do Brasil');
   await expectNoHorizontalOverflow(page);
 });
+
+test('card invoice dialog selects the destination cycle and requires consent to replace a confirmed source', async ({
+  page,
+}) => {
+  await signedIn(page);
+  await financeFixtures(page);
+  const importId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+  const previousId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+  let confirmed = false;
+  const preview = {
+    id: importId,
+    billMonth: '2026-10',
+    replacesInvoiceId: previousId,
+    version: 1,
+    status: 'review',
+    parsed: {
+      billMonth: '2026-10',
+      total: 5000,
+      warnings: [],
+      lines: [
+        {
+          date: '2026-09-01',
+          description: 'Compra exemplo',
+          amount: 5000,
+          installmentNumber: null,
+          installmentCount: null,
+        },
+      ],
+    },
+    reconciliation: [{ lineIndex: 0, purchaseId: null, confidence: 'unmatched' }],
+  };
+  await page.route(`**/v1/cards/${financeCardId}/invoices/import`, (route) => {
+    expect(route.request().postData()).toContain('2026-10');
+    return route.fulfill({ json: preview });
+  });
+  await page.route(`**/v1/cards/invoices/${importId}/confirm`, (route) => {
+    expect(route.request().headers()['x-replaces-invoice']).toBe(previousId);
+    confirmed = true;
+    return route.fulfill({
+      json: { ...preview, status: 'confirmed', replacesInvoiceId: null, version: 2 },
+    });
+  });
+  await page.goto(`/cards?card=${financeCardId}&month=2026-11`);
+  await page.getByRole('button', { name: 'Importar fatura', exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  await fillControl(dialog.getByLabel('Mês da fatura de destino'), '2026-10');
+  await dialog
+    .locator('input[type=file]')
+    .setInputFiles({ name: 'invoice.csv', mimeType: 'text/csv', buffer: Buffer.from('synthetic') });
+  await dialog.getByRole('button', { name: 'Ler fatura', exact: true }).click();
+  await expect(dialog.getByText('Destino: outubro de 2026')).toBeVisible();
+  const confirm = dialog.getByRole('button', { name: 'Confirmar e substituir compras do ciclo' });
+  await expect(confirm).toBeDisabled();
+  await dialog.getByRole('button', { name: 'Alterar mês ou arquivo' }).click();
+  await expectControlValue(dialog.getByLabel('Mês da fatura de destino'), '2026-10');
+  await dialog.getByRole('button', { name: 'Ler fatura', exact: true }).click();
+  await dialog.getByRole('checkbox', { name: /Substituir a importação já confirmada/ }).check();
+  await expect(confirm).toBeEnabled();
+  await confirm.click();
+  await expect(page).toHaveURL(/month=2026-10/);
+  await expect(dialog).toHaveCount(0);
+  expect(confirmed).toBe(true);
+  await expectNoHorizontalOverflow(page);
+});
+
+for (const width of [390, 1440])
+  test(`automatic batch separates mixed banks and months while isolating duplicates and invalid files at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 1000 });
+    await signedIn(page);
+    const c6 = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+      inter = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+      bb = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+    const confirmed: string[] = [];
+    await page.route('**/v1/accounts', (route) =>
+      route.fulfill({ json: [{ ...account, id: bb, name: 'BB', institution: 'banco_do_brasil' }] }),
+    );
+    await page.route('**/v1/cards/invoice-destinations?*', (route) =>
+      route.fulfill({
+        json:
+          new URL(route.request().url()).searchParams.get('institution') === 'c6'
+            ? [{ id: c6, name: 'C6 Bank' }]
+            : [{ id: inter, name: 'Inter' }],
+      }),
+    );
+    await page.route('**/v1/imports/detect', (route) => {
+      const body = route.request().postData() ?? '';
+      if (body.includes('invalid.pdf'))
+        return route.fulfill({ status: 422, json: { title: 'PDF inválido' } });
+      if (body.includes('account.csv'))
+        return route.fulfill({
+          json: {
+            kind: 'account_statement',
+            institution: 'banco_do_brasil',
+            itemCount: 1,
+            sourceFormat: 'csv',
+            months: ['2026-10'],
+            periodStart: '2026-10-01',
+            periodEnd: '2026-10-31',
+          },
+        });
+      const c6File = body.includes('Fatura_2026-11-05.csv');
+      return route.fulfill({
+        json: {
+          kind: 'card_invoice',
+          institution: c6File ? 'c6' : 'inter',
+          itemCount: 1,
+          sourceFormat: c6File ? 'csv' : 'pdf',
+          automaticMonth: c6File ? '2026-11' : '2026-10',
+          dueDate: c6File ? '2026-11-05' : '2026-10-10',
+          monthSource: c6File ? 'filename' : 'document',
+          summaryOnly: false,
+        },
+      });
+    });
+    for (const [id, month] of [
+      [c6, '2026-11'],
+      [inter, '2026-10'],
+    ]) {
+      await page.route(`**/v1/cards/${id}/invoices/import`, (route) => {
+        expect(route.request().postData()).toContain(month);
+        return route.fulfill({
+          json: {
+            id,
+            version: 1,
+            status: 'review',
+            billMonth: month,
+            parsed: { summaryOnly: false },
+            reconciliation: [],
+          },
+        });
+      });
+      await page.route(`**/v1/cards/invoices/${id}/confirm`, (route) => {
+        confirmed.push(month);
+        return route.fulfill({ json: { status: 'confirmed' } });
+      });
+    }
+    await page.route('**/v1/imports', (route) =>
+      route.fulfill({
+        json:
+          route.request().method() === 'POST'
+            ? {
+                id: bb,
+                status: 'draft',
+                version: 1,
+                items: [{ selected: true, description: 'Pix recebido', cardId: null }],
+              }
+            : [],
+      }),
+    );
+    await page.route(`**/v1/imports/${bb}/confirmations`, (route) => {
+      confirmed.push('bb-2026-10');
+      return route.fulfill({ json: { id: bb, status: 'confirmed' } });
+    });
+    await page.goto('/imports');
+    const chooser = page.waitForEvent('filechooser');
+    await page.getByRole('button', { name: 'Selecionar arquivos em lote' }).click();
+    await (
+      await chooser
+    ).setFiles([
+      { name: 'Fatura_2026-11-05.csv', mimeType: 'text/csv', buffer: Buffer.from('c6 synthetic') },
+      {
+        name: 'inter-oct.pdf',
+        mimeType: 'application/pdf',
+        buffer: Buffer.from('%PDF-inter synthetic'),
+      },
+      { name: 'account.csv', mimeType: 'text/csv', buffer: Buffer.from('bb synthetic') },
+      { name: 'copy.csv', mimeType: 'text/csv', buffer: Buffer.from('c6 synthetic') },
+      {
+        name: 'invalid.pdf',
+        mimeType: 'application/pdf',
+        buffer: Buffer.from('%PDF-invalid synthetic'),
+      },
+    ]);
+    const region = page.getByRole('region', { name: 'Importação automática em lote' });
+    await expect(
+      region.getByRole('button', { name: 'Importar 3 arquivo(s) identificado(s)' }),
+    ).toBeVisible();
+    await expect(region.getByText('Arquivo repetido no lote.')).toBeVisible();
+    await expect(region.getByText('PDF inválido')).toBeVisible();
+    await region.getByRole('button', { name: 'Importar 3 arquivo(s) identificado(s)' }).click();
+    await expect(region.getByText('Importado', { exact: true })).toHaveCount(3);
+    expect(confirmed.sort()).toEqual(['2026-10', '2026-11', 'bb-2026-10']);
+    await expectNoHorizontalOverflow(page);
+  });

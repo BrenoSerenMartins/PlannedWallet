@@ -99,3 +99,14 @@ it('rejects invalid PDF password inputs before reading files', async () => {
     readCardInvoice(Buffer.from('%PDF-test'), 'fatura.pdf', '2026-11', 'x'.repeat(129)),
   ).rejects.toThrow('senha');
 });
+
+it('identifies the C6 exported due date from its filename without using the currently open month', async () => {
+  const csv = Buffer.from(
+    'Data de Compra;Nome no Cartão;Final do Cartão;Categoria;Descrição;Parcela;Valor (em US$);Cotação (em R$);Valor (em R$)\n01/10/2026;Exemplo;1234;-;Compra exemplo;Única;0;0;50.00',
+  );
+  const result = await readCardInvoice(csv, 'Fatura_2026-11-05.csv', '2026-01');
+  expect(result).toMatchObject({ institution: 'c6', dueDate: '2026-11-05' });
+  expect(result.warnings.join(' ')).toContain('nome do CSV');
+  expect((await readCardInvoice(csv, 'renomeado.csv', '2026-01')).dueDate).toBeUndefined();
+  expect((await readCardInvoice(csv, 'Fatura_2026-02-31.csv', '2026-01')).dueDate).toBeUndefined();
+});

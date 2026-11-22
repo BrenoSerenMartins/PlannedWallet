@@ -282,6 +282,23 @@
         "tags": ["Goals"]
       }
     },
+    "/v1/cards/invoice-destinations": {
+      "get": {
+        "operationId": "CardsController_invoiceDestinations",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": ["Cards"]
+      }
+    },
     "/v1/cards/{id}/invoices/import": {
       "post": {
         "operationId": "CardsController_importInvoice",
@@ -302,7 +319,17 @@
     "/v1/cards/invoices/{importId}/confirm": {
       "post": {
         "operationId": "CardsController_confirmInvoice",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "X-Replaces-Invoice",
+            "in": "header",
+            "description": "Confirmed invoice import ID from the preview; explicitly authorizes replacement.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "201": {
             "description": ""

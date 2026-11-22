@@ -83,6 +83,10 @@ export class CardInvoiceImportsService {
     if (!data.cards.some((card) => card.id === cardId))
       throw new NotFoundException('Cartão não encontrado.');
     const parsed = await readCardInvoice(file.buffer, file.originalname, billMonth, password);
+    if (parsed.dueDate && parsed.dueDate.slice(0, 7) !== billMonth)
+      throw new ConflictException(
+        `O vencimento identificado pertence a ${parsed.dueDate.slice(0, 7)}. Selecione esse mês para importar esta fatura.`,
+      );
     const fingerprint = await this.crypto.fingerprint(
       createHash('sha256').update(file.buffer).digest('hex'),
     );
@@ -95,12 +99,41 @@ export class CardInvoiceImportsService {
       parsed,
       reconciliation,
     });
-    if (saved.id !== id && saved.status === 'review' && saved.billMonth === billMonth)
-      await this.imports.refreshReview(saved.id, saved.version, { parsed, reconciliation });
+    if (saved.billMonth !== billMonth && saved.status !== 'review')
+      throw new ConflictException(
+        `Este arquivo já foi confirmado em ${saved.billMonth}. Selecione esse mês para consultar a importação existente.`,
+      );
+    if (saved.id !== id && saved.status === 'review')
+      await this.imports.refreshReview(
+        saved.id,
+        saved.version,
+        { parsed, reconciliation },
+        billMonth,
+      );
     return this.get(saved.id);
   }
 
-  async confirm(id: string, version: string) {
+  async destinations(institution: string) {
+    const patterns: Record<string, RegExp> = {
+      mercado_pago: /\bmercado\s*pago\b/i,
+      inter: /\binter\b/i,
+      itau: /\bitau\b/i,
+      c6: /\bc6\b/i,
+    };
+    if (!Object.hasOwn(patterns, institution)) return [];
+    const known = new Set(await this.imports.institutionCards(institution));
+    const data = await this.cards.snapshot();
+    return data.cards
+      .filter(
+        (card) =>
+          !card.archived &&
+          (known.has(card.id) ||
+            patterns[institution].test(card.name.normalize('NFD').replace(/[\u0300-\u036f]/g, ''))),
+      )
+      .map((card) => ({ id: card.id, name: card.name }));
+  }
+
+  async confirm(id: string, version: string, replacesInvoiceId?: string) {
     const invoice = await this.imports.get(id, true);
     if (!invoice) throw new NotFoundException('Importação de fatura não encontrada.');
     if (invoice.status === 'confirmed') {
@@ -132,6 +165,7 @@ export class CardInvoiceImportsService {
       throw new ConflictException(
         'O total a pagar inclui ajustes que ainda precisam ser conciliados.',
       );
+    let replaced: string | null = null;
     await this.cardService.applyInvoice(
       invoice.card_id,
       invoice.bill_month,
@@ -139,12 +173,21 @@ export class CardInvoiceImportsService {
       parsed.lines,
       id,
       async () => {
-        if (await this.imports.hasConfirmed(invoice.card_id, invoice.bill_month))
-          throw new ConflictException('Já existe uma fatura confirmada para este cartão e mês.');
+        const existing = await this.imports.confirmedForMonth(invoice.card_id, invoice.bill_month);
+        if (existing && existing.id !== replacesInvoiceId)
+          throw new ConflictException(
+            `Já existe uma importação confirmada para ${invoice.bill_month}. Reabra a prévia e autorize a substituição, ou selecione outro mês.`,
+          );
+        if (replacesInvoiceId && existing?.id !== replacesInvoiceId)
+          throw new ConflictException(
+            'A importação confirmada mudou. Reabra a prévia antes de substituir.',
+          );
+        replaced = existing?.id ?? null;
         return this.candidates(parsed.lines, invoice.card_id, invoice.bill_month);
       },
       parsed.movements,
     );
+    if (replaced) await this.imports.supersede(replaced);
     await this.imports.confirm(id);
     return this.get(id);
   }
@@ -154,7 +197,9 @@ export class CardInvoiceImportsService {
     if (!invoice) throw new NotFoundException('Importação de fatura não encontrada.');
     const parsed = (invoice.payload as { parsed: ParsedCardInvoice }).parsed;
     const reconciliation = await this.candidates(parsed.lines, invoice.card_id, invoice.bill_month);
+    const existing = await this.imports.confirmedForMonth(invoice.card_id, invoice.bill_month);
     return {
+      replacesInvoiceId: existing && existing.id !== invoice.id ? existing.id : null,
       id: invoice.id,
       cardId: invoice.card_id,
       billMonth: invoice.bill_month,

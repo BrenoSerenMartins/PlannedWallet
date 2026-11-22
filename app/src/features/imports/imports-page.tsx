@@ -1,3 +1,5 @@
+import { AutomaticImportBatch } from './components/automatic-import-batch';
+import { useAutomaticImportBatch } from './hooks/use-automatic-import-batch';
 import '../../shared/ui/card-invoice-preview.css';
 import { FileText as EmptyStateIcon } from 'lucide-react';
 import { Select } from '../../shared/ui/controls/select';
@@ -32,6 +34,11 @@ export function ImportsPage() {
   const navigate = useNavigate();
   const client = useQueryClient();
   const input = useRef<HTMLInputElement>(null);
+  const automaticSelection = useRef(false);
+  const batchPassword = useRef('');
+  const automaticBatch = useAutomaticImportBatch(() => {
+    void client.invalidateQueries();
+  });
   const [pdfPassword, setPdfPassword] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [detected, setDetected] = useState<
@@ -53,6 +60,7 @@ export function ImportsPage() {
       }
     | null
   >(null);
+  const [replaceConfirmed, setReplaceConfirmed] = useState(false);
   const [destination, setDestination] = useState('');
   const [newAccountName, setNewAccountName] = useState('');
   const [detecting, setDetecting] = useState(false);
@@ -63,6 +71,7 @@ export function ImportsPage() {
   const [closingDay, setClosingDay] = useState('10');
   const [dueDay, setDueDay] = useState('20');
   const [cardPreview, setCardPreview] = useState<{
+    replacesInvoiceId?: string | null;
     id: string;
     cardId: string;
     status: string;
@@ -89,7 +98,7 @@ export function ImportsPage() {
     void client.invalidateQueries({ queryKey: [session?.user.id, 'imports'] });
     if (rows.length === 1 && rows[0].result) navigate('/imports/' + rows[0].result.id);
   });
-  const busy = uploads.busy || saving;
+  const busy = uploads.busy || saving || automaticBatch.busy;
   const accounts = useQuery({
     queryKey: [session?.user.id, 'accounts'],
     queryFn: () => request<Account[]>('/accounts'),
@@ -111,6 +120,7 @@ export function ImportsPage() {
   const chooseStatement = async (file: File) => {
     setSelectedFile(file);
     setCardPreview(null);
+    setReplaceConfirmed(false);
     setDetected(null);
     setDetectError('');
     setDetecting(true);
@@ -286,6 +296,17 @@ export function ImportsPage() {
             </Select>
           </label>
           <div hidden={view !== 'upload'} className="view-content">
+            <AutomaticImportBatch
+              batch={automaticBatch}
+              onSelect={(password) => {
+                automaticSelection.current = true;
+                batchPassword.current = password;
+                input.current?.click();
+              }}
+              onReview={(file) => {
+                void chooseStatement(file);
+              }}
+            />
             <div className="import-grid">
               <section className="panel upload-panel">
                 <span className="file-icon">
@@ -314,15 +335,29 @@ export function ImportsPage() {
                       />
                     </label>
                     <input
-                      ref={input}
+                      ref={(element) => {
+                        input.current = element;
+                        if (element)
+                          element.oncancel = () => {
+                            automaticSelection.current = false;
+                            batchPassword.current = '';
+                          };
+                      }}
                       type="file"
+                      multiple
                       disabled={busy || detecting}
                       accept="application/pdf,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.pdf,.csv,.xlsx"
                       hidden
                       onChange={(e) => {
-                        const file = e.target.files?.[0];
+                        const files = Array.from(e.target.files ?? []);
                         e.target.value = '';
-                        if (file) void chooseStatement(file);
+                        if (!files.length) return;
+                        if (automaticSelection.current || files.length > 1) {
+                          const password = batchPassword.current || pdfPassword;
+                          automaticSelection.current = false;
+                          batchPassword.current = '';
+                          void automaticBatch.analyze(files, password);
+                        } else void chooseStatement(files[0]);
                       }}
                     />
                     {cardPreview ? (
@@ -373,6 +408,17 @@ export function ImportsPage() {
                             {warning}
                           </p>
                         ))}
+                        {cardPreview.replacesInvoiceId && cardPreview.status === 'review' && (
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={replaceConfirmed}
+                              onChange={(event) => setReplaceConfirmed(event.target.checked)}
+                            />
+                            Substituir a importação já confirmada neste mês, preservando o histórico
+                            anterior.
+                          </label>
+                        )}
                         <ul className="card-invoice-import-preview">
                           {cardPreview.parsed.lines.map((line, index) => (
                             <li key={`${line.date}-${index}`}>
@@ -407,7 +453,9 @@ export function ImportsPage() {
                             cardPreview.parsed.total ||
                             !!cardPreview.parsed.balanceBreakdown) && (
                             <Button
-                              disabled={busy}
+                              disabled={
+                                busy || (!!cardPreview.replacesInvoiceId && !replaceConfirmed)
+                              }
                               onClick={async () => {
                                 setSaving(true);
                                 setDetectError('');
@@ -417,7 +465,14 @@ export function ImportsPage() {
                                       `/cards/invoices/${cardPreview.id}/confirm`,
                                       {
                                         method: 'POST',
-                                        headers: { 'If-Match': String(cardPreview.version) },
+                                        headers: {
+                                          'If-Match': String(cardPreview.version),
+                                          ...(cardPreview.replacesInvoiceId && replaceConfirmed
+                                            ? {
+                                                'X-Replaces-Invoice': cardPreview.replacesInvoiceId,
+                                              }
+                                            : {}),
+                                        },
                                       },
                                     ),
                                   );
@@ -450,6 +505,7 @@ export function ImportsPage() {
                           className="secondary compact"
                           onClick={() => {
                             setCardPreview(null);
+                            setReplaceConfirmed(false);
                             setSelectedFile(null);
                             setDetected(null);
                           }}

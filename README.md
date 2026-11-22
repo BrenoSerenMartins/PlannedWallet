@@ -55,6 +55,10 @@ Cada usuário acessa seus próprios espaços. Compartilhamento, convites e membr
 - **C6:** CSV de compras da fatura; pagamentos anteriores ficam separados, enquanto estornos e créditos de pontos são preservados. O total é calculado pela soma do arquivo e precisa de conferência.
 - **Crediffato:** a captura de tela foi mapeada para transcrição revisada. A aplicação continua aceitando PDF/CSV, sem leitura automática de imagens.
 
+Em **Importações → Importar vários arquivos**, selecione até 20 arquivos (10 MB cada e 100 MB por lote). O sistema identifica os formatos suportados, banco, período e destinos compatíveis. Faturas usam o mês do vencimento; o CSV C6 `Fatura_AAAA-MM-DD.csv` usa o vencimento do nome exportado e mostra essa origem. Os lançamentos de extrato mantêm suas próprias datas, mesmo cobrindo mais de um mês.
+
+Use **Importar arquivos identificados** para confirmar os que estão prontos de uma vez. Arquivos repetidos são separados; falhas, dados insuficientes, múltiplos destinos e conflitos ficam em revisão sem bloquear os demais. Contas/cartões ausentes são criados por banco; em cartões novos sem fechamento informado no arquivo, o cadastro usa o dia 1 até ser ajustado. Não há reconhecimento genérico de imagens/OFX nesta etapa. Pagamentos de cartão só são vinculados automaticamente quando emissor, ciclo e valor têm correspondência única; os demais exigem revisão para não duplicar despesas.
+
 As prévias continuam exigindo revisão e confirmação. Reconhecer um formato não importa dados automaticamente nem comprova cobertura completa da conta.
 
 ## Executar localmente

@@ -12,7 +12,7 @@ The pilot implements the routes below, published in `api/openapi.json`. Generate
 | `/accounts`, `/accounts/:accountId` | Owned accounts and history |
 | `/planning`, `/planning?view=commitments` | Monthly budgets, actual comparison, saved prior-month copy, commitments and forecast |
 | `/transactions` | Filtered history and transaction detail |
-| `/imports`, `/imports/:importId` | Upload, review, confirmation and history |
+| `/imports`, `/imports/:importId` | Automatic mixed-bank/month batch queue, individual upload, review, confirmation and history |
 | `/cards` | Cards, purchases, bills and payments |
 | `/wealth` | Investments, assets/debts and position history |
 | `/categories` | Groups and categories |
@@ -102,3 +102,6 @@ Overview revision (2026-10-30): `GET /v1/dashboard?from=...&to=...` adds `expens
 Monthly comparisons/lifecycle: `GET /v1/dashboard/history?month=YYYY-MM&months=2|4|7|12` returns chronological zero-filled months with signed income/expense, typed count and unclassified count. Ranges end at the selected month, from 1900 through 9998. Dashboard summary also adds `expenseCategories`. `GET /v1/workspaces/trash` lists restorable owned spaces with deletedAt/deleteAfter; `DELETE /v1/workspaces/:id` starts retention without extending retries; `POST /v1/workspaces/:id/restorations` restores the same space before expiry. These workspace routes use verified owner scope without an active selection. Normal financial routes reject deleted spaces. No public hard-delete or purge endpoint exists.
 
 MP reference refinement (2026-10-31): account/import basis resources add optional referencePoint=closing and referenceKey. `POST /v1/accounts/:accountId/balance-reference` reselects confirmed MP evidence with the displayed If-Match account version. Existing `POST .../balance-basis/imports/:id` validates the supplied source then reselects the newest eligible account reference. `GET /v1/accounts` and `GET /v1/dashboard` can upgrade eligible legacy MP projections under owner/workspace/account locks; period-history reads remain read-only. Confirmation receipts add balanceBefore/balanceAfter/referenceStatus and generated counts. `POST /v1/imports/:id/items/reviews` accepts version, 1–100 unique explicit itemIds, and selection/category action; draft/type/duplicate/link/refund boundaries are checked server-side and the updates are atomic. No public DTO exposes deferred balance-refresh workflow control.
+
+## Automatic invoice routing and source replacement
+`GET /v1/cards/invoice-destinations?institution=...` returns scoped active card hints from issuer names and confirmed encrypted source metadata. `POST /v1/imports/detect` additionally returns source months/period, invoice due-month provenance and totals for the batch queue. `POST /v1/cards/invoices/:importId/confirm` optionally accepts `X-Replaces-Invoice` to authorize replacement of the exact confirmed source shown in the preview; stale source/version intents are rejected. Existing per-file confirmation and ownership checks remain authoritative.

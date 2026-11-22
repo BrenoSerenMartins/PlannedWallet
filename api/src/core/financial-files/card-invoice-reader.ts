@@ -1,3 +1,4 @@
+import { invoiceFilenameDate } from './invoice-filename-date.js';
 import { UnprocessableEntityException } from '@nestjs/common';
 import { parse } from 'csv-parse/sync';
 import { readStatementWorker } from './worker-reader.js';
@@ -278,5 +279,15 @@ export async function readCardInvoice(
     result.warnings.push(
       'Datas sem ano foram estimadas pelo mês da fatura. Confira antes de confirmar.',
     );
-  return { ...result, ...(c6 ? { institution: 'c6' as const } : {}), movements };
+  const exportedDueDate = c6 ? invoiceFilenameDate(filename) : null;
+  if (exportedDueDate)
+    result.warnings.push(
+      'Vencimento identificado pelo nome do CSV exportado. Confira se o arquivo não foi renomeado.',
+    );
+  return {
+    ...result,
+    ...(c6 ? { institution: 'c6' as const } : {}),
+    ...(exportedDueDate ? { dueDate: exportedDueDate } : {}),
+    movements,
+  };
 }

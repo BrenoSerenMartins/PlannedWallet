@@ -680,7 +680,15 @@ export function CardsPage() {
           <CardPurchaseForm card={card} write={write} onSaved={saved} />
         )}
         {dialog?.kind === 'invoice' && card && (
-          <CardInvoiceImportForm cardId={card.id} month={month} />
+          <CardInvoiceImportForm
+            cardId={card.id}
+            month={month}
+            onConfirmed={(billMonth) => {
+              setDialog(null);
+              update({ month: billMonth });
+              setMessage('Fatura confirmada.');
+            }}
+          />
         )}
         {dialog?.kind === 'opening' && card && (
           <CardOpeningForm card={card} month={month} write={write} onSaved={() => saved()} />
@@ -760,6 +768,8 @@ export function CardsPage() {
 
 type InvoiceImportPreview = {
   id: string;
+  billMonth: string;
+  replacesInvoiceId?: string | null;
   version: number;
   status: string;
   parsed: {
@@ -784,8 +794,18 @@ type InvoiceImportPreview = {
   }>;
 };
 
-function CardInvoiceImportForm({ cardId, month }: { cardId: string; month: string }) {
+function CardInvoiceImportForm({
+  cardId,
+  month,
+  onConfirmed,
+}: {
+  cardId: string;
+  month: string;
+  onConfirmed: (month: string) => void;
+}) {
   const client = useQueryClient();
+  const [targetMonth, setTargetMonth] = useState(month);
+  const [replaceConfirmed, setReplaceConfirmed] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [password, setPassword] = useState('');
   const [preview, setPreview] = useState<InvoiceImportPreview | null>(null);
@@ -798,12 +818,13 @@ function CardInvoiceImportForm({ cardId, month }: { cardId: string; month: strin
         event.preventDefault();
         if (!file) return setError('Selecione a fatura em PDF ou CSV.');
         const form = new FormData();
-        form.set('billMonth', month);
+        form.set('billMonth', targetMonth);
         form.set('file', file);
         if (password) form.set('password', password);
         setBusy(true);
         setError('');
         try {
+          setReplaceConfirmed(false);
           setPreview(
             await request<InvoiceImportPreview>(`/cards/${cardId}/invoices/import`, {
               method: 'POST',
@@ -821,7 +842,15 @@ function CardInvoiceImportForm({ cardId, month }: { cardId: string; month: strin
       {!preview ? (
         <>
           <label>
-            Fatura do período {monthLabel(month)}
+            Mês da fatura de destino
+            <MonthPicker
+              required
+              value={targetMonth}
+              onChange={(event) => setTargetMonth(event.target.value)}
+            />
+          </label>
+          <label>
+            Arquivo da fatura
             <input
               type="file"
               accept=".pdf,.csv,application/pdf,text/csv"
@@ -852,6 +881,37 @@ function CardInvoiceImportForm({ cardId, month }: { cardId: string; month: strin
         </>
       ) : (
         <section aria-label="Prévia da fatura importada">
+          <p>
+            <strong>
+              Destino:{' '}
+              {new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(
+                new Date(`${preview.billMonth}-01T12:00:00`),
+              )}
+            </strong>
+          </p>
+          <Button
+            type="button"
+            className="secondary compact"
+            disabled={busy}
+            onClick={() => {
+              setPreview(null);
+              setReplaceConfirmed(false);
+              setError('');
+            }}
+          >
+            Alterar mês ou arquivo
+          </Button>
+          {preview.replacesInvoiceId && preview.status === 'review' && (
+            <label>
+              <input
+                type="checkbox"
+                checked={replaceConfirmed}
+                onChange={(event) => setReplaceConfirmed(event.target.checked)}
+              />
+              Substituir a importação já confirmada neste mês. Os lançamentos do ciclo serão
+              revisados e o histórico anterior será preservado.
+            </label>
+          )}
           <p>
             <strong>{preview.parsed.lines.length} lançamentos reconhecidos</strong>
           </p>
@@ -922,7 +982,7 @@ function CardInvoiceImportForm({ cardId, month }: { cardId: string; month: strin
               !!preview.parsed.balanceBreakdown) && (
               <Button
                 type="button"
-                disabled={busy}
+                disabled={busy || (!!preview.replacesInvoiceId && !replaceConfirmed)}
                 onClick={async () => {
                   setBusy(true);
                   setError('');
@@ -930,9 +990,15 @@ function CardInvoiceImportForm({ cardId, month }: { cardId: string; month: strin
                     setPreview(
                       await request<InvoiceImportPreview>(`/cards/invoices/${preview.id}/confirm`, {
                         method: 'POST',
-                        headers: { 'If-Match': String(preview.version) },
+                        headers: {
+                          'If-Match': String(preview.version),
+                          ...(preview.replacesInvoiceId && replaceConfirmed
+                            ? { 'X-Replaces-Invoice': preview.replacesInvoiceId }
+                            : {}),
+                        },
                       }),
                     );
+                    onConfirmed(preview.billMonth);
                     await client.invalidateQueries();
                   } catch (cause) {
                     setError(

@@ -39,6 +39,7 @@ import {
   mercadoPagoSourceFormat,
 } from '../mappers/mercado-pago/statement.mapper.js';
 import type { ParsedStatement } from '../contracts/statement.js';
+import { invoiceFilenameDate } from '../../../core/financial-files/invoice-filename-date.js';
 import { readCardInvoice } from '../../../core/financial-files/card-invoice-reader.js';
 import type { ReviewItemDto } from '../dto/import.dto.js';
 @Injectable()
@@ -77,7 +78,15 @@ export class ImportsService {
         try {
           const statement = await extractInstitutionStatement(institution, buffer, fileName);
           this.assertConsumerStatement(statement.reportType);
+          const months = [
+            ...new Set(statement.items.map((item) => item.transactionDate.slice(0, 7))),
+          ].sort();
           return {
+            openingBalance: statement.openingBalance,
+            closingBalance: statement.closingBalance,
+            months,
+            periodStart: statement.items[0]?.transactionDate ?? null,
+            periodEnd: statement.items.at(-1)?.transactionDate ?? null,
             kind: 'account_statement',
             institution,
             reportType: statement.reportType ?? 'account_statement',
@@ -91,6 +100,15 @@ export class ImportsService {
       try {
         const invoice = await readCardInvoice(buffer, fileName, billMonth, password);
         return {
+          total: invoice.total,
+          automaticMonth: invoice.dueDate?.slice(0, 7) ?? null,
+          monthSource: invoice.dueDate
+            ? invoice.sourceFormat === 'csv' && invoiceFilenameDate(fileName)
+              ? 'filename'
+              : 'document'
+            : null,
+          dueDate: invoice.dueDate ?? null,
+          warnings: invoice.warnings,
           kind: 'card_invoice',
           institution: invoice.institution ?? null,
           reportType: 'card_invoice',

@@ -2073,3 +2073,111 @@ it.skipIf(!process.env.PLANNEDWALLET_INVOICE_FIXTURE)(
     expect((await run(() => accounts.find(bank.id))).balance).toBe(100000);
   },
 );
+
+it('moves an unconfirmed invoice review to the explicitly selected month and preserves confirmed routing', async () => {
+  const { card } = await makeCard('Invoice month routing');
+  const crypto = new FinancialCryptoService(db.service, {
+    financialDataKek: Buffer.alloc(32, 42).toString('base64'),
+  } as Configuration);
+  const service = new CardInvoiceImportsService(
+    new CardsRepository(db.service),
+    new CardInvoiceImportsRepository(db.service, crypto),
+    crypto,
+    cards,
+  );
+  const file = {
+    originalname: 'month.csv',
+    buffer: Buffer.from('Data;Descrição;Valor\n01/09/2026;Compra exemplo;20,00'),
+  } as Express.Multer.File;
+  const first = await run(() => service.import(card.id, '2026-11', file));
+  const moved = await run(() => service.import(card.id, '2026-10', file));
+  expect(moved.id).toBe(first.id);
+  expect(moved).toMatchObject({ billMonth: '2026-10', parsed: { billMonth: '2026-10' } });
+  await expect(run(() => service.confirm(first.id, String(first.version)))).rejects.toThrow();
+  await run(() => service.confirm(moved.id, String(moved.version)));
+  expect((await currentCard(card.id)).bills.map((bill) => bill.month)).toEqual(['2026-10']);
+  await expect(run(() => service.import(card.id, '2026-11', file))).rejects.toThrow(
+    'já foi confirmado em 2026-10',
+  );
+});
+
+it('requires explicit replacement of the confirmed source, preserves its audit and rejects stale replacement intents', async () => {
+  const { card } = await makeCard('Invoice replacement source');
+  const crypto = new FinancialCryptoService(db.service, {
+    financialDataKek: Buffer.alloc(32, 42).toString('base64'),
+  } as Configuration);
+  const repository = new CardInvoiceImportsRepository(db.service, crypto);
+  const service = new CardInvoiceImportsService(
+    new CardsRepository(db.service),
+    repository,
+    crypto,
+    cards,
+  );
+  const file = (description: string, value: string) =>
+    ({
+      originalname: 'invoice.csv',
+      buffer: Buffer.from(`Data;Descrição;Valor\n01/10/2026;${description};${value}`),
+    }) as Express.Multer.File;
+  const original = await run(() =>
+    service.import(card.id, '2026-11', file('Compra original', '20,00')),
+  );
+  const confirmed = await run(() => service.confirm(original.id, String(original.version)));
+  const next = await run(() =>
+    service.import(card.id, '2026-11', file('Compra corrigida', '30,00')),
+  );
+  expect(next.replacesInvoiceId).toBe(original.id);
+  await expect(run(() => service.confirm(next.id, String(next.version)))).rejects.toThrow(
+    'autorize a substituição',
+  );
+  await expect(
+    run(() => service.confirm(next.id, String(next.version), randomUUID())),
+  ).rejects.toThrow();
+  expect((await currentCard(card.id)).bills[0].total).toBe(2000);
+  const replacement = await run(() => service.confirm(next.id, String(next.version), original.id));
+  expect(replacement.status).toBe('confirmed');
+  expect((await run(() => repository.get(original.id)))?.status).toBe('superseded');
+  expect((await currentCard(card.id)).bills[0].total).toBe(3000);
+  await expect(run(() => service.confirm(original.id, String(confirmed.version)))).rejects.toThrow(
+    'Este registro mudou',
+  );
+  const superseded = await run(() => repository.get(original.id));
+  await expect(
+    run(() => service.confirm(original.id, String(superseded!.version))),
+  ).rejects.toThrow('não está mais disponível');
+  await run(() => service.confirm(next.id, String(replacement.version)));
+  expect((await currentCard(card.id)).bills[0].total).toBe(3000);
+});
+
+it('learns a card issuer from confirmed encrypted sources without exposing another owner destination', async () => {
+  const { card } = await makeCard('Generic issuer destination');
+  const crypto = new FinancialCryptoService(db.service, {
+    financialDataKek: Buffer.alloc(32, 42).toString('base64'),
+  } as Configuration);
+  const service = new CardInvoiceImportsService(
+    new CardsRepository(db.service),
+    new CardInvoiceImportsRepository(db.service, crypto),
+    crypto,
+    cards,
+  );
+  expect(
+    (await run(() => service.destinations('c6'))).some((destination) => destination.id === card.id),
+  ).toBe(false);
+  const file = {
+    originalname: 'Fatura_2026-11-05.csv',
+    buffer: Buffer.from(
+      'Data de Compra;Nome no Cartão;Final do Cartão;Categoria;Descrição;Parcela;Valor (em US$);Cotação (em R$);Valor (em R$)\n01/10/2026;Exemplo;1234;-;Compra exemplo;Única;0;0;50.00',
+    ),
+  } as Express.Multer.File;
+  const preview = await run(() => service.import(card.id, '2026-11', file));
+  await run(() => service.confirm(preview.id, String(preview.version)));
+  expect(await run(() => service.destinations('c6'))).toContainEqual({
+    id: card.id,
+    name: 'Generic issuer destination',
+  });
+  expect(
+    (await db.forUser(db.other, () => service.destinations('c6'))).some(
+      (destination) => destination.id === card.id,
+    ),
+  ).toBe(false);
+  expect(await run(() => service.destinations('__proto__'))).toEqual([]);
+});

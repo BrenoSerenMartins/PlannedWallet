@@ -164,6 +164,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/cards/invoice-destinations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['CardsController_invoiceDestinations'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/cards/{id}/invoices/import': {
     parameters: {
       query?: never;
@@ -3093,6 +3109,23 @@ export interface operations {
       };
     };
   };
+  CardsController_invoiceDestinations: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
   CardsController_importInvoice: {
     parameters: {
       query?: never;
@@ -3113,7 +3146,10 @@ export interface operations {
   CardsController_confirmInvoice: {
     parameters: {
       query?: never;
-      header?: never;
+      header?: {
+        /** @description Confirmed invoice import ID from the preview; explicitly authorizes replacement. */
+        'X-Replaces-Invoice'?: string;
+      };
       path?: never;
       cookie?: never;
     };

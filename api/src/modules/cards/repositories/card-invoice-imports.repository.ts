@@ -73,7 +73,7 @@ export class CardInvoiceImportsRepository {
       ),
     };
   }
-  async refreshReview(id: string, version: number, payload: unknown) {
+  async refreshReview(id: string, version: number, payload: unknown, month: string) {
     const ciphertext = await this.crypto.encrypt(
       this.db.workspaceId,
       'card_invoice_imports.payload',
@@ -81,17 +81,47 @@ export class CardInvoiceImportsRepository {
       payload,
     );
     await this.db.query(
-      "UPDATE wallet.card_invoice_imports SET payload_ciphertext=$4::jsonb, version=version+1 WHERE user_id=$1 AND workspace_id=$2 AND id=$3 AND status='review' AND version=$5",
-      [this.db.userId, this.db.workspaceId, id, JSON.stringify(ciphertext), version],
+      "UPDATE wallet.card_invoice_imports SET payload_ciphertext=$4::jsonb, bill_month=$6, version=version+1 WHERE user_id=$1 AND workspace_id=$2 AND id=$3 AND status='review' AND version=$5",
+      [this.db.userId, this.db.workspaceId, id, JSON.stringify(ciphertext), version, month],
     );
   }
 
-  async hasConfirmed(cardId: string, month: string) {
+  async confirmedForMonth(cardId: string, month: string) {
     const rows = await this.db.query(
-      "SELECT 1 FROM wallet.card_invoice_imports WHERE user_id=$1 AND workspace_id=$2 AND card_id=$3 AND bill_month=$4 AND status='confirmed'",
+      "SELECT id,bill_month FROM wallet.card_invoice_imports WHERE user_id=$1 AND workspace_id=$2 AND card_id=$3 AND bill_month=$4 AND status='confirmed'",
       [this.db.userId, this.db.workspaceId, cardId, month],
     );
-    return rows.length > 0;
+    return rows[0] ? { id: String(rows[0].id), billMonth: String(rows[0].bill_month) } : null;
+  }
+
+  async institutionCards(institution: string) {
+    const rows = await this.db.query<{ id: string; card_id: string; payload_ciphertext: object }>(
+      "SELECT id,card_id,payload_ciphertext FROM wallet.card_invoice_imports WHERE user_id=$1 AND workspace_id=$2 AND status='confirmed' ORDER BY confirmed_at DESC LIMIT 200",
+      [this.db.userId, this.db.workspaceId],
+    );
+    const identities = new Map<string, Set<string>>();
+    for (const row of rows) {
+      const payload = (await this.crypto.decrypt(
+        this.db.workspaceId,
+        'card_invoice_imports.payload',
+        row.id,
+        row.payload_ciphertext as never,
+      )) as { parsed?: { institution?: string } };
+      if (!payload.parsed?.institution) continue;
+      const banks = identities.get(row.card_id) ?? new Set<string>();
+      banks.add(payload.parsed.institution);
+      identities.set(row.card_id, banks);
+    }
+    return [...identities]
+      .filter(([, banks]) => banks.size === 1 && banks.has(institution))
+      .map(([id]) => id);
+  }
+
+  async supersede(id: string) {
+    await this.db.query(
+      "UPDATE wallet.card_invoice_imports SET status='superseded', version=version+1 WHERE user_id=$1 AND workspace_id=$2 AND id=$3 AND status='confirmed'",
+      [this.db.userId, this.db.workspaceId, id],
+    );
   }
 
   async confirm(id: string) {

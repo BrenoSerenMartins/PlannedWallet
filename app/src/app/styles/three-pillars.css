@@ -2179,8 +2179,6 @@
 }
 .physical-card-picker {
   display: grid;
-  grid-template-rows: auto auto;
-  gap: 10px;
   width: 100%;
   padding: 4px;
   border: 0;
@@ -2226,7 +2224,10 @@
 .physical-card-caption strong {
   font-variant-numeric: tabular-nums;
 }
-.physical-card-picker[aria-pressed='true'] .physical-card-caption > strong {
+.physical-card-picker[aria-pressed='true']
+  + .physical-card-caption
+  .physical-card-caption-heading
+  > strong {
   color: var(--gold-soft);
 }
 
@@ -2254,4 +2255,97 @@
 }
 .physical-card-default svg {
   align-self: end;
+}
+
+.physical-card-caption-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 36px;
+}
+.physical-card-caption-heading .physical-card-edit {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+}
+:root[data-ui='bento'] body .page-content .cards-page .physical-card-frame.credit-card-frame-new {
+  align-content: start;
+  align-self: start;
+  min-height: 0;
+  padding: 4px;
+}
+:root[data-ui='bento'] body .page-content .cards-page .credit-card-new.physical-card-face {
+  height: auto;
+  border-radius: 16px;
+}
+
+@media (max-width: 600px) {
+  :root[data-ui='bento'] body .page-content .cards-page .card-detail {
+    display: grid;
+    gap: 14px;
+  }
+  :root[data-ui='bento']
+    body
+    .page-content
+    .cards-page
+    .card-detail
+    > :is(
+      .card-bill-toolbar,
+      .card-limit-overview,
+      .card-projection,
+      .card-bill-status,
+      .card-entries-heading,
+      .card-entry-list,
+      .card-purchases-disclosure
+    ) {
+    margin-block: 0;
+  }
+  :root[data-ui='bento'] body .page-content .cards-page .card-bill-toolbar {
+    align-items: stretch;
+    gap: 8px;
+  }
+  :root[data-ui='bento'] body .page-content .cards-page .card-bill-toolbar > .inline-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+    gap: 6px;
+  }
+  :root[data-ui='bento']
+    body
+    .page-content
+    .cards-page
+    .card-bill-toolbar
+    > .inline-actions
+    .button {
+    justify-content: center;
+    min-width: 0;
+    padding-inline: 4px;
+    white-space: normal;
+    text-align: center;
+    font-size: clamp(10px, 3vw, 12px);
+  }
+  :root[data-ui='bento'] body .page-content .cards-page .card-bill-status {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: start;
+    gap: 8px;
+  }
+  :root[data-ui='bento'] body .page-content .cards-page .card-bill-status > .button {
+    width: 100%;
+    margin: 0;
+  }
+  :root[data-ui='bento']
+    body
+    .page-content
+    .cards-page
+    .card-detail
+    > .card-entry-list
+    > li
+    > .text-button {
+    width: auto;
+    justify-content: center;
+    white-space: nowrap;
+  }
 }

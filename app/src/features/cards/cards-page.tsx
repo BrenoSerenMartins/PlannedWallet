@@ -199,6 +199,7 @@ export function CardsPage() {
                         <button
                           type="button"
                           className="physical-card-picker"
+                          aria-label={c.name}
                           data-card-id={c.id}
                           aria-pressed={c.id === card?.id}
                           onClick={() => update({ card: c.id })}
@@ -217,36 +218,38 @@ export function CardsPage() {
                               </span>
                             )}
                           </span>
-                          <span className="physical-card-caption">
+                        </button>
+                        <div className="physical-card-caption">
+                          <div className="physical-card-caption-heading">
                             <strong>
                               {c.name}
                               {c.archived ? ' · Arquivado' : ''}
                             </strong>
-                            <span>
-                              Fatura do mês <strong>{invoiceTotal}</strong>
-                            </span>
+                            {c.id === card?.id && (
+                              <Tooltip text="Editar cartão">
+                                <button
+                                  type="button"
+                                  className="physical-card-edit icon-button"
+                                  aria-label="Editar cartão"
+                                  onClick={() => setDialog({ kind: 'edit' })}
+                                  disabled={!navigator.onLine}
+                                >
+                                  <Pencil size={16} />
+                                </button>
+                              </Tooltip>
+                            )}
+                          </div>
+                          <span>
+                            Fatura do mês <strong>{invoiceTotal}</strong>
                           </span>
-                        </button>
-                        {c.id === card?.id && (
-                          <Tooltip text="Editar cartão">
-                            <button
-                              type="button"
-                              className="credit-card-edit"
-                              aria-label="Editar cartão"
-                              onClick={() => setDialog({ kind: 'edit' })}
-                              disabled={!navigator.onLine}
-                            >
-                              <Pencil size={16} />
-                            </button>
-                          </Tooltip>
-                        )}
+                        </div>
                       </div>
                     );
                   })}
-                  <div className="credit-card-frame credit-card-frame-new">
+                  <div className="credit-card-frame credit-card-frame-new physical-card-frame">
                     <button
                       type="button"
-                      className="credit-card-new"
+                      className="credit-card-new physical-card-face"
                       onClick={() => setDialog({ kind: 'new' })}
                       disabled={!navigator.onLine}
                     >

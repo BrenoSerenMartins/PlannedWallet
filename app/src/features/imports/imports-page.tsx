@@ -379,7 +379,7 @@ export function ImportsPage() {
                             {detectError}
                           </p>
                         )}
-                        {cardPreview.status === 'review' &&
+                        {(cardPreview.status === 'review' || cardPreview.status === 'confirmed') &&
                           !cardPreview.parsed.summaryOnly &&
                           (cardPreview.parsed.lines.reduce((sum, line) => sum + line.amount, 0) ===
                             cardPreview.parsed.total ||
@@ -411,7 +411,11 @@ export function ImportsPage() {
                                 }
                               }}
                             >
-                              {busy ? 'Confirmando…' : 'Confirmar e substituir compras do ciclo'}
+                              {busy
+                                ? 'Confirmando…'
+                                : cardPreview.status === 'confirmed'
+                                  ? 'Reconciliar saldo'
+                                  : 'Confirmar e substituir compras do ciclo'}
                             </Button>
                           )}
                         <Link

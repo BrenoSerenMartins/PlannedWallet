@@ -223,7 +223,7 @@ export class CardsService implements CardForecast, ManagedBackup<CardsSnapshot> 
     lines: import('../../../core/financial-files/card-invoice-reader.js').CardInvoiceLine[],
     importId: string,
     resolve: () => Promise<Array<{ purchaseId: string | null; confidence: string }>>,
-    issuedOn?: string,
+    movements: import('../../../core/financial-files/card-invoice-reader.js').ParsedCardInvoice['movements'] = [],
   ) {
     let card = await this.card(id);
     card = await this.lockedCard(id, String(card.version));
@@ -314,19 +314,56 @@ export class CardsService implements CardForecast, ManagedBackup<CardsSnapshot> 
     const updated = (await this.calculated()).cards
       .find((item) => item.id === id)!
       .bills.find((item) => item.month === month);
-    const paidBeforeIssue = issuedOn
-      ? sum(
-          (updated?.payments ?? [])
-            .filter((payment) => payment.active && payment.paymentDate <= issuedOn)
-            .map((payment) => payment.amount),
-        )
-      : 0;
     const delta =
-      total -
-      purchasesTotal +
-      (total !== purchasesTotal ? paidBeforeIssue + (updated?.creditApplied ?? 0) : 0);
+      total - purchasesTotal + this.paymentsReportedByInvoice(updated?.payments ?? [], movements);
     if (delta)
       await this.recordInvoiceAdjustment(card, month, delta, 'Ajuste de saldo da fatura importada');
+    await this.repo.bump(id);
+  }
+
+  private paymentsReportedByInvoice(
+    payments: Array<{ active: boolean; paymentDate: string; amount: number }>,
+    movements: Array<{ date: string; description: string; amount: number }>,
+  ) {
+    const reported = movements.filter((item) => /pagamento.*fatura/i.test(item.description));
+    let included = 0;
+    for (const payment of payments) {
+      if (!payment.active) continue;
+      const index = reported.findIndex(
+        (row) => row.date === payment.paymentDate && Math.abs(row.amount) === payment.amount,
+      );
+      if (index < 0) continue;
+      reported.splice(index, 1);
+      included += payment.amount;
+    }
+    return included;
+  }
+
+  async reconcileConfirmedInvoice(
+    id: string,
+    month: string,
+    parsed: import('../../../core/financial-files/card-invoice-reader.js').ParsedCardInvoice,
+  ) {
+    const initial = await this.card(id);
+    const card = await this.lockedCard(id, String(initial.version));
+    const { cards, live } = await this.calculated();
+    const bill = cards.find((item) => item.id === id)?.bills.find((item) => item.month === month);
+    if (!bill) throw new NotFoundException('Ciclo da fatura importada não encontrado.');
+    const purchases = sum(parsed.lines.map((line) => line.amount));
+    const delta =
+      parsed.total -
+      purchases +
+      this.paymentsReportedByInvoice(bill.payments, parsed.movements ?? []);
+    const description = 'Ajuste de saldo da fatura importada';
+    const adjustments = bill.entries.filter(
+      (row) => row.active && row.kind === 'invoice_adjustment' && row.description === description,
+    );
+    if (-sum(adjustments.map((row) => row.amount)) === delta) return;
+    for (const row of adjustments) {
+      const entry = live.get(row.transactionId!)!;
+      await this.ledger.reverseManaged(entry.id, entry.version, 'card');
+    }
+    if (delta) await this.recordInvoiceAdjustment(card, month, delta, description);
     await this.repo.bump(id);
   }
 

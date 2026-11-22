@@ -66,6 +66,12 @@ export function CardsPage() {
   const cards = all.filter((c) => showArchived || !c.archived);
   const card = cards.find((c) => c.id === params.get('card')) ?? cards[0];
   const bill = card?.bills.find((b) => b.month === month);
+  const activeEntries = bill?.entries.filter((entry) => entry.active) ?? [];
+  const activePurchaseIds = new Set(
+    activeEntries.filter((entry) => entry.kind === 'purchase').map((entry) => entry.purchaseId),
+  );
+  const cyclePurchases =
+    card?.purchases.filter((purchase) => activePurchaseIds.has(purchase.id)) ?? [];
   useEffect(() => {
     if (params.get('action') !== 'pay' || !card || card.id !== params.get('card') || !bill) return;
     setDialog({ kind: 'pay' });
@@ -482,11 +488,11 @@ export function CardsPage() {
                           )}
                         </div>
                         <h3 className="card-entries-heading">
-                          Lançamentos na fatura · {bill.entries.length}
+                          Lançamentos na fatura · {activeEntries.length}
                         </h3>
                         <ul className="card-entry-list">
-                          {bill.entries.map((entry) => (
-                            <li key={entry.id} className={!entry.active ? 'inactive' : ''}>
+                          {activeEntries.map((entry) => (
+                            <li key={entry.id}>
                               <div>
                                 <CreditIcon size={15} aria-hidden="true" />
                                 <strong>
@@ -494,22 +500,20 @@ export function CardsPage() {
                                     ?.description ?? entry.description}
                                 </strong>
                                 <span>
-                                  {!entry.active
-                                    ? 'Desfeito'
-                                    : entry.kind === 'opening'
-                                      ? 'Dívida anterior'
-                                      : entry.kind === 'invoice_adjustment'
-                                        ? 'Ajuste da fatura importada'
-                                        : entry.kind === 'refund'
-                                          ? 'Estorno'
-                                          : (() => {
-                                              const purchase = card.purchases.find(
-                                                (item) => item.id === entry.purchaseId,
-                                              );
-                                              return purchase && entry.installmentNumber
-                                                ? `Parcela ${entry.installmentNumber}/${purchase.installments}`
-                                                : 'Despesa da fatura';
-                                            })()}
+                                  {entry.kind === 'opening'
+                                    ? 'Dívida anterior'
+                                    : entry.kind === 'invoice_adjustment'
+                                      ? 'Ajuste da fatura importada'
+                                      : entry.kind === 'refund'
+                                        ? 'Estorno'
+                                        : (() => {
+                                            const purchase = card.purchases.find(
+                                              (item) => item.id === entry.purchaseId,
+                                            );
+                                            return purchase && entry.installmentNumber
+                                              ? `Parcela ${entry.installmentNumber}/${purchase.installments}`
+                                              : 'Despesa da fatura';
+                                          })()}
                                 </span>
                               </div>
                               <strong className={entry.amount > 0 ? 'positive' : ''}>
@@ -582,14 +586,14 @@ export function CardsPage() {
                     ) : (
                       <p className="card-empty-line">Nenhuma compra neste vencimento</p>
                     )}
-                    {!!card.purchases.length && (
+                    {!!cyclePurchases.length && (
                       <details className="finance-disclosure card-purchases-disclosure">
                         <summary>
-                          <span>Compras e parcelamentos · {card.purchases.length}</span>
+                          <span>Compras e parcelamentos · {cyclePurchases.length}</span>
                           <ChevronDown size={17} aria-hidden="true" />
                         </summary>
                         <ul className="card-entry-list card-purchase-list">
-                          {card.purchases.map((p) => (
+                          {cyclePurchases.map((p) => (
                             <li key={p.id}>
                               <div className="purchase-mainline">
                                 <strong>{p.description}</strong>
@@ -609,10 +613,7 @@ export function CardsPage() {
                               </div>
                               <strong className="purchase-amount">{value(p.amount)}</strong>
                               <div className="purchase-subline">
-                                <span>
-                                  {shortDate(p.purchaseDate)}
-                                  {p.canceled ? ' · Cancelada' : ''}
-                                </span>
+                                <span>{shortDate(p.purchaseDate)}</span>
                                 {!p.canceled && (
                                   <div className="inline-actions">
                                     <button
@@ -901,7 +902,7 @@ function CardInvoiceImportForm({ cardId, month }: { cardId: string; month: strin
               {error}
             </p>
           )}
-          {preview.status === 'review' &&
+          {(preview.status === 'review' || preview.status === 'confirmed') &&
             !preview.parsed.summaryOnly &&
             (preview.parsed.lines.reduce((sum, line) => sum + line.amount, 0) ===
               preview.parsed.total ||
@@ -931,7 +932,11 @@ function CardInvoiceImportForm({ cardId, month }: { cardId: string; month: strin
                   }
                 }}
               >
-                {busy ? 'Confirmando…' : 'Confirmar e substituir compras do ciclo'}
+                {busy
+                  ? 'Confirmando…'
+                  : preview.status === 'confirmed'
+                    ? 'Reconciliar saldo'
+                    : 'Confirmar e substituir compras do ciclo'}
               </Button>
             )}
         </section>

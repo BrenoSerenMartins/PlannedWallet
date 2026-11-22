@@ -1,4 +1,5 @@
-const CACHE = 'plannedwallet-shell-v105';
+const CACHE_PREFIX = 'plannedwallet-shell-';
+const CACHE = CACHE_PREFIX + '__PLANNEDWALLET_BUILD__';
 const SHELL = [
   '/',
   '/theme.js',
@@ -8,14 +9,22 @@ const SHELL = [
   '/manifest.webmanifest?v=4',
 ];
 self.addEventListener('install', (event) =>
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL))),
+  event.waitUntil(
+    caches
+      .open(CACHE)
+      .then((cache) => cache.addAll(SHELL.map((path) => new Request(path, { cache: 'reload' })))),
+  ),
 );
 self.addEventListener('activate', (event) =>
   event.waitUntil(
     caches
       .keys()
       .then((keys) =>
-        Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key))),
+        Promise.all(
+          keys
+            .filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE)
+            .map((key) => caches.delete(key)),
+        ),
       )
       .then(() => self.clients.claim()),
   ),
@@ -35,7 +44,7 @@ self.addEventListener('fetch', (event) => {
   )
     return;
   if (event.request.mode === 'navigate') {
-    event.respondWith(fetch(event.request).catch(() => caches.match('/')));
+    event.respondWith(fetch(event.request, { cache: 'no-cache' }).catch(() => caches.match('/')));
     return;
   }
   if (

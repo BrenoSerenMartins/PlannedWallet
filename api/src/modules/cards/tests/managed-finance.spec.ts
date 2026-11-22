@@ -1928,7 +1928,7 @@ it('applies an invoice balance with earlier debt and preserves settled bank paym
       ],
       randomUUID(),
       async () => [{ purchaseId: null, confidence: 'unmatched' }],
-      '2026-11-06',
+      [{ date: '2026-11-05', description: 'Pagamento da fatura', amount: 1000 }],
     ),
   );
   const result = await currentCard(card.id);
@@ -1937,5 +1937,26 @@ it('applies an invoice balance with earlier debt and preserves settled bank paym
     remaining: 2000,
     paid: 2000,
   });
+  expect((await run(() => accounts.find(bank.id))).balance).toBe(98000);
+  const corrected = {
+    billMonth: '2026-11',
+    total: 3000,
+    lines: [
+      {
+        date: '2026-11-04',
+        description: 'Compra da fatura',
+        amount: 5500,
+        installmentNumber: null,
+        installmentCount: null,
+      },
+    ],
+    sourceFormat: 'pdf' as const,
+    warnings: [],
+  };
+  await run(() => cards.reconcileConfirmedInvoice(card.id, '2026-11', corrected));
+  await run(() => cards.reconcileConfirmedInvoice(card.id, '2026-11', corrected));
+  expect((await currentCard(card.id)).bills.find((bill) => bill.month === '2026-11')).toMatchObject(
+    { total: 3000, remaining: 1000, paid: 2000 },
+  );
   expect((await run(() => accounts.find(bank.id))).balance).toBe(98000);
 });

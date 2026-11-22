@@ -120,14 +120,34 @@ function ShellContent() {
   }, []);
   useEffect(() => {
     if (!import.meta.env.PROD || !('serviceWorker' in navigator)) return;
-    void navigator.serviceWorker.register('/sw.js').then((reg) => {
-      if (reg.waiting) setUpdate(reg.waiting);
-      reg.addEventListener('updatefound', () =>
-        reg.installing?.addEventListener('statechange', () => {
-          if (reg.waiting && navigator.serviceWorker.controller) setUpdate(reg.waiting);
-        }),
-      );
-    });
+    let disposed = false;
+    let cleanup: (() => void) | undefined;
+    void navigator.serviceWorker
+      .register('/sw.js', { updateViaCache: 'none' })
+      .then((reg) => {
+        if (disposed) return;
+        const showWaiting = () => {
+          if (!disposed && reg.waiting && navigator.serviceWorker.controller)
+            setUpdate(reg.waiting);
+        };
+        const watchInstall = () => reg.installing?.addEventListener('statechange', showWaiting);
+        const check = () => {
+          if (document.visibilityState === 'visible') void reg.update().catch(() => {});
+        };
+        showWaiting();
+        watchInstall();
+        reg.addEventListener('updatefound', watchInstall);
+        document.addEventListener('visibilitychange', check);
+        cleanup = () => {
+          reg.removeEventListener('updatefound', watchInstall);
+          document.removeEventListener('visibilitychange', check);
+        };
+      })
+      .catch(() => {});
+    return () => {
+      disposed = true;
+      cleanup?.();
+    };
   }, []);
   useEffect(() => {
     if (!online)

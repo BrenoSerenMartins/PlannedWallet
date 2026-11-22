@@ -103,7 +103,17 @@ export class CardInvoiceImportsService {
   async confirm(id: string, version: string) {
     const invoice = await this.imports.get(id, true);
     if (!invoice) throw new NotFoundException('Importação de fatura não encontrada.');
-    if (invoice.status === 'confirmed') return this.get(id);
+    if (invoice.status === 'confirmed') {
+      if (invoice.version === Number(version)) {
+        const { parsed } = invoice.payload as { parsed: ParsedCardInvoice };
+        await this.cardService.reconcileConfirmedInvoice(
+          invoice.card_id,
+          invoice.bill_month,
+          parsed,
+        );
+      }
+      return this.get(id);
+    }
     requireVersion(invoice.version, version);
     if (invoice.status !== 'review')
       throw new ConflictException('Esta revisão não está mais disponível.');
@@ -133,7 +143,7 @@ export class CardInvoiceImportsService {
           throw new ConflictException('Já existe uma fatura confirmada para este cartão e mês.');
         return this.candidates(parsed.lines, invoice.card_id, invoice.bill_month);
       },
-      parsed.issuedOn,
+      parsed.movements,
     );
     await this.imports.confirm(id);
     return this.get(id);

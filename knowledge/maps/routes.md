@@ -17,10 +17,12 @@ The pilot implements the routes below, published in `api/openapi.json`. Generate
 | `/wealth` | Investments, assets/debts and position history |
 | `/categories` | Groups and categories |
 | `/counterparties` | Agents, confirmed aliases and rules |
-| `/settings?view=appearance`, `/settings?view=data`, `/settings?view=account` | Theme, export/restore and account settings |
+| `/settings?view=appearance`, `/settings?view=data`, `/settings?view=account` | Theme, device notifications, export/restore and account settings |
 | `/settings/categories` | Compatibility redirect to categories |
 
 Authenticated routes handle session loading and expiration explicitly; client routing is not an authorization boundary.
+
+The mobile dock exposes Home, Planning, Cards, Transactions and Import, followed by More. The header gear opens Settings on mobile and desktop. Import is also a primary desktop destination.
 
 ## REST
 | Endpoint | Owner and intent |
@@ -34,6 +36,7 @@ Authenticated routes handle session loading and expiration explicitly; client ro
 | `GET/POST /v1/transactions` | Ledger: filtered list/manual entry |
 | `GET/PATCH /v1/transactions/:id` | Ledger: detail/version-checked correction |
 | `POST /v1/transactions/:id/reversals` | Ledger: explicit reversal with impact checks |
+| `PATCH /v1/cards/:id/bills/:month/total` | Cards: version-checked manual bill total. Confirmed imported cycles reject manual edits |
 | `POST /v1/transfers` | Ledger: atomic pair of opposing account movements |
 | `GET/PUT /v1/planning/:month` | Planning: month summary and complete version-checked budget replacement |
 | `POST /v1/planning/:month/copies` | Planning: copy preceding month targets with expected source/target versions |

@@ -149,7 +149,14 @@ export class CardsService implements CardForecast, ManagedBackup<CardsSnapshot> 
       const first = input.firstBillMonth
         ? validCardMonth(input.firstBillMonth)
         : firstBillMonth(input.purchaseDate, card.closingDay, card.dueDay);
-      if (first < input.purchaseDate.slice(0, 7))
+      if (
+        !Number.isInteger(firstRecordedInstallment) ||
+        firstRecordedInstallment < 1 ||
+        firstRecordedInstallment > input.installments
+      )
+        throw new UnprocessableEntityException('Parcela inicial de importação inválida.');
+      const firstRecordedMonth = shiftCardMonth(first, firstRecordedInstallment - 1);
+      if (firstRecordedMonth < input.purchaseDate.slice(0, 7))
         throw new UnprocessableEntityException(
           'A primeira fatura não pode anteceder o mês da compra.',
         );
@@ -280,10 +287,24 @@ export class CardsService implements CardForecast, ManagedBackup<CardsSnapshot> 
       const current = line.installmentNumber ?? 1;
       const firstBillMonth = shiftCardMonth(month, 1 - current);
       const amount = line.amount * installments;
-      if (line.amount <= 0 || line.description.length > 120 || amount > 1_000_000_000_000)
+      if (
+        !Number.isSafeInteger(line.amount) ||
+        line.amount === 0 ||
+        line.description.length > 120 ||
+        Math.abs(amount) > 1_000_000_000_000
+      )
         throw new UnprocessableEntityException(
           'Esta fatura tem ajustes ou compras que exigem revisão manual.',
         );
+      if (line.amount < 0) {
+        await this.recordInvoiceAdjustment(
+          card,
+          month,
+          line.amount,
+          `Crédito da fatura · ${line.description}`,
+        );
+        continue;
+      }
       await this.purchase(
         id,
         {

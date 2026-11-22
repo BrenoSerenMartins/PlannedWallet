@@ -1960,3 +1960,116 @@ it('applies an invoice balance with earlier debt and preserves settled bank paym
   );
   expect((await run(() => accounts.find(bank.id))).balance).toBe(98000);
 });
+
+it('confirms a C6 invoice with a later annual-fee date, unlinked credits and future installments exactly once', async () => {
+  const { card, bank } = await makeCard('C6 import regression');
+  const repository = new CardsRepository(db.service);
+  const crypto = new FinancialCryptoService(db.service, {
+    financialDataKek: Buffer.alloc(32, 42).toString('base64'),
+  } as Configuration);
+  const service = new CardInvoiceImportsService(
+    repository,
+    new CardInvoiceImportsRepository(db.service, crypto),
+    crypto,
+    cards,
+  );
+  const file = {
+    originalname: 'c6.csv',
+    buffer: Buffer.from(
+      'Data de Compra;Nome no Cartão;Final do Cartão;Categoria;Descrição;Parcela;Valor (em US$);Cotação (em R$);Valor (em R$)\n05/10/2026;Exemplo;1234;-;Inclusao de Pagamento;Única;0;0;-100.00\n24/10/2026;Exemplo;1234;-;Anuidade Diferenciada;5/12;0;0;80.00\n24/10/2026;Exemplo;1234;-;Estorno Tarifa;Única;0;0;-80.00\n25/10/2026;Exemplo;1234;-;Pagamento com pontos atomos;Única;0;0;-10.00\n06/10/2026;Exemplo;1234;-;Loja Exemplo;Única;0;0;50.00',
+    ),
+  } as Express.Multer.File;
+  const preview = await run(() => service.import(card.id, '2026-11', file));
+  const confirmed = await run(() => service.confirm(preview.id, String(preview.version)));
+  expect(confirmed.status).toBe('confirmed');
+  const result = await currentCard(card.id);
+  expect(result.bills.find((bill) => bill.month === '2026-11')).toMatchObject({
+    total: 4000,
+    remaining: 4000,
+    paid: 0,
+  });
+  expect(result.bills.some((bill) => bill.month < '2026-11')).toBe(false);
+  expect(result.bills.find((bill) => bill.month === '2026-12')?.total).toBe(8000);
+  const snapshot = await run(() => repository.snapshot());
+  expect(
+    snapshot.purchases.find(
+      (purchase) => purchase.cardId === card.id && purchase.description === 'Anuidade Diferenciada',
+    ),
+  ).toMatchObject({ purchaseDate: '2026-10-24', firstBillMonth: '2026-07', installments: 12 });
+  const entries = snapshot.entries.filter((entry) => entry.cardId === card.id);
+  expect(
+    entries
+      .filter((entry) => entry.kind === 'invoice_adjustment')
+      .map((entry) => entry.amount)
+      .sort((a, b) => a - b),
+  ).toEqual([1000, 8000]);
+  await run(() => service.confirm(preview.id, String(preview.version)));
+  expect(
+    (await run(() => repository.snapshot())).entries.filter((entry) => entry.cardId === card.id),
+  ).toHaveLength(entries.length);
+  expect((await run(() => accounts.find(bank.id))).balance).toBe(100000);
+});
+
+it('keeps manual purchase chronology strict and refuses an imported recorded cycle before its source date', async () => {
+  const { card } = await makeCard('Invoice chronology guards');
+  const input = {
+    description: 'Compra exemplo',
+    purchaseDate: '2026-10-24',
+    amount: 12000,
+    installments: 12,
+    firstBillMonth: '2026-07',
+  };
+  await expect(
+    run(() => cards.purchase(card.id, input, String(card.version), randomUUID())),
+  ).rejects.toThrow('primeira fatura');
+  await expect(
+    run(() => cards.purchase(card.id, input, String(card.version), randomUUID(), 3)),
+  ).rejects.toThrow('primeira fatura');
+  await expect(
+    run(() => cards.purchase(card.id, input, String(card.version), randomUUID(), 13)),
+  ).rejects.toThrow('Parcela inicial');
+});
+
+it.skipIf(!process.env.PLANNEDWALLET_INVOICE_FIXTURE)(
+  'confirms a configured private invoice fixture without uploading it remotely',
+  async () => {
+    const { readFile } = await import('node:fs/promises');
+    const { readCardInvoice } =
+      await import('../../../core/financial-files/card-invoice-reader.js');
+    const buffer = await readFile(process.env.PLANNEDWALLET_INVOICE_FIXTURE!);
+    const month = process.env.PLANNEDWALLET_INVOICE_MONTH ?? '2026-11';
+    const parsed = await readCardInvoice(buffer, 'invoice.csv', month);
+    const { card, bank } = await makeCard('Private invoice fixture');
+    const repository = new CardsRepository(db.service);
+    const crypto = new FinancialCryptoService(db.service, {
+      financialDataKek: Buffer.alloc(32, 42).toString('base64'),
+    } as Configuration);
+    const service = new CardInvoiceImportsService(
+      repository,
+      new CardInvoiceImportsRepository(db.service, crypto),
+      crypto,
+      cards,
+    );
+    const preview = await run(() =>
+      service.import(card.id, month, {
+        originalname: 'invoice.csv',
+        buffer,
+      } as Express.Multer.File),
+    );
+    await run(() => service.confirm(preview.id, String(preview.version)));
+    const result = await currentCard(card.id);
+    expect(result.bills.find((bill) => bill.month === month)).toMatchObject({
+      total: parsed.total,
+      remaining: parsed.total,
+      paid: 0,
+    });
+    expect(result.bills.some((bill) => bill.month < month)).toBe(false);
+    const snapshot = await run(() => repository.snapshot());
+    const before = snapshot.entries.filter((entry) => entry.cardId === card.id).length;
+    await run(() => service.confirm(preview.id, String(preview.version)));
+    expect(
+      (await run(() => repository.snapshot())).entries.filter((entry) => entry.cardId === card.id),
+    ).toHaveLength(before);
+    expect((await run(() => accounts.find(bank.id))).balance).toBe(100000);
+  },
+);

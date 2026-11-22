@@ -1895,3 +1895,47 @@ it('replaces an omitted manual purchase and uses the disclosed invoice balance a
       .sort(),
   ).toEqual(['invoice_adjustment', 'purchase']);
 });
+
+it('applies an invoice balance with earlier debt and preserves settled bank payments', async () => {
+  const { card, bank } = await makeCard('Invoice with prior balance');
+  await run(() => cards.opening(card.id, '2026-10', 4000, String(card.version), randomUUID()));
+  await purchase(card.id, (await currentCard(card.id)).version, 5000, 1);
+  for (const date of ['2026-11-05', '2026-11-15']) {
+    const version = (await currentCard(card.id)).version;
+    await run(() =>
+      cards.pay(
+        card.id,
+        '2026-11',
+        { mode: 'create', accountId: bank.id, date, amount: 1000 },
+        String(version),
+        randomUUID(),
+      ),
+    );
+  }
+  await run(() =>
+    cards.applyInvoice(
+      card.id,
+      '2026-11',
+      3000,
+      [
+        {
+          date: '2026-11-04',
+          description: 'Compra da fatura',
+          amount: 5500,
+          installmentNumber: null,
+          installmentCount: null,
+        },
+      ],
+      randomUUID(),
+      async () => [{ purchaseId: null, confidence: 'unmatched' }],
+      '2026-11-06',
+    ),
+  );
+  const result = await currentCard(card.id);
+  expect(result.bills.find((bill) => bill.month === '2026-10')?.remaining).toBe(0);
+  expect(result.bills.find((bill) => bill.month === '2026-11')).toMatchObject({
+    remaining: 2000,
+    paid: 2000,
+  });
+  expect((await run(() => accounts.find(bank.id))).balance).toBe(98000);
+});

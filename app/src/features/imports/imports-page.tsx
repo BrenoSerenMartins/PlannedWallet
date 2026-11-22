@@ -1,3 +1,4 @@
+import '../../shared/ui/card-invoice-preview.css';
 import { FileText as EmptyStateIcon } from 'lucide-react';
 import { Select } from '../../shared/ui/controls/select';
 import { MonthPicker } from '../../shared/ui/controls/month-picker';

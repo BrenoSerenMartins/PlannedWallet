@@ -20,6 +20,7 @@ export type ParsedCardInvoice = {
   summaryOnly?: boolean;
   balanceBreakdown?: { purchases: number; previousBalance: number; paymentsAndCredits: number };
   dueDate?: string;
+  issuedOn?: string;
   movements?: Array<{ date: string; description: string; amount: number }>;
 };
 
@@ -148,6 +149,8 @@ export function readMercadoPagoInvoice(
     );
   const purchases = lines.reduce((sum, line) => sum + line.amount, 0);
   const summary = cover.join(' ');
+  const issued = summary.match(/Emitida em:\s*(\d{2}\/\d{2}\/\d{4})/i);
+  const issuedOn = issued ? date(issued[1], invoiceMonth) : undefined;
   const previous = summary.match(/Total da fatura de [\p{L}]+\s+R\$\s*([\d.]+,\d{2})/iu);
   const credits = summary.match(/Pagamentos e créditos devolvidos\s+R\$\s*([\d.]+,\d{2})/i);
   const balanceBreakdown =
@@ -163,7 +166,7 @@ export function readMercadoPagoInvoice(
     result.warnings.push(
       'Esta fatura precisa da conciliação de saldo anterior, pagamentos ou créditos para ser confirmada.',
     );
-  return { ...result, institution: 'mercado_pago', dueDate, movements, balanceBreakdown };
+  return { ...result, institution: 'mercado_pago', dueDate, issuedOn, movements, balanceBreakdown };
 }
 
 export function readInvoiceCover(rows: string[], billMonth: string): ParsedCardInvoice | null {

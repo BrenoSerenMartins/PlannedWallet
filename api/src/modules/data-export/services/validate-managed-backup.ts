@@ -199,7 +199,7 @@ export function validateManagedBackup(b: BackupPayload, unique: (id: string) => 
       )
         fail();
       cover(e.transactionId);
-    } else if (e.kind === 'purchase' && !p!.canceled) fail();
+    }
   }
   for (const p of cards.purchases) {
     const rows = cards.entries.filter((e) => e.purchaseId === p.id && e.kind === 'purchase');

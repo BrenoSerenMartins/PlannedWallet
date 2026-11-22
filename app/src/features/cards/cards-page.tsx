@@ -1,3 +1,4 @@
+import '../../shared/ui/card-invoice-preview.css';
 import { useFinancialVisibility } from '../../shared/privacy/financial-visibility';
 import { MonthPicker } from '../../shared/ui/controls/month-picker';
 import { HelpTip, Tooltip } from '../../shared/ui/tooltip';

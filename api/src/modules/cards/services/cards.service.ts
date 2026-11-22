@@ -223,10 +223,11 @@ export class CardsService implements CardForecast, ManagedBackup<CardsSnapshot> 
     lines: import('../../../core/financial-files/card-invoice-reader.js').CardInvoiceLine[],
     importId: string,
     resolve: () => Promise<Array<{ purchaseId: string | null; confidence: string }>>,
+    issuedOn?: string,
   ) {
     let card = await this.card(id);
     card = await this.lockedCard(id, String(card.version));
-    const { cards } = await this.calculated();
+    const { cards, live } = await this.calculated();
     const bill = cards.find((item) => item.id === id)?.bills.find((item) => item.month === month);
     const matches = await resolve();
     const matched = matches.flatMap((item) => (item.purchaseId ? [item.purchaseId] : []));
@@ -241,64 +242,36 @@ export class CardsService implements CardForecast, ManagedBackup<CardsSnapshot> 
       throw new ConflictException(
         'Há compras com correspondência ambígua entre o PDF e o cartão. Confira nomes, valores e parcelas no ciclo selecionado.',
       );
-    if (
-      bill?.entries.some(
-        (entry) => entry.active && entry.kind !== 'purchase' && entry.kind !== 'opening',
-      )
-    )
-      throw new ConflictException(
-        'A fatura já tem estornos ou ajustes ativos. Confira esses registros antes de substituir o ciclo.',
-      );
-
-    const omitted = [
-      ...new Set(
-        bill?.entries.flatMap((entry) =>
-          entry.active && entry.purchaseId && !matched.includes(entry.purchaseId)
-            ? [entry.purchaseId]
-            : [],
-        ) ?? [],
+    const omitted = new Set(
+      bill?.entries.flatMap((entry) =>
+        entry.active &&
+        entry.kind === 'purchase' &&
+        entry.purchaseId &&
+        !matched.includes(entry.purchaseId)
+          ? [entry.purchaseId]
+          : [],
       ),
-    ];
+    );
     const currentCard = cards.find((item) => item.id === id)!;
-    const delta = total - sum(lines.map((line) => line.amount));
-    if (
-      delta &&
-      currentCard.bills.some(
-        (item) =>
-          (item.month < month && item.remaining > 0) || (item.month === month && item.paid > 0),
-      )
-    )
-      throw new ConflictException(
-        'Concilie os pagamentos já registrados e o saldo dos ciclos anteriores antes de aplicar os ajustes da fatura.',
-      );
-    for (const entry of bill?.entries ?? []) {
-      if (!entry.active || entry.kind !== 'opening') continue;
-      await this.cancelOpening(
-        id,
-        entry.id,
-        String(card.version),
-        `${importId}:opening:${entry.id}`,
-      );
-      card = await this.card(id);
+    for (const cycle of currentCard.bills) {
+      if (cycle.month < month) continue;
+      for (const row of cycle.entries) {
+        if (!row.active || !row.transactionId) continue;
+        const replace =
+          (cycle.month === month && row.kind !== 'purchase') ||
+          (row.purchaseId !== null && omitted.has(row.purchaseId));
+        if (!replace) continue;
+        const entry = live.get(row.transactionId)!;
+        await this.ledger.reverseManaged(entry.id, entry.version, 'card');
+      }
     }
     for (const purchaseId of omitted) {
-      if (
-        currentCard.bills.some(
-          (item) =>
-            item.month < month &&
-            item.entries.some((entry) => entry.active && entry.purchaseId === purchaseId),
-        )
-      )
-        throw new ConflictException(
-          'Uma compra ausente do PDF tem parcelas em ciclos anteriores. Confira essa compra antes de substituir.',
-        );
-      await this.cancelPurchase(
-        id,
-        purchaseId,
-        String(card.version),
-        `${importId}:replace:${purchaseId}`,
+      const hasHistory = currentCard.bills.some(
+        (cycle) =>
+          cycle.month < month &&
+          cycle.entries.some((row) => row.active && row.purchaseId === purchaseId),
       );
-      card = await this.card(id);
+      if (!hasHistory) await this.repo.cancelPurchase(purchaseId);
     }
 
     for (const [index, line] of lines.entries()) {
@@ -326,32 +299,65 @@ export class CardsService implements CardForecast, ManagedBackup<CardsSnapshot> 
       );
       card = await this.card(id);
     }
-    if (delta) {
-      const cycle = await this.ensureBill(card, month);
-      const description = 'Ajuste de saldo da fatura importada';
-      const entry = await this.ledger.postManaged(
-        {
-          accountId: card.accountId,
-          description,
-          amount: -delta,
-          transactionDate: cycle.dueDate,
-          transactionType: 'transfer',
-        },
-        'card',
-      );
-      await this.repo.saveEntry({
-        id: randomUUID(),
-        cardId: id,
-        purchaseId: null,
-        transactionId: entry.id,
-        billMonth: month,
-        kind: 'invoice_adjustment',
-        installmentNumber: null,
-        amount: -delta,
-        description,
-      });
-      await this.repo.bump(id);
+    const purchasesTotal = sum(lines.map((line) => line.amount));
+    const balances = (await this.calculated()).cards.find((item) => item.id === id)!.bills;
+    if (total !== purchasesTotal) {
+      for (const earlier of balances.filter((item) => item.month < month && item.remaining > 0)) {
+        await this.recordInvoiceAdjustment(
+          card,
+          earlier.month,
+          -earlier.remaining,
+          'Saldo incorporado à fatura importada',
+        );
+      }
     }
+    const updated = (await this.calculated()).cards
+      .find((item) => item.id === id)!
+      .bills.find((item) => item.month === month);
+    const paidBeforeIssue = issuedOn
+      ? sum(
+          (updated?.payments ?? [])
+            .filter((payment) => payment.active && payment.paymentDate <= issuedOn)
+            .map((payment) => payment.amount),
+        )
+      : 0;
+    const delta =
+      total -
+      purchasesTotal +
+      (total !== purchasesTotal ? paidBeforeIssue + (updated?.creditApplied ?? 0) : 0);
+    if (delta)
+      await this.recordInvoiceAdjustment(card, month, delta, 'Ajuste de saldo da fatura importada');
+    await this.repo.bump(id);
+  }
+
+  private async recordInvoiceAdjustment(
+    card: CreditCard,
+    month: string,
+    delta: number,
+    description: string,
+  ) {
+    const cycle = await this.ensureBill(card, month);
+    const entry = await this.ledger.postManaged(
+      {
+        accountId: card.accountId,
+        description,
+        amount: -delta,
+        transactionDate: cycle.dueDate,
+        transactionType: 'transfer',
+      },
+      'card',
+    );
+    await this.repo.saveEntry({
+      id: randomUUID(),
+      cardId: card.id,
+      purchaseId: null,
+      transactionId: entry.id,
+      billMonth: month,
+      kind: 'invoice_adjustment',
+      installmentNumber: null,
+      amount: -delta,
+      description,
+    });
   }
   async opening(id: string, month: string, amount: number, version: string, key: string) {
     return this.receipts.execute('card.opening', key, { id, month, amount, version }, async () => {

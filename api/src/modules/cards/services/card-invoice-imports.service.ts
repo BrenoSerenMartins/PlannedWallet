@@ -133,6 +133,7 @@ export class CardInvoiceImportsService {
           throw new ConflictException('Já existe uma fatura confirmada para este cartão e mês.');
         return this.candidates(parsed.lines, invoice.card_id, invoice.bill_month);
       },
+      parsed.issuedOn,
     );
     await this.imports.confirm(id);
     return this.get(id);

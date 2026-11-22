@@ -1860,3 +1860,37 @@ it('confirms an encrypted invoice once and projects only current and remaining i
     ['2026-12', 3000],
   ]);
 });
+
+it('replaces an omitted manual purchase and uses the disclosed invoice balance adjustment', async () => {
+  const { card } = await makeCard('Invoice replacement');
+  const omitted = await purchase(card.id, card.version, 2500, 1);
+  await run(() =>
+    cards.applyInvoice(
+      card.id,
+      '2026-11',
+      3000,
+      [
+        {
+          date: '2026-11-08',
+          description: 'Compra do PDF',
+          amount: 5000,
+          installmentNumber: null,
+          installmentCount: null,
+        },
+      ],
+      randomUUID(),
+      async () => [{ purchaseId: null, confidence: 'unmatched' }],
+    ),
+  );
+  const result = await currentCard(card.id);
+  const bill = result.bills.find((item) => item.month === '2026-11');
+  expect(result.purchases.find((item) => item.id === omitted.id)?.canceled).toBe(true);
+  expect(bill?.total).toBe(3000);
+  expect(bill?.paid).toBe(0);
+  expect(
+    bill?.entries
+      .filter((entry) => entry.active)
+      .map((entry) => entry.kind)
+      .sort(),
+  ).toEqual(['invoice_adjustment', 'purchase']);
+});

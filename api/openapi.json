@@ -3620,7 +3620,7 @@
           },
           "kind": {
             "type": "string",
-            "enum": ["purchase", "opening", "refund"]
+            "enum": ["purchase", "opening", "refund", "invoice_adjustment"]
           },
           "amount": {
             "type": "number"

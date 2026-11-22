@@ -73,6 +73,19 @@ export class CardInvoiceImportsRepository {
       ),
     };
   }
+  async refreshReview(id: string, version: number, payload: unknown) {
+    const ciphertext = await this.crypto.encrypt(
+      this.db.workspaceId,
+      'card_invoice_imports.payload',
+      id,
+      payload,
+    );
+    await this.db.query(
+      "UPDATE wallet.card_invoice_imports SET payload_ciphertext=$4::jsonb, version=version+1 WHERE user_id=$1 AND workspace_id=$2 AND id=$3 AND status='review' AND version=$5",
+      [this.db.userId, this.db.workspaceId, id, JSON.stringify(ciphertext), version],
+    );
+  }
+
   async hasConfirmed(cardId: string, month: string) {
     const rows = await this.db.query(
       "SELECT 1 FROM wallet.card_invoice_imports WHERE user_id=$1 AND workspace_id=$2 AND card_id=$3 AND bill_month=$4 AND status='confirmed'",

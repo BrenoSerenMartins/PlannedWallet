@@ -237,16 +237,52 @@ export class CardsService implements CardForecast, ManagedBackup<CardsSnapshot> 
         (purchaseId) =>
           !bill?.entries.some((entry) => entry.active && entry.purchaseId === purchaseId),
       ) ||
-      bill?.entries.some(
-        (entry) => entry.active && (!entry.purchaseId || !matched.includes(entry.purchaseId)),
-      ) ||
-      (bill?.total ?? 0) +
-        sum(lines.filter((_, i) => !matches[i].purchaseId).map((line) => line.amount)) !==
-        total
+      bill?.entries.some((entry) => entry.active && entry.kind !== 'purchase')
     )
       throw new ConflictException(
         'A fatura diverge dos lançamentos registrados. Confira os valores e as parcelas antes de confirmar.',
       );
+
+    const omitted = [
+      ...new Set(
+        bill?.entries.flatMap((entry) =>
+          entry.active && entry.purchaseId && !matched.includes(entry.purchaseId)
+            ? [entry.purchaseId]
+            : [],
+        ) ?? [],
+      ),
+    ];
+    const currentCard = cards.find((item) => item.id === id)!;
+    const delta = total - sum(lines.map((line) => line.amount));
+    if (
+      delta &&
+      currentCard.bills.some(
+        (item) =>
+          (item.month < month && item.remaining > 0) || (item.month === month && item.paid > 0),
+      )
+    )
+      throw new ConflictException(
+        'Concilie os pagamentos já registrados e o saldo dos ciclos anteriores antes de aplicar os ajustes da fatura.',
+      );
+    for (const purchaseId of omitted) {
+      if (
+        currentCard.bills.some(
+          (item) =>
+            item.month < month &&
+            item.entries.some((entry) => entry.active && entry.purchaseId === purchaseId),
+        )
+      )
+        throw new ConflictException(
+          'Uma compra ausente do PDF tem parcelas em ciclos anteriores. Confira essa compra antes de substituir.',
+        );
+      await this.cancelPurchase(
+        id,
+        purchaseId,
+        String(card.version),
+        `${importId}:replace:${purchaseId}`,
+      );
+      card = await this.card(id);
+    }
 
     for (const [index, line] of lines.entries()) {
       if (matches[index].purchaseId) continue;
@@ -272,6 +308,32 @@ export class CardsService implements CardForecast, ManagedBackup<CardsSnapshot> 
         current,
       );
       card = await this.card(id);
+    }
+    if (delta) {
+      const cycle = await this.ensureBill(card, month);
+      const description = 'Ajuste de saldo da fatura importada';
+      const entry = await this.ledger.postManaged(
+        {
+          accountId: card.accountId,
+          description,
+          amount: -delta,
+          transactionDate: cycle.dueDate,
+          transactionType: 'transfer',
+        },
+        'card',
+      );
+      await this.repo.saveEntry({
+        id: randomUUID(),
+        cardId: id,
+        purchaseId: null,
+        transactionId: entry.id,
+        billMonth: month,
+        kind: 'invoice_adjustment',
+        installmentNumber: null,
+        amount: -delta,
+        description,
+      });
+      await this.repo.bump(id);
     }
   }
   async opening(id: string, month: string, amount: number, version: string, key: string) {

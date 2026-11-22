@@ -15,6 +15,12 @@ import { jsonBody, request } from '../../shared/api/client';
 import type { Account, CardsSummary, ImportBatch } from '../../shared/api/resources';
 import { Button, EmptyState, ErrorState, Loading } from '../../shared/ui/primitives';
 import { money } from '../../shared/formatting/money';
+const invoiceIssuers = {
+  mercado_pago: 'Mercado Pago',
+  inter: 'Inter',
+  itau: 'Itaú',
+  c6: 'C6 Bank',
+};
 const monthLabel = (month: string) =>
   new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(
     new Date(`${month}-01T12:00:00`),
@@ -36,7 +42,8 @@ export function ImportsPage() {
       }
     | {
         kind: 'card_invoice';
-        institution: 'mercado_pago' | null;
+        institution: keyof typeof invoiceIssuers | null;
+        summaryOnly: boolean;
         reportType: 'card_invoice';
         itemCount: number;
         sourceFormat: string;
@@ -62,6 +69,8 @@ export function ImportsPage() {
     parsed: {
       total: number;
       dueDate?: string;
+      summaryOnly?: boolean;
+      balanceBreakdown?: { purchases: number; previousBalance: number; paymentsAndCredits: number };
       lines: Array<{
         date: string;
         description: string;
@@ -123,7 +132,7 @@ export function ImportsPage() {
         setNewAccountName(result.institution === 'alelo' ? 'Alelo Alimentação' : 'Mercado Pago');
       } else {
         setDestination('__new__');
-        setNewCardName('Meu cartão');
+        setNewCardName(result.institution ? invoiceIssuers[result.institution] : 'Meu cartão');
       }
     } catch (cause) {
       setDetectError(
@@ -314,6 +323,28 @@ export function ImportsPage() {
                             Vence em {cardPreview.parsed.dueDate.split('-').reverse().join('/')}
                           </p>
                         )}
+                        {!cardPreview.parsed.summaryOnly &&
+                          cardPreview.parsed.lines.reduce((sum, line) => sum + line.amount, 0) !==
+                            cardPreview.parsed.total && (
+                            <p className="field-help">
+                              Compras:{' '}
+                              {money(
+                                cardPreview.parsed.lines.reduce(
+                                  (sum, line) => sum + line.amount,
+                                  0,
+                                ),
+                              )}
+                              {cardPreview.parsed.balanceBreakdown && (
+                                <>
+                                  {' '}
+                                  · Saldo anterior:{' '}
+                                  {money(cardPreview.parsed.balanceBreakdown.previousBalance)} ·
+                                  Pagamentos e créditos: −
+                                  {money(cardPreview.parsed.balanceBreakdown.paymentsAndCredits)}
+                                </>
+                              )}
+                            </p>
+                          )}
                         {cardPreview.parsed.warnings.map((warning) => (
                           <p className="field-help" key={warning}>
                             {warning}
@@ -347,37 +378,41 @@ export function ImportsPage() {
                             {detectError}
                           </p>
                         )}
-                        {cardPreview.status === 'review' && (
-                          <Button
-                            disabled={busy}
-                            onClick={async () => {
-                              setSaving(true);
-                              setDetectError('');
-                              try {
-                                setCardPreview(
-                                  await request<NonNullable<typeof cardPreview>>(
-                                    `/cards/invoices/${cardPreview.id}/confirm`,
-                                    {
-                                      method: 'POST',
-                                      headers: { 'If-Match': String(cardPreview.version) },
-                                    },
-                                  ),
-                                );
-                                await client.invalidateQueries();
-                              } catch (cause) {
-                                setDetectError(
-                                  cause instanceof Error
-                                    ? cause.message
-                                    : 'Não foi possível confirmar a fatura.',
-                                );
-                              } finally {
-                                setSaving(false);
-                              }
-                            }}
-                          >
-                            {busy ? 'Confirmando…' : 'Confirmar fatura'}
-                          </Button>
-                        )}
+                        {cardPreview.status === 'review' &&
+                          !cardPreview.parsed.summaryOnly &&
+                          (cardPreview.parsed.lines.reduce((sum, line) => sum + line.amount, 0) ===
+                            cardPreview.parsed.total ||
+                            !!cardPreview.parsed.balanceBreakdown) && (
+                            <Button
+                              disabled={busy}
+                              onClick={async () => {
+                                setSaving(true);
+                                setDetectError('');
+                                try {
+                                  setCardPreview(
+                                    await request<NonNullable<typeof cardPreview>>(
+                                      `/cards/invoices/${cardPreview.id}/confirm`,
+                                      {
+                                        method: 'POST',
+                                        headers: { 'If-Match': String(cardPreview.version) },
+                                      },
+                                    ),
+                                  );
+                                  await client.invalidateQueries();
+                                } catch (cause) {
+                                  setDetectError(
+                                    cause instanceof Error
+                                      ? cause.message
+                                      : 'Não foi possível confirmar a fatura.',
+                                  );
+                                } finally {
+                                  setSaving(false);
+                                }
+                              }}
+                            >
+                              {busy ? 'Confirmando…' : 'Confirmar e substituir compras do ciclo'}
+                            </Button>
+                          )}
                         <Link
                           className="button"
                           to={`/cards?card=${cardPreview.cardId}&month=${cardPreview.billMonth}`}
@@ -408,7 +443,7 @@ export function ImportsPage() {
                       <>
                         <p role="status" className="field-help">
                           {detected.kind === 'card_invoice'
-                            ? `Fatura de cartão${detected.institution ? ' Mercado Pago' : ''} · ${detected.itemCount} compras reconhecidas`
+                            ? `Fatura de cartão${detected.institution ? ' ' + invoiceIssuers[detected.institution] : ''} · ${detected.summaryOnly ? 'Resumo identificado' : detected.itemCount + ' compras reconhecidas'}`
                             : `${detected.institution === 'alelo' ? 'Alelo Alimentação' : 'Mercado Pago'} · ${detected.itemCount} movimentos identificados`}
                         </p>
                         {detected.kind === 'card_invoice' ? (

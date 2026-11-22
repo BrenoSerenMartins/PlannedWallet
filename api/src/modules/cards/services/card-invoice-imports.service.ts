@@ -57,7 +57,18 @@ export class CardInvoiceImportsService {
         return {
           lineIndex: index,
           purchaseId: matches.length === 1 ? matches[0].id : null,
-          confidence: matches.length === 1 ? 'exact' : possible.length ? 'ambiguous' : 'unmatched',
+          confidence:
+            matches.length === 1
+              ? 'exact'
+              : matches.length ||
+                  possible.some(
+                    (purchase) =>
+                      !data.entries.some(
+                        (entry) => entry.purchaseId === purchase.id && entry.billMonth === month,
+                      ),
+                  )
+                ? 'ambiguous'
+                : 'unmatched',
         };
       }),
     );
@@ -80,6 +91,8 @@ export class CardInvoiceImportsService {
       parsed,
       reconciliation,
     });
+    if (saved.id !== id && saved.status === 'review' && saved.billMonth === billMonth)
+      await this.imports.refreshReview(saved.id, saved.version, { parsed, reconciliation });
     return this.get(saved.id);
   }
 
@@ -91,6 +104,20 @@ export class CardInvoiceImportsService {
     if (invoice.status !== 'review')
       throw new ConflictException('Esta revisão não está mais disponível.');
     const { parsed } = invoice.payload as { parsed: ParsedCardInvoice };
+    if (parsed.summaryOnly)
+      throw new ConflictException(
+        'Somente o resumo foi lido. A fatura ainda não pode ser confirmada.',
+      );
+    const purchases = parsed.lines.reduce((sum, line) => sum + line.amount, 0);
+    const breakdown = parsed.balanceBreakdown;
+    if (
+      purchases !== parsed.total &&
+      (!breakdown ||
+        purchases + breakdown.previousBalance - breakdown.paymentsAndCredits !== parsed.total)
+    )
+      throw new ConflictException(
+        'O total a pagar inclui ajustes que ainda precisam ser conciliados.',
+      );
     await this.cardService.applyInvoice(
       invoice.card_id,
       invoice.bill_month,

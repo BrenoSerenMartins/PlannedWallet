@@ -165,7 +165,7 @@ export function validateManagedBackup(b: BackupPayload, unique: (id: string) => 
       !Number.isSafeInteger(e.amount) ||
       !e.amount ||
       Math.abs(e.amount) > 1000000000000 ||
-      !['purchase', 'opening', 'refund'].includes(e.kind)
+      !['purchase', 'opening', 'refund', 'invoice_adjustment'].includes(e.kind)
     )
       fail();
     const p = e.purchaseId ? purchases.get(e.purchaseId) : null;
@@ -182,6 +182,7 @@ export function validateManagedBackup(b: BackupPayload, unique: (id: string) => 
     if (e.kind !== 'purchase' && e.installmentNumber !== null) fail();
     if (e.kind === 'opening' && (e.purchaseId !== null || e.amount >= 0)) fail();
     if (e.kind === 'refund' && e.amount <= 0) fail();
+    if (e.kind === 'invoice_adjustment' && e.purchaseId !== null) fail();
     if (e.transactionId) {
       requireUuid(e.transactionId);
       const t = txs.get(e.transactionId);
@@ -191,7 +192,8 @@ export function validateManagedBackup(b: BackupPayload, unique: (id: string) => 
         t.amount !== e.amount ||
         t.transactionDate !== bill!.dueDate ||
         t.managedKind !== 'card' ||
-        t.transactionType !== (e.kind === 'opening' ? 'transfer' : 'expense') ||
+        t.transactionType !==
+          (e.kind === 'opening' || e.kind === 'invoice_adjustment' ? 'transfer' : 'expense') ||
         (e.kind === 'purchase' && (p!.canceled || t.categoryId !== p!.categoryId)) ||
         (e.kind === 'refund' && !t.refundOfId)
       )
@@ -202,9 +204,13 @@ export function validateManagedBackup(b: BackupPayload, unique: (id: string) => 
   for (const p of cards.purchases) {
     const rows = cards.entries.filter((e) => e.purchaseId === p.id && e.kind === 'purchase');
     if (
-      rows.length !== p.installments ||
+      !rows.length ||
+      rows.length > p.installments ||
+      rows.some((e) => e.installmentNumber! <= p.installments - rows.length) ||
+      (rows.length < p.installments && rows.some((e) => -e.amount * p.installments !== p.amount)) ||
       new Set(rows.map((e) => e.installmentNumber)).size !== rows.length ||
-      -rows.reduce((s, e) => s + BigInt(e.amount), 0n) !== BigInt(p.amount)
+      (rows.length === p.installments &&
+        -rows.reduce((s, e) => s + BigInt(e.amount), 0n) !== BigInt(p.amount))
     )
       fail();
   }

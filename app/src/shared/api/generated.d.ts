@@ -1789,7 +1789,7 @@ export interface components {
       transactionId: string | null;
       installmentNumber: number | null;
       /** @enum {string} */
-      kind: 'purchase' | 'opening' | 'refund';
+      kind: 'purchase' | 'opening' | 'refund' | 'invoice_adjustment';
       amount: number;
       active?: boolean;
     };

@@ -497,16 +497,18 @@ export function CardsPage() {
                                     ? 'Desfeito'
                                     : entry.kind === 'opening'
                                       ? 'Dívida anterior'
-                                      : entry.kind === 'refund'
-                                        ? 'Estorno'
-                                        : (() => {
-                                            const purchase = card.purchases.find(
-                                              (item) => item.id === entry.purchaseId,
-                                            );
-                                            return purchase && entry.installmentNumber
-                                              ? `Parcela ${entry.installmentNumber}/${purchase.installments}`
-                                              : 'Despesa da fatura';
-                                          })()}
+                                      : entry.kind === 'invoice_adjustment'
+                                        ? 'Ajuste da fatura importada'
+                                        : entry.kind === 'refund'
+                                          ? 'Estorno'
+                                          : (() => {
+                                              const purchase = card.purchases.find(
+                                                (item) => item.id === entry.purchaseId,
+                                              );
+                                              return purchase && entry.installmentNumber
+                                                ? `Parcela ${entry.installmentNumber}/${purchase.installments}`
+                                                : 'Despesa da fatura';
+                                            })()}
                                 </span>
                               </div>
                               <strong className={entry.amount > 0 ? 'positive' : ''}>
@@ -761,6 +763,8 @@ type InvoiceImportPreview = {
   parsed: {
     total: number;
     dueDate?: string;
+    summaryOnly?: boolean;
+    balanceBreakdown?: { purchases: number; previousBalance: number; paymentsAndCredits: number };
     billMonth: string;
     warnings: string[];
     lines: Array<{
@@ -845,6 +849,21 @@ function CardInvoiceImportForm({ cardId, month }: { cardId: string; month: strin
               : 'Confira os lançamentos antes de aplicar a fatura ao cartão.'}
           </p>
           {preview.parsed.dueDate && <p>Vence em {shortDate(preview.parsed.dueDate)}</p>}
+          {!preview.parsed.summaryOnly &&
+            preview.parsed.lines.reduce((sum, line) => sum + line.amount, 0) !==
+              preview.parsed.total && (
+              <p className="field-help">
+                Compras: {money(preview.parsed.lines.reduce((sum, line) => sum + line.amount, 0))}
+                {preview.parsed.balanceBreakdown && (
+                  <>
+                    {' '}
+                    · Saldo anterior: {money(preview.parsed.balanceBreakdown.previousBalance)} ·
+                    Pagamentos e créditos: −
+                    {money(preview.parsed.balanceBreakdown.paymentsAndCredits)}
+                  </>
+                )}
+              </p>
+            )}
           {preview.parsed.warnings.map((warning) => (
             <p className="field-help" key={warning}>
               {warning}
@@ -881,33 +900,39 @@ function CardInvoiceImportForm({ cardId, month }: { cardId: string; month: strin
               {error}
             </p>
           )}
-          {preview.status === 'review' && (
-            <Button
-              type="button"
-              disabled={busy}
-              onClick={async () => {
-                setBusy(true);
-                setError('');
-                try {
-                  setPreview(
-                    await request<InvoiceImportPreview>(`/cards/invoices/${preview.id}/confirm`, {
-                      method: 'POST',
-                      headers: { 'If-Match': String(preview.version) },
-                    }),
-                  );
-                  await client.invalidateQueries();
-                } catch (cause) {
-                  setError(
-                    cause instanceof Error ? cause.message : 'Não foi possível confirmar a fatura.',
-                  );
-                } finally {
-                  setBusy(false);
-                }
-              }}
-            >
-              {busy ? 'Confirmando…' : 'Confirmar fatura'}
-            </Button>
-          )}
+          {preview.status === 'review' &&
+            !preview.parsed.summaryOnly &&
+            (preview.parsed.lines.reduce((sum, line) => sum + line.amount, 0) ===
+              preview.parsed.total ||
+              !!preview.parsed.balanceBreakdown) && (
+              <Button
+                type="button"
+                disabled={busy}
+                onClick={async () => {
+                  setBusy(true);
+                  setError('');
+                  try {
+                    setPreview(
+                      await request<InvoiceImportPreview>(`/cards/invoices/${preview.id}/confirm`, {
+                        method: 'POST',
+                        headers: { 'If-Match': String(preview.version) },
+                      }),
+                    );
+                    await client.invalidateQueries();
+                  } catch (cause) {
+                    setError(
+                      cause instanceof Error
+                        ? cause.message
+                        : 'Não foi possível confirmar a fatura.',
+                    );
+                  } finally {
+                    setBusy(false);
+                  }
+                }}
+              >
+                {busy ? 'Confirmando…' : 'Confirmar e substituir compras do ciclo'}
+              </Button>
+            )}
         </section>
       )}
     </form>

@@ -93,6 +93,7 @@ export class ImportsService {
           kind: 'card_invoice',
           institution: invoice.institution ?? null,
           reportType: 'card_invoice',
+          summaryOnly: invoice.summaryOnly ?? false,
           itemCount: invoice.lines.length,
           sourceFormat: invoice.sourceFormat,
           billMonth: invoice.dueDate?.slice(0, 7) ?? invoice.billMonth,

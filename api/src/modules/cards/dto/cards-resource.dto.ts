@@ -30,8 +30,8 @@ export class CardEntryResourceDto {
   @ApiProperty({ nullable: true, type: String }) purchaseId!: string | null;
   @ApiProperty({ nullable: true, type: String }) transactionId!: string | null;
   @ApiProperty({ nullable: true, type: Number }) installmentNumber!: number | null;
-  @ApiProperty({ enum: ['purchase', 'opening', 'refund'] }) kind!:
-    'purchase' | 'opening' | 'refund';
+  @ApiProperty({ enum: ['purchase', 'opening', 'refund', 'invoice_adjustment'] }) kind!:
+    'purchase' | 'opening' | 'refund' | 'invoice_adjustment';
   @ApiProperty({ type: Number }) amount!: number;
   @ApiPropertyOptional({ type: Boolean }) active?: boolean;
 }

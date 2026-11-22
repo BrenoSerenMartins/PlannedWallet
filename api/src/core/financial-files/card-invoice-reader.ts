@@ -16,7 +16,9 @@ export type ParsedCardInvoice = {
   lines: CardInvoiceLine[];
   sourceFormat: 'csv' | 'pdf';
   warnings: string[];
-  institution?: 'mercado_pago';
+  institution?: 'mercado_pago' | 'inter' | 'itau' | 'c6';
+  summaryOnly?: boolean;
+  balanceBreakdown?: { purchases: number; previousBalance: number; paymentsAndCredits: number };
   dueDate?: string;
   movements?: Array<{ date: string; description: string; amount: number }>;
 };
@@ -144,11 +146,66 @@ export function readMercadoPagoInvoice(
     result.warnings.push(
       'O ano de compras parceladas sem data completa foi estimado. Confira antes de confirmar.',
     );
-  if (lines.reduce((sum, line) => sum + line.amount, 0) !== result.total)
+  const purchases = lines.reduce((sum, line) => sum + line.amount, 0);
+  const summary = cover.join(' ');
+  const previous = summary.match(/Total da fatura de [\p{L}]+\s+R\$\s*([\d.]+,\d{2})/iu);
+  const credits = summary.match(/Pagamentos e créditos devolvidos\s+R\$\s*([\d.]+,\d{2})/i);
+  const balanceBreakdown =
+    previous && credits
+      ? { purchases, previousBalance: money(previous[1]), paymentsAndCredits: money(credits[1]) }
+      : undefined;
+  if (
+    purchases !== result.total &&
+    (!balanceBreakdown ||
+      purchases + balanceBreakdown.previousBalance - balanceBreakdown.paymentsAndCredits !==
+        result.total)
+  )
     result.warnings.push(
-      'O total a pagar difere da soma das compras. Confira pagamentos, créditos e saldo anterior antes de confirmar.',
+      'Esta fatura precisa da conciliação de saldo anterior, pagamentos ou créditos para ser confirmada.',
     );
-  return { ...result, institution: 'mercado_pago', dueDate, movements };
+  return { ...result, institution: 'mercado_pago', dueDate, movements, balanceBreakdown };
+}
+
+export function readInvoiceCover(rows: string[], billMonth: string): ParsedCardInvoice | null {
+  const cover = rows.join(' ');
+  const amount = '([\\d.]+,\\d{2})';
+  const fullDate = '(\\d{2}/\\d{2}/\\d{4})';
+  let institution: ParsedCardInvoice['institution'];
+  let total: string | undefined;
+  let due: string | undefined;
+  if (/\binter\b/i.test(cover) && /Total da sua fatura/i.test(cover)) {
+    institution = 'inter';
+    total = cover.match(new RegExp('Total da sua fatura\\s*R\\$\\s*' + amount, 'i'))?.[1];
+    due = cover.match(new RegExp('Data de vencimento\\s*' + fullDate, 'i'))?.[1];
+  } else if (/Ita[uú](?:card)?/i.test(cover) && /Total desta fatura/i.test(cover)) {
+    institution = 'itau';
+    total = cover.match(new RegExp('Total desta fatura\\s*(?:R\\$\\s*)?' + amount, 'i'))?.[1];
+    due = cover.match(
+      new RegExp('(?:Com vencimento em|Vencimento)\\s*:?\\s*' + fullDate, 'i'),
+    )?.[1];
+  } else if (/\bC6\s*Bank\b/i.test(cover) && /Sua fatura com vencimento/i.test(cover)) {
+    institution = 'c6';
+    total = cover.match(new RegExp('chegou no valor de\\s*R\\$\\s*' + amount, 'i'))?.[1];
+    due = cover.match(new RegExp('Vencimento\\s*:\\s*' + fullDate, 'i'))?.[1];
+  }
+  if (!institution) return null;
+  if (total === undefined)
+    throw new UnprocessableEntityException(
+      'Identificamos o emissor, mas não conseguimos ler o total da capa.',
+    );
+  return {
+    billMonth,
+    institution,
+    total: money(total),
+    dueDate: due ? date(due, billMonth) : undefined,
+    summaryOnly: true,
+    lines: [],
+    sourceFormat: 'pdf',
+    warnings: [
+      'Somente o resumo da fatura foi reconhecido. A confirmação depende da leitura dos lançamentos.',
+      ...(!due ? ['O vencimento completo não foi identificado na capa.'] : []),
+    ],
+  };
 }
 
 export async function readCardInvoice(
@@ -174,6 +231,8 @@ export async function readCardInvoice(
     });
     const mercadoPago = readMercadoPagoInvoice(rows, billMonth);
     if (mercadoPago) return mercadoPago;
+    const cover = readInvoiceCover(rows[0] ?? [], billMonth);
+    if (cover) return cover;
     const lines: CardInvoiceLine[] = [];
     let invoiceTotal: number | undefined;
     for (const page of rows) {

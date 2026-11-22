@@ -34,7 +34,7 @@ export interface CardBillEntry {
   purchaseId: string | null;
   transactionId: string | null;
   billMonth: string;
-  kind: 'purchase' | 'opening' | 'refund';
+  kind: 'purchase' | 'opening' | 'refund' | 'invoice_adjustment';
   installmentNumber: number | null;
   amount: number;
   description: string;

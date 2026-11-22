@@ -1,3 +1,4 @@
+import { needsPdfPassword } from '../../../shared/api/pdf-password';
 import { cardArtwork, issuerLogos } from '../../cards/art/catalog';
 import { money } from '../../../shared/formatting/money';
 import '../automatic-import.css';
@@ -36,29 +37,37 @@ export function AutomaticImportBatch({
         Selecione extratos e faturas de bancos e meses diferentes. Identificamos o tipo, o banco, o
         período e o destino antes de confirmar o lote.
       </p>
-      <label>
-        CPF do titular para PDFs protegidos (opcional)
-        <input
-          type="password"
-          inputMode="numeric"
-          autoComplete="off"
-          maxLength={14}
-          value={cpf}
-          disabled={batch.busy}
-          onChange={(event) => setCpf(event.target.value)}
-        />
-      </label>
-      <label>
-        Senha dos PDFs do lote (opcional)
-        <input
-          type="password"
-          autoComplete="off"
-          maxLength={128}
-          value={password}
-          disabled={batch.busy}
-          onChange={(event) => setPassword(event.target.value)}
-        />
-      </label>
+      {batch.rows.some((row) => needsPdfPassword(row.message)) && (
+        <>
+          <p>
+            Para usar a mesma senha nos PDFs protegidos, informe os dados e selecione os arquivos de
+            novo. Você também pode revisar cada arquivo protegido separadamente.
+          </p>
+          <label>
+            CPF do titular para PDFs protegidos (opcional)
+            <input
+              type="password"
+              inputMode="numeric"
+              autoComplete="off"
+              maxLength={14}
+              value={cpf}
+              disabled={batch.busy}
+              onChange={(event) => setCpf(event.target.value)}
+            />
+          </label>
+          <label>
+            Senha dos PDFs do lote (opcional)
+            <input
+              type="password"
+              autoComplete="off"
+              maxLength={128}
+              value={password}
+              disabled={batch.busy}
+              onChange={(event) => setPassword(event.target.value)}
+            />
+          </label>
+        </>
+      )}
       <div className="inline-actions">
         <Button
           disabled={batch.busy}

@@ -227,7 +227,11 @@ export async function readCardInvoice(
       readInvoiceCover(rows[0] ?? [], billMonth);
     if (recognized) {
       const artwork = identifyInvoiceArtwork(recognized.institution, rows);
-      return artwork ? { ...recognized, artwork } : recognized;
+      return {
+        ...recognized,
+        billMonth: recognized.dueDate?.slice(0, 7) ?? recognized.billMonth,
+        ...(artwork ? { artwork } : {}),
+      };
     }
     const lines: CardInvoiceLine[] = [];
     let invoiceTotal: number | undefined;
@@ -296,6 +300,8 @@ export async function readCardInvoice(
   const c6 = ['nome no cartao', 'final do cartao', 'valor (em us$)', 'cotacao (em r$)'].every(
     (name) => header.includes(name),
   );
+  const exportedDueDate = c6 ? invoiceFilenameDate(filename) : null;
+  const effectiveMonth = exportedDueDate?.slice(0, 7) ?? billMonth;
   const lines = rows
     .map((row): CardInvoiceLine | null => {
       const description = (row[descriptionIndex] ?? '').trim();
@@ -303,7 +309,7 @@ export async function readCardInvoice(
         throw new UnprocessableEntityException('O CSV contém uma compra sem descrição.');
       if (c6 && /^inclusao de pagamento$/i.test(description)) {
         movements.push({
-          date: date(row[dateIndex] ?? '', billMonth),
+          date: date(row[dateIndex] ?? '', effectiveMonth),
           description,
           amount: Math.abs(money(row[amountIndex] ?? '')),
           kind: 'payment',
@@ -319,19 +325,18 @@ export async function readCardInvoice(
       const installmentValue = installmentIndex >= 0 ? (row[installmentIndex] ?? '').trim() : '';
       const inst = installments(installmentValue || description);
       return {
-        date: date(row[dateIndex] ?? '', billMonth),
+        date: date(row[dateIndex] ?? '', effectiveMonth),
         description,
         amount: money(row[amountIndex] ?? ''),
         ...inst,
       };
     })
     .filter((line): line is CardInvoiceLine => line !== null);
-  const result = validate(lines, billMonth, 'csv');
+  const result = validate(lines, effectiveMonth, 'csv');
   if (rows.some((row) => /^\d{2}[/.-]\d{2}$/.test(row[dateIndex] ?? '')))
     result.warnings.push(
       'Datas sem ano foram estimadas pelo mês da fatura. Confira antes de confirmar.',
     );
-  const exportedDueDate = c6 ? invoiceFilenameDate(filename) : null;
   if (exportedDueDate)
     result.warnings.push(
       'Vencimento identificado pelo nome do CSV exportado. Confira se o arquivo não foi renomeado.',

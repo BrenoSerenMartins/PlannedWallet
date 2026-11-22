@@ -1,3 +1,4 @@
+import { needsPdfPassword } from '../../../shared/api/pdf-password';
 import { useNotifications } from '../../../shared/feedback/notification-provider';
 import { useRef, useState } from 'react';
 import { RefreshCw, Upload } from 'lucide-react';
@@ -17,10 +18,12 @@ export function ReprocessImport({
   const { success: setSuccess } = useNotifications();
   const [cpf, setCpf] = useState('');
   const [password, setPassword] = useState('');
+  const [protectedFile, setProtectedFile] = useState<File | null>(null);
   const [resetClassification, setResetClassification] = useState(false);
   const input = useRef<HTMLInputElement>(null);
   const allowed = batch.canReprocess ?? ['draft', 'history'].includes(batch.status);
-  async function reprocess(file?: File) {
+  async function reprocess(file?: File, retryWithCredentials = false) {
+    setProtectedFile(null);
     setBusy(true);
     setError('');
     setSuccess('');
@@ -33,7 +36,7 @@ export function ReprocessImport({
         body.append('file', file);
         body.append('version', String(batch.version));
         body.append('resetClassification', String(resetClassification));
-        if (file.name.toLowerCase().endsWith('.pdf')) {
+        if (retryWithCredentials && file.name.toLowerCase().endsWith('.pdf')) {
           if (cpf) body.set('cpf', cpf);
           if (password) body.set('password', password);
         }
@@ -50,7 +53,9 @@ export function ReprocessImport({
           : 'Importação reprocessada. Confira o resultado antes de confirmar.',
       );
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Não foi possível reprocessar.');
+      const message = error instanceof Error ? error.message : 'Não foi possível reprocessar.';
+      setError(message);
+      if (file && needsPdfPassword(message)) setProtectedFile(file);
     } finally {
       setCpf('');
       setPassword('');
@@ -81,6 +86,7 @@ export function ReprocessImport({
             if (!value) {
               setCpf('');
               setPassword('');
+              setProtectedFile(null);
             }
           }
         }}
@@ -123,29 +129,39 @@ export function ReprocessImport({
               Para atualizar a leitura do PDF, CSV ou XLSX. Selecione o mesmo arquivo desta
               importação; o original não fica armazenado no app.
             </p>
-            <label>
-              CPF do titular do PDF (opcional)
-              <input
-                type="password"
-                inputMode="numeric"
-                maxLength={14}
-                autoComplete="off"
-                value={cpf}
-                disabled={busy}
-                onChange={(event) => setCpf(event.target.value)}
-              />
-            </label>
-            <label>
-              Senha específica do PDF (opcional)
-              <input
-                type="password"
-                autoComplete="off"
-                maxLength={128}
-                value={password}
-                disabled={busy}
-                onChange={(event) => setPassword(event.target.value)}
-              />
-            </label>
+            {protectedFile && (
+              <>
+                <label>
+                  CPF do titular do PDF (opcional)
+                  <input
+                    type="password"
+                    inputMode="numeric"
+                    maxLength={14}
+                    autoComplete="off"
+                    value={cpf}
+                    disabled={busy}
+                    onChange={(event) => setCpf(event.target.value)}
+                  />
+                </label>
+                <label>
+                  Senha específica do PDF (opcional)
+                  <input
+                    type="password"
+                    autoComplete="off"
+                    maxLength={128}
+                    value={password}
+                    disabled={busy}
+                    onChange={(event) => setPassword(event.target.value)}
+                  />
+                </label>
+                <Button
+                  disabled={busy || !navigator.onLine}
+                  onClick={() => void reprocess(protectedFile, true)}
+                >
+                  Tentar ler novamente
+                </Button>
+              </>
+            )}
             <input
               ref={input}
               hidden

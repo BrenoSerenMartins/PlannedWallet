@@ -1,3 +1,4 @@
+import { needsPdfPassword } from '../../shared/api/pdf-password';
 import { cardArtwork } from './art/catalog';
 import '../../shared/ui/card-invoice-preview.css';
 import { useFinancialVisibility } from '../../shared/privacy/financial-visibility';
@@ -893,43 +894,56 @@ function CardInvoiceImportForm({
     >
       {!preview ? (
         <>
-          <label>
-            Mês da fatura de destino
-            <MonthPicker
-              required
-              value={targetMonth}
-              onChange={(event) => setTargetMonth(event.target.value)}
-            />
-          </label>
+          <p className="field-help">O mês é definido pelo vencimento identificado no arquivo.</p>
+          <details>
+            <summary>Escolher mês se o arquivo não informar o vencimento</summary>
+            <label>
+              Mês alternativo
+              <MonthPicker
+                required
+                value={targetMonth}
+                onChange={(event) => setTargetMonth(event.target.value)}
+              />
+            </label>
+          </details>
           <label>
             Arquivo da fatura
             <input
               type="file"
               accept=".pdf,.csv,application/pdf,text/csv"
-              onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+              onChange={(event) => {
+                setFile(event.target.files?.[0] ?? null);
+                setError('');
+                setPassword('');
+                setCpf('');
+              }}
             />
           </label>
-          <label>
-            CPF do titular do PDF (opcional)
-            <input
-              type="password"
-              inputMode="numeric"
-              autoComplete="off"
-              maxLength={14}
-              value={cpf}
-              onChange={(event) => setCpf(event.target.value)}
-            />
-          </label>
-          <label>
-            Senha do PDF (se houver)
-            <input
-              type="password"
-              autoComplete="off"
-              maxLength={128}
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-            />
-          </label>
+          {needsPdfPassword(error) && (
+            <>
+              <label>
+                CPF do titular do PDF (opcional)
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  maxLength={14}
+                  value={cpf}
+                  onChange={(event) => setCpf(event.target.value)}
+                />
+              </label>
+              <label>
+                Senha do PDF (se houver)
+                <input
+                  type="password"
+                  autoComplete="off"
+                  maxLength={128}
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                />
+              </label>
+            </>
+          )}
           <p className="field-help">
             A prévia é protegida por criptografia e não altera compras nem parcelas existentes.
           </p>

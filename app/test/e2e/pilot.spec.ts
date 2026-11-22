@@ -5111,7 +5111,8 @@ test('protected invoice upload keeps the password transient through detection an
   let detected = false;
   let uploaded = false;
   await page.route('**/v1/imports/detect', async (route) => {
-    expect(route.request().postData()).toContain(password);
+    if (!route.request().postData()?.includes(password))
+      return route.fulfill({ status: 422, json: { title: 'PDF protegido. Informe a senha.' } });
     detected = true;
     await route.fulfill({
       json: {
@@ -5124,6 +5125,7 @@ test('protected invoice upload keeps the password transient through detection an
       },
     });
   });
+  await page.route('**/v1/cards/invoice-destinations?*', (route) => route.fulfill({ json: [] }));
   await page.route('**/v1/cards', async (route) => {
     await route.fulfill({
       json:
@@ -5159,16 +5161,18 @@ test('protected invoice upload keeps the password transient through detection an
   });
   await page.goto('/imports');
   const passwordField = page.getByLabel('Senha do PDF (se houver)');
-  await passwordField.fill(password);
+  await expect(passwordField).toHaveCount(0);
   await page.locator('input[type=file]').setInputFiles({
     name: 'fatura.pdf',
     mimeType: 'application/pdf',
     buffer: Buffer.from('%PDF-synthetic'),
   });
+  await passwordField.fill(password);
+  await page.getByRole('button', { name: 'Tentar ler novamente' }).click();
   await expect(page.getByText('Fatura de cartão Inter · 1 compras reconhecidas')).toBeVisible();
   await page.getByRole('button', { name: 'Ler e conciliar fatura' }).click();
   await expect(page.getByRole('region', { name: 'Prévia da fatura importada' })).toBeVisible();
-  await expect(passwordField).toHaveValue('');
+  await expect(passwordField).toHaveCount(0);
   expect(detected && uploaded).toBe(true);
   expect(
     await page.evaluate(
@@ -5203,7 +5207,7 @@ test('Banco do Brasil detection proposes its own account rather than a Mercado P
   await expectNoHorizontalOverflow(page);
 });
 
-test('card invoice dialog selects the destination cycle and requires consent to replace a confirmed source', async ({
+test('card invoice dialog uses the cycle identified in the file and requires consent to replace a confirmed source', async ({
   page,
 }) => {
   await signedIn(page);
@@ -5234,7 +5238,7 @@ test('card invoice dialog selects the destination cycle and requires consent to 
     reconciliation: [{ lineIndex: 0, purchaseId: null, confidence: 'unmatched' }],
   };
   await page.route(`**/v1/cards/${financeCardId}/invoices/import`, (route) => {
-    expect(route.request().postData()).toContain('2026-10');
+    expect(route.request().postData()).toContain('2026-11');
     return route.fulfill({ json: preview });
   });
   await page.route(`**/v1/cards/invoices/${importId}/confirm`, (route) => {
@@ -5247,7 +5251,6 @@ test('card invoice dialog selects the destination cycle and requires consent to 
   await page.goto(`/cards?card=${financeCardId}&month=2026-11`);
   await page.getByRole('button', { name: 'Importar fatura', exact: true }).click();
   const dialog = page.getByRole('dialog');
-  await fillControl(dialog.getByLabel('Mês da fatura de destino'), '2026-10');
   await dialog
     .locator('input[type=file]')
     .setInputFiles({ name: 'invoice.csv', mimeType: 'text/csv', buffer: Buffer.from('synthetic') });
@@ -5256,7 +5259,6 @@ test('card invoice dialog selects the destination cycle and requires consent to 
   const confirm = dialog.getByRole('button', { name: 'Confirmar e substituir compras do ciclo' });
   await expect(confirm).toBeDisabled();
   await dialog.getByRole('button', { name: 'Alterar mês ou arquivo' }).click();
-  await expectControlValue(dialog.getByLabel('Mês da fatura de destino'), '2026-10');
   await dialog.getByRole('button', { name: 'Ler fatura', exact: true }).click();
   await dialog.getByRole('checkbox', { name: /Substituir a importação já confirmada/ }).check();
   await expect(confirm).toBeEnabled();
@@ -5477,7 +5479,7 @@ test('individual review opens visibly and resumes a protected PDF after requesti
   await review.getByRole('button', { name: 'Ler e conciliar fatura' }).click();
   await expect(review.getByRole('region', { name: 'Prévia da fatura importada' })).toBeVisible();
   expect(uploaded).toBe(true);
-  await expect(cpfInput).toHaveValue('');
+  await expect(cpfInput).toHaveCount(0);
   expect(
     await page.evaluate(
       (value) => Object.values(localStorage).some((entry) => entry.includes(value)),
@@ -5530,7 +5532,11 @@ test('batch CPF unlock credentials survive analysis until upload and never enter
     id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
   let uploaded = false;
   await page.route('**/v1/imports/detect', (route) => {
-    expect(route.request().postData()).toContain(cpf);
+    if (!route.request().postData()?.includes(cpf))
+      return route.fulfill({
+        status: 422,
+        json: { title: 'PDF protegido. Informe o CPF do titular.' },
+      });
     return route.fulfill({
       json: {
         kind: 'card_invoice',
@@ -5565,20 +5571,26 @@ test('batch CPF unlock credentials survive analysis until upload and never enter
   );
   await page.goto('/imports');
   const batch = page.getByRole('region', { name: 'Importação automática em lote' });
-  await batch.getByLabel('CPF do titular para PDFs protegidos (opcional)').fill(cpf);
-  const chooser = page.waitForEvent('filechooser');
-  await batch.getByRole('button', { name: 'Selecionar arquivos em lote' }).click();
-  await (
-    await chooser
-  ).setFiles({
-    name: 'protected.pdf',
-    mimeType: 'application/pdf',
-    buffer: Buffer.from('%PDF-synthetic'),
-  });
+  const cpfField = batch.getByLabel('CPF do titular para PDFs protegidos (opcional)');
+  await expect(cpfField).toHaveCount(0);
+  async function selectBatch() {
+    const chooser = page.waitForEvent('filechooser');
+    await batch.getByRole('button', { name: 'Selecionar arquivos em lote' }).click();
+    await (
+      await chooser
+    ).setFiles({
+      name: 'protected.pdf',
+      mimeType: 'application/pdf',
+      buffer: Buffer.from('%PDF-synthetic'),
+    });
+  }
+  await selectBatch();
+  await cpfField.fill(cpf);
+  await selectBatch();
   await batch.getByRole('button', { name: 'Importar 1 arquivo(s) identificado(s)' }).click();
   await expect(batch.getByText('Importado', { exact: true })).toBeVisible();
   expect(uploaded).toBe(true);
-  await expect(batch.getByLabel('CPF do titular para PDFs protegidos (opcional)')).toHaveValue('');
+  await expect(cpfField).toHaveCount(0);
   expect(
     await page.evaluate(
       (value) => Object.values(localStorage).some((entry) => entry.includes(value)),
@@ -5600,6 +5612,11 @@ test('a new batch does not silently reuse credentials from the individual form',
     });
   });
   await page.goto('/imports');
+  await page.locator('input[type=file]').setInputFiles({
+    name: 'individual.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from('%PDF-synthetic'),
+  });
   await page.getByLabel('CPF do titular do PDF (opcional)', { exact: true }).fill(cpf);
   const chooser = page.waitForEvent('filechooser');
   await page.getByRole('button', { name: 'Selecionar arquivos em lote' }).click();

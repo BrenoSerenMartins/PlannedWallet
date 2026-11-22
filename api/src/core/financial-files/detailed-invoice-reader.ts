@@ -60,6 +60,8 @@ function readInter(pages: Cell[][], billMonth: string): ParsedCardInvoice | null
     .match(/Total da sua fatura.*?R\$\s*([\d.]+,\d{2})/i);
   const due = cover.match(/Data de Vencimento.*?(\d{2}\/\d{2}\/\d{4})/i);
   if (!total || !due) return null;
+  const dueDate = date(due[1], billMonth);
+  billMonth = dueDate.slice(0, 7);
   const lines: CardInvoiceLine[] = [];
   const movements: NonNullable<ParsedCardInvoice['movements']> = [];
   let section = false;
@@ -101,7 +103,7 @@ function readInter(pages: Cell[][], billMonth: string): ParsedCardInvoice | null
   return {
     ...validate(lines, billMonth, 'pdf', money(total[1])),
     institution: 'inter',
-    dueDate: date(due[1], billMonth),
+    dueDate,
     movements,
   };
 }
@@ -112,6 +114,8 @@ function readItau(pages: Cell[][], billMonth: string): ParsedCardInvoice | null 
   const total = cover.match(/Total desta fatura\s+([\d.]+,\d{2})/i);
   const due = cover.match(/Vencimento:\s*(\d{2}\/\d{2}\/\d{4})/i);
   if (!total || !due) return null;
+  const dueDate = date(due[1], billMonth);
+  billMonth = dueDate.slice(0, 7);
   const lines: CardInvoiceLine[] = [];
   const movements: NonNullable<ParsedCardInvoice['movements']> = [];
   let section: 'purchases' | 'payments' | null = null;
@@ -142,7 +146,7 @@ function readItau(pages: Cell[][], billMonth: string): ParsedCardInvoice | null 
     result.warnings.push(
       'O ano da compra parcelada sem data completa foi estimado. Confira antes de confirmar.',
     );
-  return { ...result, institution: 'itau', dueDate: date(due[1], billMonth), movements };
+  return { ...result, institution: 'itau', dueDate, movements };
 }
 
 export function readDetailedInvoice(pages: Cell[][], billMonth: string) {

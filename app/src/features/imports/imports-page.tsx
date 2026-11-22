@@ -1,3 +1,4 @@
+import { needsPdfPassword } from '../../shared/api/pdf-password';
 import {
   findDestinations,
   type AutomaticImportRow,
@@ -161,6 +162,7 @@ export function ImportsPage() {
     file: File,
     known?: NonNullable<typeof detected>,
     destinationId?: string,
+    retryWithCredentials = false,
   ) => {
     setSelectedFile(file);
     setCardPreview(null);
@@ -172,8 +174,13 @@ export function ImportsPage() {
       const form = new FormData();
       form.set('file', file);
       form.set('billMonth', billMonth);
-      if (pdfPassword) form.set('password', pdfPassword);
-      if (pdfCpf) form.set('cpf', pdfCpf);
+      if (retryWithCredentials) {
+        if (pdfPassword) form.set('password', pdfPassword);
+        if (pdfCpf) form.set('cpf', pdfCpf);
+      } else if (!known) {
+        setPdfPassword('');
+        setPdfCpf('');
+      }
       const result =
         known ??
         (await request<Exclude<NonNullable<typeof detected>, null>>('/imports/detect', {
@@ -436,30 +443,34 @@ export function ImportsPage() {
                   <ErrorState error={accounts.error} />
                 ) : (
                   <>
-                    <label>
-                      CPF do titular do PDF (opcional)
-                      <input
-                        data-pdf-cpf
-                        type="password"
-                        inputMode="numeric"
-                        autoComplete="off"
-                        maxLength={14}
-                        value={pdfCpf}
-                        disabled={busy || detecting}
-                        onChange={(event) => setPdfCpf(event.target.value)}
-                      />
-                    </label>
-                    <label>
-                      Senha do PDF (se houver)
-                      <input
-                        type="password"
-                        autoComplete="off"
-                        maxLength={128}
-                        value={pdfPassword}
-                        disabled={busy || detecting}
-                        onChange={(event) => setPdfPassword(event.target.value)}
-                      />
-                    </label>
+                    {needsPdfPassword(detectError) && !cardPreview && (
+                      <>
+                        <label>
+                          CPF do titular do PDF (opcional)
+                          <input
+                            data-pdf-cpf
+                            type="password"
+                            inputMode="numeric"
+                            autoComplete="off"
+                            maxLength={14}
+                            value={pdfCpf}
+                            disabled={busy || detecting}
+                            onChange={(event) => setPdfCpf(event.target.value)}
+                          />
+                        </label>
+                        <label>
+                          Senha do PDF (se houver)
+                          <input
+                            type="password"
+                            autoComplete="off"
+                            maxLength={128}
+                            value={pdfPassword}
+                            disabled={busy || detecting}
+                            onChange={(event) => setPdfPassword(event.target.value)}
+                          />
+                        </label>
+                      </>
+                    )}
                     <input
                       ref={(element) => {
                         input.current = element;
@@ -480,10 +491,8 @@ export function ImportsPage() {
                         e.target.value = '';
                         if (!files.length) return;
                         if (automaticSelection.current || files.length > 1) {
-                          const password = automaticSelection.current
-                            ? batchPassword.current
-                            : pdfPassword;
-                          const cpf = automaticSelection.current ? batchCpf.current : pdfCpf;
+                          const password = automaticSelection.current ? batchPassword.current : '';
+                          const cpf = automaticSelection.current ? batchCpf.current : '';
                           automaticSelection.current = false;
                           batchPassword.current = '';
                           void automaticBatch.analyze(files, password, cpf);
@@ -662,14 +671,20 @@ export function ImportsPage() {
                         </p>
                         {detected.kind === 'card_invoice' ? (
                           <>
-                            <label>
-                              Mês da fatura
-                              <MonthPicker
-                                required
-                                value={billMonth}
-                                onChange={(e) => setBillMonth(e.target.value)}
-                              />
-                            </label>
+                            {detected.dueDate ? (
+                              <p className="field-help">
+                                Mês identificado no arquivo: {monthLabel(billMonth)}
+                              </p>
+                            ) : (
+                              <label>
+                                Mês da fatura
+                                <MonthPicker
+                                  required
+                                  value={billMonth}
+                                  onChange={(e) => setBillMonth(e.target.value)}
+                                />
+                              </label>
+                            )}
                             <label>
                               Cartão de destino
                               <Select
@@ -844,7 +859,8 @@ export function ImportsPage() {
                         <Button
                           disabled={busy || detecting}
                           onClick={() => {
-                            if (selectedFile) void chooseStatement(selectedFile);
+                            if (selectedFile)
+                              void chooseStatement(selectedFile, undefined, undefined, true);
                           }}
                         >
                           Tentar ler novamente

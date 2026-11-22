@@ -119,10 +119,7 @@ export class CardInvoiceImportsService {
       (card.artwork || !(await this.imports.institutionCards(parsed.institution)).includes(card.id))
     )
       throw new ConflictException('O cartão de destino deve ser do mesmo emissor da fatura.');
-    if (parsed.dueDate && parsed.dueDate.slice(0, 7) !== billMonth)
-      throw new ConflictException(
-        `O vencimento identificado pertence a ${parsed.dueDate.slice(0, 7)}. Selecione esse mês para importar esta fatura.`,
-      );
+    const destinationMonth = parsed.billMonth;
     const fingerprint = await this.crypto.fingerprint(
       createHash('sha256').update(file.buffer).digest('hex'),
     );
@@ -130,21 +127,17 @@ export class CardInvoiceImportsService {
     const sourceName = file.originalname.toLowerCase().endsWith('.pdf')
       ? 'Fatura PDF'
       : 'Fatura CSV';
-    const reconciliation = await this.candidates(parsed.lines, cardId, billMonth);
-    const saved = await this.imports.save(id, cardId, billMonth, sourceName, fingerprint, {
+    const reconciliation = await this.candidates(parsed.lines, cardId, destinationMonth);
+    const saved = await this.imports.save(id, cardId, destinationMonth, sourceName, fingerprint, {
       parsed,
       reconciliation,
     });
-    if (saved.billMonth !== billMonth && saved.status !== 'review')
-      throw new ConflictException(
-        `Este arquivo já foi confirmado em ${saved.billMonth}. Selecione esse mês para consultar a importação existente.`,
-      );
     if (saved.id !== id && saved.status === 'review')
       await this.imports.refreshReview(
         saved.id,
         saved.version,
         { parsed, reconciliation },
-        billMonth,
+        destinationMonth,
       );
     return this.get(saved.id);
   }

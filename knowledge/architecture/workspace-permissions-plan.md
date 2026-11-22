@@ -1,6 +1,6 @@
 # Workspace permissions — design for next cycle
 
-Status: design only. Runtime remains owner-only until a tested migration and access revision are shipped.
+The permission matrix below documents the original design. See Shipped invitations by email for the current invitation flow.
 
 ## Permission matrix
 
@@ -40,3 +40,7 @@ Invite tokens are random, stored as hashes, expiring, revocable and consumed ato
 ## Required proof before release
 
 Tests under restricted runtime role for owner/editor/reader/nonmember, cross-space direct IDs, revoked/expired invites, last-owner constraints, role changes during writes, backup/export, batch import, trash and jobs. Use a real PostgreSQL integration environment as well as the existing PGlite suite for RLS and locking behavior. No sharing UI is shipped until the server matrix is complete.
+
+## Shipped invitations by email
+
+Owners open **Compartilhar** in the space directory, enter an email and choose Reader or Editor. The app generates a seven-day link and offers a prefilled email draft or a copy action. The sender completes delivery in their email client. The API binds acceptance to the authenticated user's verified email and stores only a hash of the invitation token. The sign-up callback returns to the pending invitation in the same browser session.

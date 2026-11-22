@@ -282,3 +282,9 @@ body .page-content .categories-page .category-toolbar .view-switcher-indicator {
     justify-content: center;
   }
 }
+
+.category-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}

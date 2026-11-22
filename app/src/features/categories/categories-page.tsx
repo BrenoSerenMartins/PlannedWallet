@@ -1,3 +1,4 @@
+import { CategoryDefaultDialog } from './components/category-default-dialog';
 import { PageHeader } from '../../shared/ui/page-header';
 import { SearchField } from '../../shared/ui/controls/search-field';
 import { IconAction } from '../../shared/ui/icon-action';
@@ -27,6 +28,7 @@ export function CategoriesPage() {
   const [selectedGroup, setSelectedGroup] = useState('');
   const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
   const [deleting, setDeleting] = useState<CategoryGroup | null>(null);
+  const [defaultCategory, setDefaultCategory] = useState<Category | null>(null);
   const [editor, setEditor] = useState<Editor | null>(null);
   const matching = (categories.data ?? []).filter(
     (c) =>
@@ -152,9 +154,16 @@ export function CategoriesPage() {
               onDelete={() => setDeleting(activeGroup)}
               onEditCategory={(entry) => setEditor({ kind: 'category', entry })}
               onDeleteCategory={setDeletingCategory}
+              onSetDefault={setDefaultCategory}
             />
           )}
         </>
+      )}
+      {defaultCategory && (
+        <CategoryDefaultDialog
+          category={defaultCategory}
+          onClose={() => setDefaultCategory(null)}
+        />
       )}
       {deletingCategory && (
         <DeleteCategoryDialog

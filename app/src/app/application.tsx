@@ -118,6 +118,7 @@ export function Application() {
                 ) : (
                   <>
                     <Route path="workspaces" element={<WorkspacesPage />} />
+                    <Route path="auth/callback" element={<SignedInCallback />} />
                     <Route element={<WorkspaceBoundary />}>
                       <Route element={<AppShell />}>
                         <Route index element={<DashboardPage />} />
@@ -185,4 +186,19 @@ function WorkspaceStartup({
   const { loading } = useWorkspace();
   if (loading && !initialReady) return null;
   return children;
+}
+
+function SignedInCallback() {
+  let invite: string | null = null;
+  try {
+    invite = sessionStorage.getItem('plannedwallet-pending-invite');
+  } catch {
+    // Session storage may be unavailable.
+  }
+  return (
+    <Navigate
+      to={invite && /^[a-f0-9]{64}$/.test(invite) ? `/workspaces?invite=${invite}` : '/'}
+      replace
+    />
+  );
 }

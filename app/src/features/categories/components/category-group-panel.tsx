@@ -1,3 +1,4 @@
+import { Flag } from 'lucide-react';
 import { Tooltip } from '../../../shared/ui/tooltip';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import type { Category, CategoryGroup } from '../../../shared/api/resources';
@@ -11,6 +12,7 @@ export function CategoryGroupPanel({
   onDelete,
   onEditCategory,
   onDeleteCategory,
+  onSetDefault,
 }: {
   group: CategoryGroup;
   categories: Category[];
@@ -20,6 +22,7 @@ export function CategoryGroupPanel({
   onDelete: () => void;
   onEditCategory: (category: Category) => void;
   onDeleteCategory: (category: Category) => void;
+  onSetDefault: (category: Category) => void;
 }) {
   return (
     <section
@@ -79,16 +82,28 @@ export function CategoryGroupPanel({
               {searching && <small>{category.groupName}</small>}
             </button>
 
-            <Tooltip text={`Excluir categoria ${category.name}`}>
-              <button
-                type="button"
-                className="icon-button"
-                aria-label={`Excluir categoria ${category.name}`}
-                onClick={() => onDeleteCategory(category)}
-              >
-                <Trash2 size={16} />
-              </button>
-            </Tooltip>
+            <div className="category-row-actions">
+              <Tooltip text="Categoria padrão">
+                <button
+                  type="button"
+                  className="icon-button"
+                  aria-label={`Categoria padrão: ${category.name}`}
+                  onClick={() => onSetDefault(category)}
+                >
+                  <Flag size={16} aria-hidden="true" />
+                </button>
+              </Tooltip>
+              <Tooltip text={`Excluir categoria ${category.name}`}>
+                <button
+                  type="button"
+                  className="icon-button"
+                  aria-label={`Excluir categoria ${category.name}`}
+                  onClick={() => onDeleteCategory(category)}
+                >
+                  <Trash2 size={16} />
+                </button>
+              </Tooltip>
+            </div>
           </div>
         ))}
       </div>

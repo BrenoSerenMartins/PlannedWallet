@@ -18,7 +18,8 @@ export function WorkspaceSharing({ workspace }: { workspace: Workspace }) {
   const client = useQueryClient(),
     [email, setEmail] = useState(''),
     [role, setRole] = useState('reader'),
-    [link, setLink] = useState(''),
+    [invitation, setInvitation] = useState<{ email: string; link: string }>(),
+    [copied, setCopied] = useState(false),
     [error, setError] = useState('');
   const members = useQuery({
       queryKey: ['members', workspace.id],
@@ -28,6 +29,9 @@ export function WorkspaceSharing({ workspace }: { workspace: Workspace }) {
       queryKey: ['invites', workspace.id],
       queryFn: () => request<Invite[]>(`/workspaces/${workspace.id}/invites`),
     });
+  const mailto = invitation
+    ? `mailto:${encodeURIComponent(invitation.email)}?subject=${encodeURIComponent(`Convite para ${workspace.name} no PlannedWallet`)}&body=${encodeURIComponent(`Você recebeu um convite para participar do espaço ${workspace.name} no PlannedWallet.\n\nAbra o link e entre com o e-mail que recebeu o convite:\n${invitation.link}\n\nO convite é válido por 7 dias.`)}`
+    : undefined;
   async function change(path: string, method: string, body?: unknown) {
     setError('');
     try {
@@ -48,13 +52,18 @@ export function WorkspaceSharing({ workspace }: { workspace: Workspace }) {
         gerencia acessos e restaura backups.
       </p>
       <FinanceForm
-        label="Criar link de convite"
+        label="Criar convite"
         onSubmit={async () => {
+          const recipient = email.trim();
           const r = await request<{ token: string }>(`/workspaces/${workspace.id}/invites`, {
             method: 'POST',
-            body: jsonBody({ email, role }),
+            body: jsonBody({ email: recipient, role }),
           });
-          setLink(`${window.location.origin}/workspaces?invite=${r.token}`);
+          setInvitation({
+            email: recipient,
+            link: `${window.location.origin}/workspaces?invite=${r.token}`,
+          });
+          setCopied(false);
           await invites.refetch();
         }}
       >
@@ -70,14 +79,33 @@ export function WorkspaceSharing({ workspace }: { workspace: Workspace }) {
           </Select>
         </label>
       </FinanceForm>
-      {link && (
-        <label>
-          Envie este link para a pessoa (válido por 7 dias)
-          <input value={link} readOnly onFocus={(e) => e.target.select()} />
-          <Button className="secondary" onClick={() => void navigator.clipboard.writeText(link)}>
-            Copiar convite
-          </Button>
-        </label>
+      {invitation && (
+        <div className="form-stack">
+          <label>
+            Link para {invitation.email} · válido por 7 dias
+            <input value={invitation.link} readOnly onFocus={(e) => e.target.select()} />
+          </label>
+          <div className="inline-actions">
+            <a className="button" href={mailto}>
+              Abrir e-mail com convite
+            </a>
+            <Button
+              className="secondary"
+              type="button"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(invitation.link);
+                  setCopied(true);
+                } catch {
+                  setError('Selecione o link do convite para copiá-lo manualmente.');
+                }
+              }}
+            >
+              Copiar link
+            </Button>
+          </div>
+          {copied && <p role="status">Link copiado.</p>}
+        </div>
       )}
       <h3>Participantes</h3>
       {members.isPending ? (

@@ -65,7 +65,7 @@ function MonthlyBudgetPage({ navigation }: { navigation?: ReactNode }) {
         plan && (
           <>
             <header className="future-page-heading">
-              <h1>Visão futura</h1>
+              <h2>Visão futura</h2>
             </header>
             <PlanningSummary
               plan={plan}

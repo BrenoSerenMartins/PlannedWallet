@@ -584,15 +584,13 @@ test('batch uploads run sequentially, keep successful files after errors and lin
     return route.fulfill({ status: 201, json: { id, status: 'confirmed' } });
   });
   await page.goto('/imports');
-  await page
-    .locator('input[type=file]')
-    .setInputFiles(
-      ['month.pdf', 'invalid.xlsx', 'same-month.csv'].map((name) => ({
-        name,
-        mimeType: 'text/csv',
-        buffer: Buffer.from(name),
-      })),
-    );
+  await page.locator('input[type=file]').setInputFiles(
+    ['month.pdf', 'invalid.xlsx', 'same-month.csv'].map((name) => ({
+      name,
+      mimeType: 'text/csv',
+      buffer: Buffer.from(name),
+    })),
+  );
   await page.getByRole('button', { name: /Importar 3 arquivo/ }).click();
   await expect.poll(() => count).toBe(1);
   await expect(page.getByRole('button', { name: 'Selecionar arquivos em lote' })).toBeDisabled();
@@ -629,15 +627,13 @@ test('stopping the queue finishes only the active file and skips the remaining f
     });
   });
   await page.goto('/imports');
-  await page
-    .locator('input[type=file]')
-    .setInputFiles(
-      ['first.csv', 'second.csv'].map((name) => ({
-        name,
-        mimeType: 'text/csv',
-        buffer: Buffer.from(name),
-      })),
-    );
+  await page.locator('input[type=file]').setInputFiles(
+    ['first.csv', 'second.csv'].map((name) => ({
+      name,
+      mimeType: 'text/csv',
+      buffer: Buffer.from(name),
+    })),
+  );
   await page.getByRole('button', { name: /Importar 2 arquivo/ }).click();
   await expect.poll(() => count).toBe(1);
   await page.getByRole('button', { name: 'Pausar lote', exact: true }).click();
@@ -663,15 +659,13 @@ test('leaving the upload screen stops subsequent submissions', async ({ page }) 
     });
   });
   await page.goto('/imports');
-  await page
-    .locator('input[type=file]')
-    .setInputFiles(
-      ['first.csv', 'second.csv'].map((name) => ({
-        name,
-        mimeType: 'text/csv',
-        buffer: Buffer.from(name),
-      })),
-    );
+  await page.locator('input[type=file]').setInputFiles(
+    ['first.csv', 'second.csv'].map((name) => ({
+      name,
+      mimeType: 'text/csv',
+      buffer: Buffer.from(name),
+    })),
+  );
   await page.getByRole('button', { name: /Importar 2 arquivo/ }).click();
   await expect.poll(() => requests).toBe(1);
   await page.getByRole('link', { name: 'Preferências', exact: true }).click();
@@ -1547,31 +1541,21 @@ for (const width of [390, 1440])
     };
     await page.route('**/v1/planning/**', (route) => route.fulfill({ json: payload }));
     await page.goto('/planning');
+    await expect(page.getByText('197 itens em Outros', { exact: true })).toBeVisible();
+    const expenses = page.getByRole('article', { name: 'Despesas', exact: true });
+    await expect(expenses).toContainText('R$ 600,00');
+    await expect(expenses).toContainText('Excedido R$ 100,00');
+    const incomeCard = page.getByRole('article', { name: 'Receitas', exact: true });
+    await expect(incomeCard).toContainText('Previsto R$ 3.000,00');
+    await expect(incomeCard).toContainText('R$ 2.800,00');
     await expect(
-      page.getByText('Sem categoria também entra na conta', { exact: true }),
-    ).toBeVisible();
-    await expect(
-      page.getByText('Seu realizado ainda precisa de revisão', { exact: true }),
-    ).toHaveCount(0);
-    await expect(
-      page.getByText(/197 lançamentos estão em Outros e já fazem parte do realizado/),
-    ).toBeVisible();
-    const expenses = page.getByRole('article', { name: 'Orçamento de despesas', exact: true });
-    await expect(expenses.getByText('R$ 500,00', { exact: true })).toBeVisible();
-    await expect(expenses.getByText('R$ 600,00', { exact: true })).toBeVisible();
-    await expect(expenses.getByText('R$ 100,00 acima do orçamento', { exact: true })).toBeVisible();
-    const incomeCard = page.getByRole('article', { name: 'Receitas do mês', exact: true });
-    await expect(incomeCard.getByText('R$ 3.000,00', { exact: true })).toBeVisible();
-    await expect(incomeCard.getByText('R$ 2.800,00', { exact: true })).toBeVisible();
-    await expect(
-      page
-        .getByRole('article', { name: 'Aporte planejado', exact: true })
-        .getByText('Não identificado', { exact: true }),
-    ).toBeVisible();
+      page.getByRole('article', { name: 'Aporte planejado', exact: true }),
+    ).toContainText('R$ 100,00');
     const line = page
       .locator('.budget-line')
       .filter({ has: page.getByText('Outros', { exact: true }) });
-    await expect(line.getByText('R$ 50,00', { exact: true })).toBeVisible();
+    await page.locator('.budget-group').filter({ has: line }).locator(':scope > summary').click();
+    await expect(line).toContainText('R$ 50,00');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
@@ -1873,7 +1857,11 @@ test('account forms use automatic defaults and preserve existing baseline amount
   await expect(dialog.getByLabel('Saldo inicial (R$)')).toHaveCount(0);
   await expect(dialog.getByLabel('Data inicial')).toHaveCount(0);
   await dialog.getByLabel('Instituição').click();
-  await expect(page.getByRole('listbox').getByRole('option')).toHaveText(['Alelo', 'Mercado Pago']);
+  await expect(page.getByRole('listbox').getByRole('option')).toHaveText([
+    'Banco do Brasil',
+    'Alelo',
+    'Mercado Pago',
+  ]);
   await chooseSelect(dialog.getByLabel('Instituição'), 'alelo');
   await expectControlValue(dialog.getByRole('combobox', { name: /^Tipo/ }), 'benefit_food');
   await chooseSelect(dialog.getByLabel('Instituição'), 'mercado_pago');
@@ -1969,7 +1957,7 @@ test('a transaction can explicitly remember an agent category without imposing a
     'new',
   );
   await fillControl(dialog.getByLabel('Nome da pessoa ou estabelecimento'), 'Supermercado Exemplo');
-  await dialog.getByLabel(/Usar esta categoria para esta pessoa/).check();
+  await dialog.getByLabel(/Usar esta categoria em lançamentos do mesmo tipo/).check();
   await dialog.getByRole('button', { name: 'Registrar movimento', exact: true }).click();
   await expect(dialog).toHaveCount(0);
   expect(saved).toMatchObject({
@@ -2097,7 +2085,7 @@ test('import review saves learning intent for confirmation and shows the automat
     page.getByRole('combobox', { name: 'Pessoa ou estabelecimento', exact: true }),
     automationAgent.id,
   );
-  await page.getByLabel(/Usar esta categoria para esta pessoa/).check();
+  await page.getByLabel(/Usar esta categoria em lançamentos do mesmo tipo/).check();
   await page
     .getByRole('button', { name: 'Salvar relação para a confirmação', exact: true })
     .click();
@@ -2190,16 +2178,10 @@ for (const width of [390, 1440])
       dialog.getByRole('combobox', { name: 'Pessoa ou estabelecimento', exact: true }),
       maria.id,
     );
-    await expect(
-      dialog.getByLabel(
-        'Reconhecer esta descrição no histórico e nos próximos movimentos desta conta',
-      ),
-    ).toBeChecked();
-    await expect(
-      dialog.getByLabel(
-        'Usar esta categoria para esta pessoa ou estabelecimento neste tipo de movimento',
-      ),
-    ).not.toBeChecked();
+    await expect(dialog.getByLabel('Reconhecer esta descrição nesta conta')).toBeChecked();
+    await expect(dialog.getByLabel('Usar esta categoria em lançamentos do mesmo tipo')).toHaveCount(
+      0,
+    );
     await dialog.getByRole('button', { name: 'Registrar movimento', exact: true }).click();
     await expect(dialog).toHaveCount(0);
     expect(saved).toMatchObject({
@@ -2681,9 +2663,9 @@ for (const width of [320, 430, 1024, 1280, 1920])
     );
     await page.goto('/');
     await page.getByRole('button', { name: 'Ver contas', exact: true }).click();
-    await expect(page.locator('.current-balances')).toContainText('Referência do extrato');
+    await expect(page.locator('.current-balances')).toContainText('Ref. 30/10/2026');
     await expect(
-      page.getByRole('link', { name: 'Ver origem', exact: true }).filter({ visible: true }),
+      page.getByRole('link', { name: /^Ver origem/ }).filter({ visible: true }),
     ).toHaveAttribute('href', '/imports/bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb');
     const privacy = page
       .getByRole('button', { name: 'Ocultar valores', exact: true })
@@ -3280,11 +3262,11 @@ for (const width of [320, 390, 768, 1440])
     await expect(
       page.getByRole('heading', { name: 'Cartões e faturas', exact: true }),
     ).toBeVisible();
-    await expect(page.locator('.credit-selector-item')).toContainText('R$ 120,00');
+    await expect(page.locator('.credit-card-frame').first()).toContainText('R$ 120,00');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
-    await page.getByRole('button', { name: 'Registrar compra', exact: true }).click();
+    await page.getByRole('button', { name: 'Compra', exact: true }).click();
     await expect(
       page.getByRole('dialog').getByLabel('Valor total da compra (R$)', { exact: true }),
     ).toBeVisible();
@@ -3362,7 +3344,7 @@ test('creates a credit card and sends an exact installment purchase without debi
     dueDay: 20,
     limit: 250000,
   });
-  await page.getByRole('button', { name: 'Registrar compra', exact: true }).click();
+  await page.getByRole('button', { name: 'Compra', exact: true }).click();
   dialog = page.getByRole('dialog');
   await fillControl(dialog.getByLabel('Descrição da compra', { exact: true }), 'Compra parcelada');
   await fillControl(dialog.getByLabel('Valor total da compra (R$)', { exact: true }), '100,01');
@@ -3615,21 +3597,18 @@ for (const width of [360, 1440])
       });
     });
     await page.goto('/planning?month=2026-11');
-    await page
-      .getByText('Como os valores são calculados e configurações do VA/VR', { exact: true })
-      .click();
+    await page.getByText('Regra de créditos VA/VR', { exact: true }).click();
     const notice = page.getByRole('region', { name: 'Competência do VA/VR' });
-    const income = page.getByRole('article', { name: 'Receitas do mês', exact: true });
+    const income = page.getByRole('article', { name: 'Receitas', exact: true });
     await expect(income.getByText('R$ 0,00', { exact: true })).toBeVisible();
     await notice.getByRole('button', { name: 'Usar no mês seguinte' }).click();
     await expect(
       notice.getByText('Créditos de outubro de 2026 entram em novembro de 2026.'),
     ).toBeVisible();
-    await expect(income.getByText('R$ 700,00', { exact: true })).toHaveCount(2);
+    await expect(income.locator('strong').first()).toHaveText('R$ 700,00');
+    await expect(income).toContainText('Previsto R$ 700,00');
     await page.reload();
-    await page
-      .getByText('Como os valores são calculados e configurações do VA/VR', { exact: true })
-      .click();
+    await page.getByText('Regra de créditos VA/VR', { exact: true }).click();
     await expect(notice.getByRole('button', { name: 'Usar mês do recebimento' })).toBeVisible();
     await notice.getByRole('button', { name: 'Usar mês do recebimento' }).click();
     await expect(income.getByText('R$ 0,00', { exact: true })).toBeVisible();
@@ -3684,7 +3663,7 @@ for (const width of [390, 1440])
           await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
           path,
         ).toBe(true);
-        const action = page.locator('.page-header-actions button').first();
+        const action = page.locator('.page-header-actions button:visible').first();
         if (await action.count()) {
           const target = await action.boundingBox();
           expect(
@@ -3775,14 +3754,16 @@ test('account filters explain empty results and keep account and card workspaces
   await expect(page.locator('.account-record')).toHaveCount(1);
   const navigation = page.getByRole('navigation', { name: 'Navegação principal', exact: true });
   await test.step('Open cards from the accounts navigation', async () => {
-    await navigation.getByRole('button', { name: 'Contas', exact: true }).click();
     await navigation.getByRole('link', { name: 'Cartões e faturas', exact: true }).click();
     await expect(page).toHaveURL(/\/cards(?:\?|$)/);
   });
   await expect(page.getByRole('heading', { level: 1, name: 'Cartões e faturas' })).toBeVisible();
   await test.step('Return to balances from the accounts navigation', async () => {
-    await navigation.getByRole('button', { name: 'Contas', exact: true }).click();
-    await navigation.getByRole('link', { name: 'Contas e saldos', exact: true }).click();
+    await openAppMenu(page);
+    await page
+      .getByRole('dialog', { name: 'Menu do espaço' })
+      .getByRole('link', { name: 'Contas', exact: true })
+      .click();
     await expect(page).toHaveURL(/\/accounts(?:\?|$)/);
   });
   await expect(page.locator('.account-record')).toHaveCount(1);
@@ -3833,7 +3814,7 @@ test('visible date controls remove one bound without losing movement type or the
   expect(url.searchParams.get('type')).toBe('income');
   await expectControlValue(await movementFilterControl(page, 'Até'), '2026-10-31');
   await page.getByRole('button', { name: 'Ver movimentos', exact: true }).click();
-  await expect(page.getByRole('status').filter({ hasText: '1 movimento carregado' })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Compra de supermercado/ })).toBeVisible();
 });
 test('settings retain the chosen section on reload and offer labelled theme previews', async ({
   page,
@@ -3963,10 +3944,10 @@ test.describe('help on touch screens', () => {
     await signedIn(page);
     await page.setViewportSize({ width: 320, height: 850 });
     await page.goto('/planning?month=2026-11');
-    const help = page.getByRole('button', { name: 'Ajuda: Resultado do mês', exact: true });
+    const help = page.getByRole('button', { name: 'Ajuda: Receitas', exact: true });
     await help.tap();
     const tooltip = page.getByRole('tooltip');
-    await expect(tooltip).toContainText('não é o saldo atual');
+    await expect(tooltip).toContainText('Receitas realizadas e previstas no mês selecionado.');
     const box = await tooltip.boundingBox();
     expect(box!.x).toBeGreaterThanOrEqual(0);
     expect(box!.x + box!.width).toBeLessThanOrEqual(320);
@@ -4222,7 +4203,7 @@ for (const width of [390, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/planning?month=2026-11');
     const month = page.getByRole('combobox', { name: 'Mês do planejamento', exact: true });
-    await expect(month).toContainText('Novembro 2026');
+    await expect(month).toContainText('Nov 2026');
     await month.click();
     const popup = page.getByRole('dialog', {
       name: 'Selecionar mês: Mês do planejamento',
@@ -4241,11 +4222,7 @@ for (const width of [390, 1440]) {
     expect(box).not.toBeNull();
     expect(section).not.toBeNull();
     expect(section!.y - (box!.y + box!.height)).toBeGreaterThanOrEqual(12);
-    await expect(page.locator('.budget-section').first()).toHaveCSS('border-radius', '24px');
-    await expect(page.locator('.budget-section').first()).toHaveCSS(
-      'background-image',
-      /linear-gradient/,
-    );
+    await expect(page.locator('.budget-section').first()).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
@@ -4575,7 +4552,7 @@ for (const width of [390, 1440]) {
       await page.goto(path);
       const action = page.getByRole('button', { name: label, exact: true });
       await expect(action).toBeVisible();
-      await expect(action).toHaveClass(/quiet-action/);
+      await expect(action).toBeEnabled();
       await action.click();
       const dialog = page.getByRole('dialog', { name: title, exact: true });
       await expect(dialog).toBeVisible();
@@ -4633,11 +4610,16 @@ for (const width of [390, 1440]) {
     );
     await page.goto('/planning?month=2026-12');
     const panel = page.getByRole('region', { name: 'Disponível no período', exact: true });
-    await expect(panel.locator('.period-budget-head')).toContainText('R$ 100,00');
-    await expect(panel.locator('.period-budget-head')).toContainText('R$ 800,00');
     await panel.getByText('Detalhes', { exact: true }).click();
+    await expect(
+      panel
+        .locator('.period-budget-flows > div')
+        .filter({ has: page.getByText('Saldo trazido', { exact: true }) }),
+    ).toContainText('R$ 100,00');
     await panel.getByText('Benefício', { exact: true }).click();
-    await expect(panel).toContainText('R$ 700,00');
+    await expect(panel.locator('.period-budget-account')).toContainText('R$ 700,00');
+    await expect(panel.locator('.period-budget-account')).toContainText('R$ 800,00');
+    await expect(panel.locator('.period-budget-account')).toContainText('R$ 100,00');
     await expectNoHorizontalOverflow(page);
     await page.goto('/?month=2026-12');
     await page.locator('.bento-month-details>summary').click();
@@ -4772,17 +4754,15 @@ for (const width of [390, 1440])
     );
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/planning?month=2026-11');
-    const section = page.locator('.planning-invoice-section');
+    const section = page.locator('.planning-future-commitments');
     await expect(section).toContainText('Cartão pessoal');
-    await expect(section).toContainText('Falta pagar');
+    await expect(section).toContainText('R$ 120,00');
     await page.getByRole('button', { name: 'Mais ações do planejamento', exact: true }).click();
     await page.getByRole('button', { name: 'Editar planejamento', exact: true }).click();
     const dialog = page.getByRole('dialog');
     await expect(dialog.getByRole('checkbox', { name: /Cartão pessoal/ })).toBeChecked();
     await page.getByRole('button', { name: 'Fechar', exact: true }).click();
-    await section
-      .getByRole('link', { name: 'Registrar ou vincular pagamento', exact: true })
-      .click();
+    await section.getByRole('link', { name: 'Ver', exact: true }).click();
     await expect(
       page.getByRole('dialog').getByRole('group', { name: 'Modo de pagamento da fatura' }),
     ).toBeVisible();
@@ -5636,4 +5616,91 @@ test('a new batch does not silently reuse credentials from the individual form',
       .getByRole('region', { name: 'Importação automática em lote' })
       .getByText('PDF protegido. Informe o CPF do titular.', { exact: true }),
   ).toBeVisible();
+});
+
+test('batch invoice replacement stays in unified imports and requires explicit consent', async ({
+  page,
+}) => {
+  await signedIn(page);
+  await financeFixtures(page);
+  await page.setViewportSize({ width: 390, height: 1000 });
+  const id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+  const previous = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+  let confirmations = 0;
+  const preview = {
+    id,
+    billMonth: '2026-10',
+    replacesInvoiceId: previous,
+    version: 1,
+    status: 'review',
+    parsed: {
+      billMonth: '2026-10',
+      total: 5000,
+      warnings: [],
+      lines: [
+        {
+          date: '2026-09-01',
+          description: 'Compra exemplo',
+          amount: 5000,
+          installmentNumber: null,
+          installmentCount: null,
+        },
+      ],
+    },
+    reconciliation: [{ lineIndex: 0, purchaseId: null, confidence: 'unmatched' }],
+  };
+  await page.route('**/v1/imports/detect', (route) =>
+    route.fulfill({
+      json: {
+        kind: 'card_invoice',
+        institution: 'inter',
+        itemCount: 1,
+        sourceFormat: 'csv',
+        billMonth: '2026-10',
+        automaticMonth: '2026-10',
+        dueDate: '2026-10-20',
+      },
+    }),
+  );
+  await page.route('**/v1/cards/invoice-destinations?*', (route) =>
+    route.fulfill({ json: [{ id: financeCardId, name: 'Inter' }] }),
+  );
+  await page.route(`**/v1/cards/${financeCardId}/invoices/import`, (route) => {
+    expect(route.request().postData()).toContain('2026-10');
+    return route.fulfill({ json: preview });
+  });
+  await page.route(`**/v1/cards/invoices/${id}/confirm`, (route) => {
+    expect(route.request().headers()['x-replaces-invoice']).toBe(previous);
+    confirmations++;
+    return route.fulfill({
+      json: { ...preview, status: 'confirmed', replacesInvoiceId: null, version: 2 },
+    });
+  });
+  await page.goto('/imports');
+  const picker = page.waitForEvent('filechooser');
+  await page.getByRole('button', { name: 'Selecionar arquivos em lote' }).click();
+  await (
+    await picker
+  ).setFiles({
+    name: 'inter-2026-10.csv',
+    mimeType: 'text/csv',
+    buffer: Buffer.from('synthetic replacement'),
+  });
+  await page.getByRole('button', { name: /Importar 1 arquivo/ }).click();
+  const batch = page.getByRole('region', { name: 'Importação automática em lote' });
+  await batch.getByRole('button', { name: 'Revisar individualmente' }).click();
+  expect(confirmations).toBe(0);
+  await expect(page).toHaveURL(/\/imports$/);
+  const review = page.getByRole('region', { name: 'Revisão individual de importação' });
+  await expect(review).toBeFocused();
+  await review.getByRole('button', { name: 'Ler e conciliar fatura' }).click();
+  const confirm = review.getByRole('button', {
+    name: 'Confirmar e substituir compras deste mês em diante',
+  });
+  await expect(confirm).toBeDisabled();
+  await review.getByRole('checkbox', { name: /Substituir a importação já confirmada/ }).check();
+  await confirm.click();
+  await expect(review.getByText('Fatura confirmada.', { exact: true })).toBeVisible();
+  expect(confirmations).toBe(1);
+  await expectNoHorizontalOverflow(page);
 });

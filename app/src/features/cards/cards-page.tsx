@@ -1,3 +1,4 @@
+import { PageHeader } from '../../shared/ui/page-header';
 import { cardHudArtwork } from './art/catalog';
 import '../../shared/ui/card-invoice-preview.css';
 import { useFinancialVisibility } from '../../shared/privacy/financial-visibility';
@@ -131,6 +132,7 @@ export function CardsPage() {
   };
   return (
     <div className="page-enter cards-page">
+      <PageHeader title="Cartões e faturas" compact />
       <section className="card-directory-surface" aria-label="Cartões cadastrados">
         {query.isPending ? (
           <Loading />

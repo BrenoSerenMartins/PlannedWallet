@@ -201,12 +201,12 @@ for (const width of [320, 390, 768, 1440])
       await page.setViewportSize({ width, height: 960 });
       await fixture(page, theme);
       await page.goto('/?month=2026-11');
-      await expect(page.getByRole('heading', { name: 'Visão geral', exact: true })).toBeVisible();
+      await expect(page.getByRole('region', { name: 'Saldos atuais', exact: true })).toBeVisible();
       await expect(page.locator('.hero-balance')).toHaveText('R$ 12.486,50');
       const dock = page.getByRole('navigation', { name: 'Navegação móvel' });
       if (width <= 1050) {
         await expect(dock).toBeVisible();
-        await expect(dock.getByRole('link')).toHaveCount(4);
+        await expect(dock.getByRole('link')).toHaveCount(5);
         const box = await dock.boundingBox();
         expect(box!.y + box!.height).toBeLessThan(960);
         const hero = await page.locator('.balance-hero').boundingBox();

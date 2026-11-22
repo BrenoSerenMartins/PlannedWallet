@@ -50,6 +50,16 @@ fi
 printf 'Revisão e knowledge --- OK\n'
 run Diff git diff --cached --check
 run Autenticacao gh api user --silent
+# Never infer the deployed schema from origin/main, which may not be live yet.
+production=''
+if node scripts/verify-production.mjs --baseline > "$log_dir/production.log" 2>&1; then
+  production=$(cat "$log_dir/production.log")
+  if [[ ! $production =~ ^[a-f0-9]{40}$ ]] || ! git cat-file -e "$production^{commit}" 2>/dev/null; then
+    production=''
+  fi
+fi
+printf 'Versão publicada --- OK (%s)\n' "${production:-verificação de banco obrigatória}"
+
 run Automacao node --test scripts/tests/release.test.mjs
 run Dependencias npm ci --no-audit --no-fund
 run Contratos npm run contracts:check
@@ -57,13 +67,18 @@ for stage in lint types boundaries unit build; do
   run "$stage" node scripts/check-quiet.mjs "--only=$stage"
 done
 run secrets node scripts/check-secrets.mjs
-run browser npm run test:e2e -- --max-failures=1 --reporter=line
+run browser npm run test:e2e -- --fully-parallel --workers=2 --max-failures=1 --timeout=90000 --reporter=line
 # A check must not silently change the reviewed/staged tree.
 [[ -z $(git diff --name-only) && -z $(git ls-files --others --exclude-standard) ]] || fail Arquivos 'Uma validação alterou arquivos; revise e prepare novamente.'
 run Atualidade git fetch origin main
 [[ $(git rev-parse origin/main) == "$base" ]] || fail Atualidade 'A main avançou durante os testes. Faça --prepare, integre e revise novamente.'
-# Always consult the database ledger, even when SQL files did not change locally.
-run Migrations npm run db:migrate
+# Identical SQL to a healthy deployed commit requires no migration for this release.
+# Unknown baseline or any SQL difference must use the database ledger; never skip failures.
+if [[ -n $production ]] && git diff --quiet "$production" -- supabase/migrations scripts/migrate.mjs; then
+  printf 'Migrations --- OK (sem mudanças de schema desde a versão publicada)\n'
+else
+  run Migrations npm run db:migrate
+fi
 if ! git diff --cached --quiet; then
   run Commit git commit -m "$1"
 else

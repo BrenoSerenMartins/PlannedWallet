@@ -388,3 +388,5 @@ Validation includes a local private encrypted PDF opened with CPF-derived creden
 
 ## Unified upload screen
 The Imports screen is titled “Importar extratos e faturas”. A single primary file picker accepts one or multiple documents through automatic detection; individual review appears only after a file is selected for review. Upload and history use explicit section buttons. The stepper belongs to an individual statement review, not the mixed batch upload landing page. Card and transaction screens link to `/imports`; Cards no longer maintains a separate invoice upload modal. The shared import page retains invoice destination, month, password/CPF, replacement consent and confirmation logic. Upload panels use scoped gutters, wrapping filenames and actions to fit narrow mobile layouts.
+
+Batch invoices requiring replacement or ambiguous reconciliation open individual review on the same Imports screen, including when the batch already has a card review URL. Only imported invoices navigate to Cards. Replacement remains opt-in through the existing checkbox and versioned confirmation headers.

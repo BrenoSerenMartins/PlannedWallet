@@ -115,3 +115,9 @@ The follow-up [navigation and task layout review](navigation-task-review.md) def
 ## Notifications and help
 
 Use [shared notifications and contextual help](notifications-help.md) for temporary feedback and compact explanations. Action confirmations use floating notices with session history; field validation and decisions affecting a financial operation remain beside their data. Use hover/focus descriptions for icon controls and explicit touch help for financial concepts. Tooltips must preserve the original action and accessible name.
+
+The compact shared header keeps the financial-visibility control at a minimum 44×44px touch target. Header text can truncate before reducing this target; keyboard names and the privacy behavior remain unchanged.
+
+The card wallet retains a compact PageHeader with an accessible level-one heading, even when the visual header is supplied by the shared app shell.
+
+Planning uses one canonical level-one page title; the visible “Visão futura” subtitle is level two with the existing visual styling preserved.

@@ -2,9 +2,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, copyFileSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, delimiter } from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { verifyProduction } from '../verify-production.mjs';
+import { verifyProduction, productionBaseline } from '../verify-production.mjs';
 
 const sha = 'a'.repeat(40);
 const deployment = { id: 1, sha, environment: 'main - plannedwallet-pilot' };
@@ -72,7 +72,7 @@ function fixture(t) {
   for (const command of ['npm', 'node', 'gh']) {
     writeFileSync(
       join(bin, command),
-      '#!/bin/sh\nprintf "%s\\n" "$*" >> "$CALLS"\nif [ "$*" = "run db:migrate" ] && [ "${FAIL_MIGRATION:-}" = 1 ]; then exit 1; fi\n',
+      '#!/bin/sh\nprintf "%s\\n" "$*" >> "$CALLS"\nif [ "$*" = "scripts/verify-production.mjs --baseline" ]; then printf "%s\\n" "$PRODUCTION_BASE"; fi\nif [ "$*" = "run db:migrate" ] && [ "${FAIL_MIGRATION:-}" = 1 ]; then exit 1; fi\n',
       { mode: 0o700 },
     );
   }
@@ -81,11 +81,22 @@ function fixture(t) {
     spawnSync('bash', ['deploy.sh', ...args], {
       cwd: work,
       encoding: 'utf8',
-      env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, CALLS: calls, ...extra },
+      env: {
+        ...process.env,
+        PATH: `${bin}${delimiter}${process.env.PATH}`,
+        CALLS: calls,
+        PRODUCTION_BASE: base,
+        ...extra,
+      },
     });
-  const stage = () => {
+  const stage = (migration = true) => {
     writeFileSync(join(work, 'knowledge', 'release.md'), 'Reviewed release\n');
     git('add', 'knowledge/release.md');
+    if (migration) {
+      mkdirSync(join(work, 'supabase', 'migrations'), { recursive: true });
+      writeFileSync(join(work, 'supabase', 'migrations', 'new.sql'), 'SELECT 1;\n');
+      git('add', 'supabase/migrations/new.sql');
+    }
   };
   return { root, remote, work, git, base, run, calls, stage };
 }
@@ -158,4 +169,29 @@ test('merge conflicts stop without discarding either side', (t) => {
   assert.equal(result.status, 2);
   assert.match(result.stderr, /Conflitos --- PENDENTE/);
   assert.match(readFileSync(join(f.work, 'knowledge', 'release.md'), 'utf8'), /<<<<<<< HEAD/);
+});
+
+test('identical schema to verified production does not require a database connection', (t) => {
+  const f = fixture(t);
+  f.stage(false);
+  const result = f.run(['Release', `--reviewed=${f.base}`], { FAIL_MIGRATION: '1' });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /sem mudanças de schema/);
+  assert.ok(!readFileSync(f.calls, 'utf8').includes('run db:migrate'));
+});
+test('unknown production baseline still requires database verification', (t) => {
+  const f = fixture(t);
+  f.stage(false);
+  const result = f.run(['Release', `--reviewed=${f.base}`], {
+    PRODUCTION_BASE: '',
+    FAIL_MIGRATION: '1',
+  });
+  assert.equal(result.status, 1, result.stderr);
+  assert.match(result.stderr, /Migrations --- FALHOU/);
+});
+test('baseline requires exact production environment, successful deployment and readiness', async () => {
+  const fixture = production('success');
+  assert.equal(await productionBaseline(fixture.args), sha);
+  await assert.rejects(productionBaseline(production('success', 503).args), /saudável/);
+  await assert.rejects(productionBaseline(production('in_progress').args), /Nenhuma versão/);
 });

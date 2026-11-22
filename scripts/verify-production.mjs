@@ -1,3 +1,6 @@
+import { fileURLToPath } from 'node:url';
+import { resolve } from 'node:path';
+import { devNull } from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { setTimeout } from 'node:timers/promises';
 
@@ -38,11 +41,30 @@ export async function verifyProduction({ sha, api, fetchUrl, sleep, attempts = 9
   );
 }
 
-if (process.argv[1] === new URL(import.meta.url).pathname) {
+export async function productionBaseline({ api, fetchUrl }) {
+  const root = 'repos/BrenoSerenMartins/PlannedWallet/deployments';
+  const deployments = await api(`${root}?per_page=100`);
+  for (const deployment of deployments) {
+    if (deployment.environment !== 'main - plannedwallet-pilot') continue;
+    const statuses = await api(`${root}/${deployment.id}/statuses`);
+    if (statuses[0]?.state !== 'success') continue;
+    if (!/^[a-f0-9]{40}$/.test(deployment.sha)) throw new Error('SHA de produção inválido.');
+    for (const path of ['/health', '/ready']) {
+      if ((await fetchUrl(`https://plannedwallet-pilot.onrender.com${path}`)).status !== 200)
+        throw new Error(
+          'A versão publicada não está saudável. Verifique o banco antes de publicar.',
+        );
+    }
+    return deployment.sha;
+  }
+  throw new Error(
+    'Nenhuma versão saudável de produção identificada; não é possível dispensar migrations.',
+  );
+}
+
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const sha = process.argv[2];
-  if (!/^[a-f0-9]{40}$/.test(sha ?? '')) throw new Error('Informe o SHA completo publicado.');
-  await verifyProduction({
-    sha,
+  const adapters = {
     api: async (path) =>
       JSON.parse(
         execFileSync('gh', ['api', path], {
@@ -61,7 +83,7 @@ if (process.argv[1] === new URL(import.meta.url).pathname) {
             '--max-time',
             '30',
             '--output',
-            '/dev/null',
+            devNull,
             '--write-out',
             '%{http_code}',
             url,
@@ -70,6 +92,10 @@ if (process.argv[1] === new URL(import.meta.url).pathname) {
         ),
       ),
     }),
-    sleep: setTimeout,
-  });
+  };
+  if (sha === '--baseline') console.log(await productionBaseline(adapters));
+  else {
+    if (!/^[a-f0-9]{40}$/.test(sha ?? '')) throw new Error('Informe o SHA completo publicado.');
+    await verifyProduction({ ...adapters, sha, sleep: setTimeout });
+  }
 }

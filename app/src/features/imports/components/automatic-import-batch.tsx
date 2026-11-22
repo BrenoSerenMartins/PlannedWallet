@@ -144,20 +144,22 @@ export function AutomaticImportBatch({
               </p>
             )}
             {row.message && <p>{row.message}</p>}
-            {row.reviewUrl && (
-              <Link to={row.reviewUrl}>
-                {row.status === 'imported' ? 'Ver importação' : 'Revisar este arquivo'}
-              </Link>
-            )}
-            {(row.status === 'review' || row.status === 'error') && !row.reviewUrl && (
-              <Button
-                className="secondary compact"
-                disabled={batch.busy}
-                onClick={() => onReview(row)}
-              >
-                Revisar individualmente
-              </Button>
-            )}
+            {row.reviewUrl &&
+              (row.detected?.kind !== 'card_invoice' || row.status === 'imported') && (
+                <Link to={row.reviewUrl}>
+                  {row.status === 'imported' ? 'Ver importação' : 'Revisar este arquivo'}
+                </Link>
+              )}
+            {(row.status === 'review' || row.status === 'error') &&
+              (!row.reviewUrl || row.detected?.kind === 'card_invoice') && (
+                <Button
+                  className="secondary compact"
+                  disabled={batch.busy}
+                  onClick={() => onReview(row)}
+                >
+                  Revisar individualmente
+                </Button>
+              )}
           </li>
         ))}
       </ul>

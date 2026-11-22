@@ -70,10 +70,4 @@ if [[ -n $(git status --porcelain --untracked-files=normal) ]]; then
 fi
 run 'Push da main' git push origin main
 
-printf 'Commit publicado --- %s\n' "$(git rev-parse --short HEAD)"
-health_url=${PLANNEDWALLET_READY_URL:-https://plannedwallet.onrender.com/ready}
-if curl --silent --fail --max-time 10 "$health_url" >"$log_dir/render-ready.log"; then
-  printf 'Render /ready --- OK (saúde do serviço, versão ainda não confirmada)\n'
-else
-  printf 'Render /ready --- PENDENTE (push concluído)\n'
-fi
+printf 'Commit enviado --- %s\n' "$(git rev-parse --short HEAD)"

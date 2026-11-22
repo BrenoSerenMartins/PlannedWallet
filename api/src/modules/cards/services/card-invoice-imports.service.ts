@@ -29,6 +29,7 @@ export class CardInvoiceImportsService {
   ) {}
 
   private candidates(lines: CardInvoiceLine[], cardId: string, month: string) {
+    const used = new Set<string>();
     return this.cards.snapshot().then((data) =>
       lines.map((line, index) => {
         const description = normalized(
@@ -54,6 +55,9 @@ export class CardInvoiceImportsService {
                   purchase.installments === line.installmentCount)),
           ),
         );
+        if (matches.length === 1 && used.has(matches[0].id))
+          return { lineIndex: index, purchaseId: null, confidence: 'unmatched' };
+        if (matches.length === 1) used.add(matches[0].id);
         return {
           lineIndex: index,
           purchaseId: matches.length === 1 ? matches[0].id : null,

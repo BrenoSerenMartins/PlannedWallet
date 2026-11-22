@@ -236,11 +236,18 @@ export class CardsService implements CardForecast, ManagedBackup<CardsSnapshot> 
       matched.some(
         (purchaseId) =>
           !bill?.entries.some((entry) => entry.active && entry.purchaseId === purchaseId),
-      ) ||
-      bill?.entries.some((entry) => entry.active && entry.kind !== 'purchase')
+      )
     )
       throw new ConflictException(
-        'A fatura diverge dos lançamentos registrados. Confira os valores e as parcelas antes de confirmar.',
+        'Há compras com correspondência ambígua entre o PDF e o cartão. Confira nomes, valores e parcelas no ciclo selecionado.',
+      );
+    if (
+      bill?.entries.some(
+        (entry) => entry.active && entry.kind !== 'purchase' && entry.kind !== 'opening',
+      )
+    )
+      throw new ConflictException(
+        'A fatura já tem estornos ou ajustes ativos. Confira esses registros antes de substituir o ciclo.',
       );
 
     const omitted = [
@@ -264,6 +271,16 @@ export class CardsService implements CardForecast, ManagedBackup<CardsSnapshot> 
       throw new ConflictException(
         'Concilie os pagamentos já registrados e o saldo dos ciclos anteriores antes de aplicar os ajustes da fatura.',
       );
+    for (const entry of bill?.entries ?? []) {
+      if (!entry.active || entry.kind !== 'opening') continue;
+      await this.cancelOpening(
+        id,
+        entry.id,
+        String(card.version),
+        `${importId}:opening:${entry.id}`,
+      );
+      card = await this.card(id);
+    }
     for (const purchaseId of omitted) {
       if (
         currentCard.bills.some(

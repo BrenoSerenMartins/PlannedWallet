@@ -1863,7 +1863,8 @@ it('confirms an encrypted invoice once and projects only current and remaining i
 
 it('replaces an omitted manual purchase and uses the disclosed invoice balance adjustment', async () => {
   const { card } = await makeCard('Invoice replacement');
-  const omitted = await purchase(card.id, card.version, 2500, 1);
+  await run(() => cards.opening(card.id, '2026-11', 3000, String(card.version), randomUUID()));
+  const omitted = await purchase(card.id, (await currentCard(card.id)).version, 2500, 1);
   await run(() =>
     cards.applyInvoice(
       card.id,

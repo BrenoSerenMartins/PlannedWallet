@@ -181,7 +181,6 @@ export function AccountsPage() {
         open={open}
         onOpenChange={setOpen}
         title={editing ? 'Editar conta' : 'Adicionar conta'}
-        description="Identifique a conta e importe seu histórico ou adicione movimentos."
       >
         <AccountForm
           key={editing?.id ?? 'new'}

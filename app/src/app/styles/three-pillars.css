@@ -1440,139 +1440,23 @@
   width: 100%;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   min-width: 0;
-  gap: 12px;
+  gap: 0 12px;
 }
 :root[data-ui='bento'] body .page-content .planning-page .planning-result-footer-row > span {
   flex: 0 0 auto;
   white-space: nowrap;
 }
-:root[data-ui='bento'] body .page-content .planning-page .period-budget-hero {
-  display: flex;
-  flex: 0 0 auto;
-  min-width: 0;
-  margin: 0;
-  padding: 0;
-}
-:root[data-ui='bento']
-  body
-  .page-content
-  .planning-page
-  .period-budget-hero:has(> .period-budget-details[open]) {
-  display: block;
-}
-:root[data-ui='bento']
-  body
-  .page-content
-  .planning-page
-  .period-budget-hero
-  .period-budget-details {
-  flex: 0 0 auto;
-  margin: 0;
-}
-:root[data-ui='bento']
-  body
-  .page-content
-  .planning-page
-  .period-budget-hero
-  .period-budget-details
-  > summary {
+:root[data-ui='bento'] body .page-content .planning-page .planning-balance-link {
   display: inline-flex;
-  min-height: 32px;
   align-items: center;
-  gap: 5px;
-  padding: 4px 10px;
-  border: 1px solid rgba(212, 175, 55, 0.22);
-  border-radius: var(--radius-pill);
-  background: rgba(212, 175, 55, 0.1);
+  min-height: 44px;
+  gap: 4px;
   color: var(--gold-soft);
-  font-size: 11px;
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
-}
-:root[data-ui='bento']
-  body
-  .page-content
-  .planning-page
-  .period-budget-hero
-  .period-budget-details
-  > summary::-webkit-details-marker {
-  display: none;
-}
-:root[data-ui='bento']
-  body
-  .page-content
-  .planning-page
-  .period-budget-hero
-  .period-budget-details
-  > summary
-  > svg {
-  transition: transform 160ms ease;
-}
-:root[data-ui='bento']
-  body
-  .page-content
-  .planning-page
-  .period-budget-hero
-  .period-budget-details[open]
-  > summary
-  > svg {
-  transform: rotate(180deg);
-}
-:root[data-ui='bento'] body .page-content .planning-page .period-budget-hero .period-budget-head {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 18px;
-  margin: 12px 0;
-}
-:root[data-ui='bento']
-  body
-  .page-content
-  .planning-page
-  .period-budget-hero
-  .period-budget-head
-  > div {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-}
-:root[data-ui='bento']
-  body
-  .page-content
-  .planning-page
-  .period-budget-hero
-  .period-budget-head
-  span,
-:root[data-ui='bento']
-  body
-  .page-content
-  .planning-page
-  .period-budget-hero
-  .period-budget-details
-  .field-help {
-  color: var(--text-secondary);
-  font-size: 12px;
-}
-:root[data-ui='bento']
-  body
-  .page-content
-  .planning-page
-  .period-budget-hero
-  .period-budget-head
-  strong {
-  color: var(--text-primary);
-  font-size: 13px;
-  font-variant-numeric: tabular-nums;
-}
-:root[data-ui='bento']
-  body
-  .page-content
-  .planning-page
-  .period-budget-hero
-  .period-budget-flows
-  > div {
-  gap: 8px 16px;
 }
 :root[data-ui='bento'] body .page-content .planning-page .planning-included {
   flex-wrap: nowrap;
@@ -1713,10 +1597,10 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: var(--gold-primary);
+  background: var(--success);
 }
 :root[data-ui='bento'] body .page-content .planning-page .budget-expense .budget-progress > i {
-  background: var(--success);
+  background: var(--gold-primary);
 }
 :root[data-ui='bento']
   body
@@ -2348,57 +2232,6 @@
     justify-content: center;
     white-space: nowrap;
   }
-}
-
-:root[data-ui='bento']
-  body
-  .page-content
-  .planning-page
-  .planning-result-footer-row:has(.period-budget-details[open]) {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  align-items: start;
-  gap: 8px;
-}
-:root[data-ui='bento']
-  body
-  .page-content
-  .planning-page
-  .period-budget-hero:has(.period-budget-details[open]) {
-  width: 100%;
-  text-align: start;
-}
-:root[data-ui='bento']
-  body
-  .page-content
-  .planning-page
-  .period-budget-hero
-  .period-budget-details {
-  width: 100%;
-  min-width: 0;
-}
-:root[data-ui='bento']
-  body
-  .page-content
-  .planning-page
-  .period-budget-hero
-  .period-budget-flows
-  > div {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: start;
-  gap: 4px 10px;
-}
-:root[data-ui='bento']
-  body
-  .page-content
-  .planning-page
-  .period-budget-hero
-  .period-budget-flows
-  dd {
-  margin: 0;
-  text-align: end;
-  font-variant-numeric: tabular-nums;
 }
 
 :root[data-ui='bento']

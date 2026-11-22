@@ -1,4 +1,4 @@
-import { PeriodBudget } from '../../../shared/ui/period-budget';
+import { Link } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { HelpTip } from '../../../shared/ui/tooltip';
 import { ArrowDownLeft, ArrowUpRight, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -94,11 +94,12 @@ export function PlanningSummary({
           <div className="planning-result-footer">
             <div className="planning-result-footer-row">
               <span>Previsto: {display(t.plannedResult)}</span>
-              <PeriodBudget
-                budget={plan.budget}
-                forecast={{ result: t.plannedResult, contribution: plan.contribution }}
-                variant="hero"
-              />
+              {!!plan.budget?.accounts.length && (
+                <Link to="/accounts" className="planning-balance-link">
+                  {plan.budget.coverage === 'complete' ? 'Ver contas' : 'Conferir saldos'}
+                  <ChevronRight size={14} aria-hidden="true" />
+                </Link>
+              )}
             </div>
             <div
               className="planning-result-meter"

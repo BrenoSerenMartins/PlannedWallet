@@ -66,7 +66,7 @@ export function FinanceChoices({
   categories?: ReturnType<typeof useFinanceChoices>['categories'];
   children: ReactNode;
 }) {
-  if (accounts.isPending || categories?.isPending) return <Loading />;
+  if (accounts.isPending || categories?.isPending) return <Loading layout="form" />;
   if (accounts.isError || categories?.isError)
     return (
       <ErrorState

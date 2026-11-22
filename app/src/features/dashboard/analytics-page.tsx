@@ -75,7 +75,7 @@ export function AnalyticsPage() {
             </Link>
           </div>
           {summary.isPending ? (
-            <Loading />
+            <Loading layout="chart" />
           ) : summary.isError ? (
             <ErrorState error={summary.error} retry={() => void summary.refetch()} />
           ) : !visible ? (
@@ -138,7 +138,7 @@ export function AnalyticsPage() {
             </Link>
           </div>
           {goals.isPending ? (
-            <Loading />
+            <Loading layout="chart" />
           ) : goals.isError ? (
             <ErrorState error={goals.error} retry={() => void goals.refetch()} />
           ) : !goals.data.goals.filter((g) => g.status !== 'archived').length ? (

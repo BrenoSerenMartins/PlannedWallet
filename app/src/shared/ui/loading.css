@@ -1,0 +1,185 @@
+.hud-loading {
+  --loading-surface: var(--grad-card, var(--surface));
+  --loading-block: var(--bg-elevated, var(--surface-raised));
+  --loading-highlight: color-mix(in srgb, var(--loading-block), var(--text) 7%);
+  --loading-padding: var(--bento-card-padding, 16px);
+  min-width: 0;
+  width: 100%;
+}
+
+.hud-loading .hud-loading-content,
+.hud-loading .hud-loading-copy,
+.hud-loading .hud-loading-hero,
+.hud-loading .hud-loading-metric {
+  display: grid;
+  min-width: 0;
+  gap: 10px;
+}
+
+.hud-loading .hud-placeholder {
+  display: block;
+  min-width: 0;
+  border-radius: var(--radius-pill, 999px);
+  background: var(--loading-block);
+  animation: hud-loading-pulse 1.6s ease-in-out infinite alternate;
+}
+
+.hud-loading .hud-loading-row {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) minmax(44px, 20%);
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+}
+
+.hud-loading-form .hud-loading-row {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.hud-loading .hud-loading-icon,
+.hud-loading .hud-loading-field {
+  border-radius: var(--radius-sm, 12px);
+}
+
+.hud-loading .hud-loading-icon {
+  height: 38px;
+}
+.hud-loading .hud-loading-field {
+  height: 44px;
+}
+.hud-loading .hud-loading-label {
+  width: min(96px, 74%);
+  height: 10px;
+}
+.hud-loading .hud-loading-meta {
+  width: min(68px, 52%);
+  height: 8px;
+}
+.hud-loading .hud-loading-amount {
+  width: 100%;
+  height: 12px;
+}
+.hud-loading .hud-loading-value {
+  width: min(152px, 82%);
+  height: 24px;
+}
+.hud-loading .hud-loading-meter {
+  height: 5px;
+  margin-top: 8px;
+}
+
+.hud-loading-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.hud-loading .hud-loading-metric,
+.hud-loading:not(.hud-loading-balance) .hud-loading-hero {
+  padding: var(--loading-padding);
+  border-radius: var(--radius-bento, 24px);
+  background: var(--loading-surface);
+  box-shadow: inset 0 1px 0 var(--border);
+}
+
+.hud-loading-planning .hud-loading-hero,
+.hud-loading-cards .hud-loading-hero {
+  background: var(--grad-hero, var(--loading-surface));
+}
+
+.hud-loading-cards .hud-loading-hero {
+  align-content: center;
+  aspect-ratio: 1.586;
+  width: min(100%, 320px);
+  justify-self: center;
+}
+
+.hud-loading-bars {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  align-items: end;
+  gap: 12px;
+  height: 112px;
+}
+
+.hud-loading-bars .hud-placeholder {
+  border-radius: var(--radius-sm, 12px) var(--radius-sm, 12px) 4px 4px;
+}
+
+@keyframes hud-loading-pulse {
+  to {
+    background-color: var(--loading-highlight);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hud-loading .hud-placeholder {
+    animation: none;
+  }
+}
+
+.app-loading-brand {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  color: var(--text-primary, var(--text));
+  font-size: clamp(24px, 6vw, 32px);
+  font-weight: 700;
+  letter-spacing: -0.045em;
+}
+
+.app-loading-brand .logo-symbol {
+  width: 72px;
+  height: 72px;
+  color: var(--gold-primary, var(--accent));
+  filter: drop-shadow(0 0 24px color-mix(in srgb, currentColor, transparent 65%));
+  animation: hud-brand-reveal 480ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
+}
+
+.app-loading-brand > span {
+  animation: hud-brand-reveal 400ms 110ms ease-out both;
+}
+
+body .app-loading {
+  position: fixed;
+  z-index: 150;
+  inset: 0;
+  min-height: 100dvh;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at center, var(--gold-muted), transparent 55%), var(--bg-base);
+}
+
+@keyframes hud-brand-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-loading-brand .logo-symbol,
+  .app-loading-brand > span {
+    animation: none;
+  }
+}
+
+body .app-loading.app-loading-ready {
+  animation: hud-boot-fade 240ms ease-in both;
+}
+
+@keyframes hud-boot-fade {
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body .app-loading.app-loading-ready {
+    animation: none;
+  }
+}

@@ -98,7 +98,6 @@ export function CompactForecast({
         open={!!detail}
         onOpenChange={(open) => !open && setSelected(null)}
         title={detail?.description ?? 'Vencimento'}
-        description="Detalhes do compromisso previsto."
       >
         {detail && (
           <div className="forecast-preview-detail">

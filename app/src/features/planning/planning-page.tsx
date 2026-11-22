@@ -58,7 +58,7 @@ function MonthlyBudgetPage({ navigation }: { navigation?: ReactNode }) {
     <div className="page-enter planning-page">
       <h1 className="sr-only">Planejamento mensal</h1>
       {query.isPending ? (
-        <Loading />
+        <Loading layout="planning" />
       ) : query.isError ? (
         <ErrorState error={query.error} retry={() => void query.refetch()} />
       ) : (
@@ -141,7 +141,6 @@ function MonthlyBudgetPage({ navigation }: { navigation?: ReactNode }) {
               open={dialog === 'edit'}
               onOpenChange={(open) => !open && setDialog(null)}
               title="Preparar planejamento"
-              description="Defina os valores previstos para o mês selecionado."
             >
               {dialog === 'edit' && <PlanForm plan={plan} onSave={save} onSaved={saved} />}
             </Modal>
@@ -149,7 +148,6 @@ function MonthlyBudgetPage({ navigation }: { navigation?: ReactNode }) {
               open={dialog === 'copy'}
               onOpenChange={(open) => !open && setDialog(null)}
               title="Revisar cópia do mês anterior"
-              description="Confira o que será substituído antes de confirmar."
             >
               {dialog === 'copy' && <CopyPlanDialog plan={plan} onCopy={copy} onCopied={saved} />}
             </Modal>

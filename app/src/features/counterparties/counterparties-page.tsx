@@ -144,7 +144,7 @@ export function CounterpartiesPage() {
         open={creating}
         onOpenChange={(open) => !busy && setCreating(open)}
         title="Nova pessoa ou estabelecimento"
-        description="Use um nome que você reconheça. As regras podem ser definidas depois."
+        description="Você pode criar regras depois."
       >
         <form
           className="form-stack"

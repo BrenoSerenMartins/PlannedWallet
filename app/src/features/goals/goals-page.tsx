@@ -27,7 +27,7 @@ export function GoalsPage() {
   }
   return (
     <div className="page-enter goals-page">
-      <PageHeader title="Metas e reservas" description="Dê um destino ao dinheiro que você já tem.">
+      <PageHeader title="Metas e reservas">
         <Button onClick={() => setDialog('new')}>Nova meta</Button>
       </PageHeader>
       {query.isPending ? (

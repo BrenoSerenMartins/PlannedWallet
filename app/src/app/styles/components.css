@@ -136,24 +136,6 @@
 .error-state strong {
   font-size: 13px;
 }
-.loading {
-  padding: 25px;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-.skeleton {
-  height: 58px;
-  background: linear-gradient(90deg, var(--surface-raised), var(--surface), var(--surface-raised));
-  background-size: 200% 100%;
-  animation: shimmer 1.4s ease-in-out infinite;
-  border-radius: 12px;
-}
-@keyframes shimmer {
-  to {
-    background-position: -200% 0;
-  }
-}
 .transaction-row {
   display: flex;
   width: 100%;

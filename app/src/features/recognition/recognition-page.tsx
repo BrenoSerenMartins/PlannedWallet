@@ -38,11 +38,10 @@ export function RecognitionPage() {
     <div className="page-enter">
       <PageHeader
         title="Revisão assistida"
-        description="Confira identificações, categorias e possíveis pagamentos de fatura antes de aplicar."
+        description="Revise sugestões de categoria, identificação e pagamento."
       />
       <p className="field-help">
-        Até 500 lançamentos recentes sem categoria são analisados. Escolhas manuais são preservadas.
-        Cada confirmação mostra o que vai mudar; valores e datas permanecem os mesmos.
+        Até 500 lançamentos sem categoria. Suas escolhas manuais são preservadas.
       </p>
       {error && (
         <p className="form-error" role="alert">
@@ -123,8 +122,7 @@ export function RecognitionPage() {
       <details className="finance-disclosure">
         <summary>Alterações recentes e desfazer</summary>
         <p className="field-help">
-          Pagamentos de fatura podem ser desfeitos em Cartões. Categorias e identificações só podem
-          ser desfeitas aqui enquanto o lançamento não tiver sido editado novamente.
+          Desfaça pagamentos em Cartões. Aqui, alterações só podem ser desfeitas antes de uma nova edição.
         </p>
         {changes.data?.map((c) => (
           <div key={c.id} className="goal-event">

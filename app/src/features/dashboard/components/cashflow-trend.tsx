@@ -90,7 +90,7 @@ export function CashflowTrend({ month, visible }: { month: string; visible: bool
         </div>
       </div>
       {state.isPending ? (
-        <Loading />
+        <Loading layout="chart" />
       ) : state.isError ? (
         <ErrorState error={state.error} retry={() => void state.refetch()} />
       ) : !visible ? (

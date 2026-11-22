@@ -1,6 +1,8 @@
 # Statement imports
 
 ## Credit card invoices
+The main Import destination handles invoices and account statements. The card HUD keeps purchase and prior balance actions.
+
 A confirmed invoice defines purchases, invoice adjustments and installment projections for its card from the statement's due month onward. Confirmation reverses active card entries in that range and rebuilds them from the file. Entries in earlier cycles and bank payment links are retained. Superseded entries remain auditable and are excluded from ordinary ledger and bill history. A newer confirmation for the same range supersedes affected import records in that range. An explicitly reapplied file rebuilds the range again. An exact match can carry forward an active expense category.
 
 Before import, users can set the due month's total. Each edit reverses the previous manual adjustment and posts the difference against the remaining entries, with one active adjustment at most. Confirmed imported cycles reject direct total edits. Changes to the source are made by importing an updated invoice.

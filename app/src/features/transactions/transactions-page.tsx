@@ -267,7 +267,6 @@ export function TransactionsPage() {
           open={filtersOpen}
           onOpenChange={setFiltersOpen}
           title="Filtros avançados"
-          description="Escolha o período e refine os resultados."
         >
           <div className="movement-filter-form">
             <div className="movement-period">
@@ -411,7 +410,7 @@ export function TransactionsPage() {
             A data inicial deve ser anterior ou igual à data final.
           </p>
         ) : entries.isPending ? (
-          <Loading />
+          <Loading layout="list" />
         ) : entries.isError ? (
           <ErrorState error={entries.error} retry={() => void entries.refetch()} />
         ) : items.length ? (
@@ -541,7 +540,7 @@ export function TransactionsPage() {
         )}
         {selected && <TransactionSources transactionId={selected.id} />}
         {transactionId && requestedTransaction.isPending ? (
-          <Loading />
+          <Loading layout="list" />
         ) : requestedTransaction.isError ? (
           <ErrorState
             error={requestedTransaction.error}
@@ -550,7 +549,7 @@ export function TransactionsPage() {
         ) : accounts.isError || categories.isError ? (
           <ErrorState error={accounts.error ?? categories.error} />
         ) : accounts.isPending || categories.isPending ? (
-          <Loading />
+          <Loading layout="form" />
         ) : selected?.managedKind ? (
           <div className="form-stack">
             <p>

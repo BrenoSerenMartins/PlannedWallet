@@ -248,7 +248,7 @@ for (const width of [360, 390, 768, 1440])
     await expect(
       page.getByRole('heading', { name: 'Importar extratos e faturas', exact: true }),
     ).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Selecionar arquivos em lote' })).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Selecionar arquivos' })).toBeEnabled();
     await page.goto('/settings');
     await expect(page.getByRole('heading', { name: 'Preferências', exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
@@ -593,7 +593,7 @@ test('batch uploads run sequentially, keep successful files after errors and lin
   );
   await page.getByRole('button', { name: /Importar 3 arquivo/ }).click();
   await expect.poll(() => count).toBe(1);
-  await expect(page.getByRole('button', { name: 'Selecionar arquivos em lote' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Selecionar arquivos' })).toBeDisabled();
   releaseFirst();
   const results = page.getByRole('region', { name: 'Importação automática em lote' });
   await expect(
@@ -4296,6 +4296,19 @@ test('invalid typed dates prevent a financial form from saving the previous date
   await expect(date).toBeFocused();
 });
 
+test('mobile intro reveals the brand once per tab', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await signedIn(page);
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  const intro = page.locator('.app-loading-intro');
+  await expect(intro).toContainText('PlannedWallet');
+  await expect(intro.locator('.logo-symbol')).toBeVisible();
+  await expect(intro).toHaveCount(0);
+  await page.reload();
+  await expect(page.locator('.app-shell')).not.toHaveClass(/app-entry/);
+  await expect(intro).toHaveCount(0);
+});
+
 test('app entry fades once per tab and keeps reduced motion static', async ({ page }) => {
   await signedIn(page);
   await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -4609,6 +4622,13 @@ for (const width of [390, 1440]) {
       route.fulfill({ json: { ...monthlyPlan('2026-12'), budget } }),
     );
     await page.goto('/planning?month=2026-12');
+    await expect(page.getByRole('link', { name: 'Ver contas', exact: true })).toHaveAttribute(
+      'href',
+      '/accounts',
+    );
+    await expectNoHorizontalOverflow(page);
+    await page.goto('/?month=2026-12');
+    await page.locator('.bento-month-details>summary').click();
     const panel = page.getByRole('region', { name: 'Disponível no período', exact: true });
     await panel.getByText('Detalhes', { exact: true }).click();
     await expect(
@@ -4621,9 +4641,6 @@ for (const width of [390, 1440]) {
     await expect(panel.locator('.period-budget-account')).toContainText('R$ 800,00');
     await expect(panel.locator('.period-budget-account')).toContainText('R$ 100,00');
     await expectNoHorizontalOverflow(page);
-    await page.goto('/?month=2026-12');
-    await page.locator('.bento-month-details>summary').click();
-    await expect(panel.locator('.period-budget-head')).toContainText('R$ 100,00');
     await page.getByRole('button', { name: 'Ocultar valores', exact: true }).click();
     await expect(panel).not.toContainText('R$');
   });
@@ -5220,14 +5237,19 @@ test('Banco do Brasil detection proposes its own account rather than a Mercado P
 });
 
 for (const width of [360, 654, 1440])
-  test(`card invoice shortcut opens unified imports without duplicate upload panels at ${width}px`, async ({
+  test(`primary navigation opens unified imports without duplicate upload panels at ${width}px`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 1000 });
     await signedIn(page);
     await financeFixtures(page);
     await page.goto(`/cards?card=${financeCardId}&month=2026-11`);
-    await page.getByRole('link', { name: 'Importar extratos e faturas', exact: true }).click();
+    await expect(
+      page.locator('.card-bill-toolbar').getByRole('link', { name: /Importar/ }),
+    ).toHaveCount(0);
+    await page
+      .getByRole('link', { name: width < 851 ? 'Importar' : 'Importações', exact: true })
+      .click();
     await expect(page).toHaveURL(/\/imports$/);
     await expect(
       page.getByRole('heading', { name: 'Importar extratos e faturas', exact: true }),
@@ -5235,7 +5257,7 @@ for (const width of [360, 654, 1440])
     await expect(
       page.getByRole('region', { name: 'Revisão individual de importação' }),
     ).toBeHidden();
-    await expect(page.getByRole('button', { name: 'Selecionar arquivos em lote' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Selecionar arquivos' })).toBeVisible();
     await expectNoHorizontalOverflow(page);
     const panel = page.getByRole('region', { name: 'Importação automática em lote' });
     const layout = await panel.evaluate((element) => {
@@ -5345,7 +5367,7 @@ for (const width of [390, 1440])
     });
     await page.goto('/imports');
     const chooser = page.waitForEvent('filechooser');
-    await page.getByRole('button', { name: 'Selecionar arquivos em lote' }).click();
+    await page.getByRole('button', { name: 'Selecionar arquivos' }).click();
     await (
       await chooser
     ).setFiles([
@@ -5440,7 +5462,7 @@ test('individual review opens visibly and resumes a protected PDF after requesti
   });
   await page.goto('/imports');
   const chooser = page.waitForEvent('filechooser');
-  await page.getByRole('button', { name: 'Selecionar arquivos em lote' }).click();
+  await page.getByRole('button', { name: 'Selecionar arquivos' }).click();
   await (
     await chooser
   ).setFiles({
@@ -5493,7 +5515,7 @@ test('a recognized batch file opens individual routing without repeating its suc
   });
   await page.goto('/imports');
   const chooser = page.waitForEvent('filechooser');
-  await page.getByRole('button', { name: 'Selecionar arquivos em lote' }).click();
+  await page.getByRole('button', { name: 'Selecionar arquivos' }).click();
   await (
     await chooser
   ).setFiles({ name: 'unknown-month.csv', mimeType: 'text/csv', buffer: Buffer.from('synthetic') });
@@ -5559,7 +5581,7 @@ test('batch CPF unlock credentials survive analysis until upload and never enter
   await expect(cpfField).toHaveCount(0);
   async function selectBatch() {
     const chooser = page.waitForEvent('filechooser');
-    await batch.getByRole('button', { name: 'Selecionar arquivos em lote' }).click();
+    await batch.getByRole('button', { name: 'Selecionar arquivos' }).click();
     await (
       await chooser
     ).setFiles({
@@ -5603,7 +5625,7 @@ test('a new batch does not silently reuse credentials from the individual form',
   });
   await page.getByLabel('CPF do titular do PDF (opcional)', { exact: true }).fill(cpf);
   const chooser = page.waitForEvent('filechooser');
-  await page.getByRole('button', { name: 'Selecionar arquivos em lote' }).click();
+  await page.getByRole('button', { name: 'Selecionar arquivos' }).click();
   await (
     await chooser
   ).setFiles({
@@ -5678,7 +5700,7 @@ test('batch invoice replacement stays in unified imports and requires explicit c
   });
   await page.goto('/imports');
   const picker = page.waitForEvent('filechooser');
-  await page.getByRole('button', { name: 'Selecionar arquivos em lote' }).click();
+  await page.getByRole('button', { name: 'Selecionar arquivos' }).click();
   await (
     await picker
   ).setFiles({

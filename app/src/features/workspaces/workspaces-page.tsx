@@ -193,7 +193,6 @@ export function WorkspacesPage() {
         open={open}
         onOpenChange={setOpen}
         title="Um novo espaço"
-        description="Dê um nome e uma identidade para esta parte da sua vida financeira."
       >
         {open && <CreateWorkspaceForm />}
       </Modal>

@@ -72,23 +72,24 @@ export function ErrorState({ error, retry }: { error: unknown; retry?: () => voi
     </div>
   );
 }
-export function Loading() {
+export { Loading } from './loading';
+export function StartupScreen({
+  intro = false,
+  ready = false,
+}: {
+  intro?: boolean;
+  ready?: boolean;
+}) {
   return (
-    <div aria-label="Carregando" role="status" className="loading">
-      <div className="skeleton" />
-      <div className="skeleton" />
-      <div className="skeleton" />
-    </div>
-  );
-}
-export function StartupScreen() {
-  return (
-    <div aria-label="Carregando PlannedWallet" role="status" className="app-loading">
-      <Logo />
-      <span className="app-loading-orbit" aria-hidden="true">
-        <i />
-      </span>
-      <span className="app-loading-caption">Organizando seu dinheiro</span>
+    <div
+      className={`app-loading${intro ? ' app-loading-intro' : ''}${ready ? ' app-loading-ready' : ''}`}
+      role="status"
+      aria-label="Carregando PlannedWallet"
+    >
+      <div className="app-loading-brand" aria-hidden="true">
+        <BrandSymbol />
+        <span>PlannedWallet</span>
+      </div>
     </div>
   );
 }

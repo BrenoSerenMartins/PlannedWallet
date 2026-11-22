@@ -87,7 +87,7 @@ export function HistoryOverview({
         </div>
       </div>
       {history.isPending ? (
-        <Loading />
+        <Loading layout="chart" />
       ) : history.isError ? (
         <ErrorState error={history.error} retry={() => void history.refetch()} />
       ) : !visible ? (

@@ -9,7 +9,7 @@ import { productName } from '../shared/brand';
 import { NotificationCenter } from '../shared/feedback/notification-center';
 import { useNotifications } from '../shared/feedback/notification-provider';
 import { useWorkspace } from '../features/workspaces/workspace-provider';
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
   CreditCard,
@@ -32,7 +32,7 @@ import {
   ScanSearch,
 } from 'lucide-react';
 import { useAuth } from '../features/auth/auth-provider';
-import { Logo, Modal } from '../shared/ui/primitives';
+import { Loading, Logo, Modal } from '../shared/ui/primitives';
 import { BrandSymbol } from '../shared/ui/brand-symbol';
 const navigation = [
   { to: '/', label: 'Visão geral', mobile: 'Início', Icon: House },
@@ -286,7 +286,9 @@ function ShellContent() {
           </div>
         </header>
         <main id="main-content" className="page-content">
-          <Outlet />
+          <Suspense fallback={<Loading />}>
+            <Outlet />
+          </Suspense>
         </main>
       </div>
       {createPortal(

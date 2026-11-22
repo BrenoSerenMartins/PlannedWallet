@@ -345,7 +345,7 @@ export function ImportsPage() {
         description={
           importId
             ? (batch.data?.fileName ?? 'Confira os movimentos antes de concluir.')
-            : 'Envie arquivos de bancos e meses diferentes e confira os dados antes de confirmar.'
+            : undefined
         }
       >
         {importId && (

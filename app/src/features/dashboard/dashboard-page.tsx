@@ -105,7 +105,7 @@ export function DashboardPage() {
       </header>
       <section className="bento-hero-gold balance-hero current-balances" aria-label="Saldos atuais">
         {snapshot.isPending ? (
-          <Loading />
+          <Loading layout="balance" />
         ) : snapshot.isError ? (
           <ErrorState error={snapshot.error} retry={() => void snapshot.refetch()} />
         ) : (
@@ -233,7 +233,7 @@ export function DashboardPage() {
       </div>
       {plan.isPending ? (
         <div className="bento-wide">
-          <Loading />
+          <Loading layout="summary" />
         </div>
       ) : plan.isError ? (
         <div className="bento-wide">

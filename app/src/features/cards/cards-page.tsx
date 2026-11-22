@@ -6,7 +6,7 @@ import { MonthPicker } from '../../shared/ui/controls/month-picker';
 import { HelpTip, Tooltip } from '../../shared/ui/tooltip';
 import { useNotifications } from '../../shared/feedback/notification-provider';
 import { useState, useEffect, useRef } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   CreditCard as CreditIcon,
@@ -135,7 +135,7 @@ export function CardsPage() {
       <PageHeader title="Cartões e faturas" compact />
       <section className="card-directory-surface" aria-label="Cartões cadastrados">
         {query.isPending ? (
-          <Loading />
+          <Loading layout="cards" />
         ) : query.isError ? (
           <ErrorState error={query.error} retry={() => void query.refetch()} />
         ) : (
@@ -299,9 +299,6 @@ export function CardsPage() {
                         >
                           Dívida anterior
                         </Button>
-                        <Link className="button secondary compact" to="/imports">
-                          Importar extratos e faturas
-                        </Link>
                       </div>
                     </div>
                     {card.limit > 0 &&
@@ -704,7 +701,6 @@ export function CardsPage() {
                             ? 'Categoria da compra'
                             : 'Revisar correção'
         }
-        description="Confira os valores antes de confirmar."
       >
         {dialog?.kind === 'billTotal' &&
           card &&

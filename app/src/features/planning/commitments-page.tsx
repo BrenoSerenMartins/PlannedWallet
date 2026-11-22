@@ -315,7 +315,6 @@ export function CommitmentsPage({ navigation }: { navigation?: ReactNode }) {
         open={!!dialog}
         onOpenChange={(open) => !open && setDialog(null)}
         title={dialog === 'new' ? 'Novo compromisso' : 'Editar compromisso'}
-        description="Defina o vencimento e o valor previsto."
       >
         {dialog && (
           <CommitmentForm
@@ -367,7 +366,6 @@ export function CommitmentsPage({ navigation }: { navigation?: ReactNode }) {
         open={!!ending}
         onOpenChange={(open) => !open && !busy && setEnding(null)}
         title="Encerrar compromisso"
-        description="Confira o que será preservado."
       >
         <p>
           Encerrar <strong>{ending?.description}</strong> remove os vencimentos pendentes de hoje em

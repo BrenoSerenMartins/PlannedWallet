@@ -364,7 +364,6 @@ export function WealthPage() {
                     ? 'Desfazer último registro'
                     : (selected?.name ?? 'Investimento')
         }
-        description="Confira os dados e a data de referência antes de salvar."
       >
         {dialog?.kind === 'newHolding' && <HoldingForm write={write} onSaved={saved} />}
         {dialog?.kind === 'editHolding' && selected && (

@@ -125,7 +125,7 @@ export function CashflowForecast({
       aria-label="Previsão de saldo"
     >
       {query.isPending ? (
-        <Loading />
+        <Loading layout="summary" />
       ) : query.isError ? (
         <ErrorState error={query.error} retry={() => void query.refetch()} />
       ) : compact ? (
@@ -142,7 +142,6 @@ export function CashflowForecast({
         open={adding}
         onOpenChange={setAdding}
         title="Novo compromisso"
-        description="Defina o vencimento e o valor previsto."
       >
         {adding && (
           <CommitmentForm

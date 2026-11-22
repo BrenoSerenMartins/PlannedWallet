@@ -1,3 +1,4 @@
+import { Upload } from 'lucide-react';
 import { needsPdfPassword } from '../../../shared/api/pdf-password';
 import { cardArtwork, issuerLogos } from '../../cards/art/catalog';
 import { money } from '../../../shared/formatting/money';
@@ -32,11 +33,13 @@ export function AutomaticImportBatch({
   const ready = batch.rows.filter((row) => row.status === 'ready').length;
   return (
     <section className="panel automatic-import-batch" aria-label="Importação automática em lote">
-      <h2>Selecione seus arquivos</h2>
-      <p>
-        Envie um arquivo ou um lote. Identificamos o banco, o mês e se é extrato ou fatura. Você
-        confere o resultado antes de importar.
-      </p>
+      <div className="import-upload-heading">
+        <span className="import-upload-icon">
+          <Upload size={24} aria-hidden="true" />
+        </span>
+        <h2>Selecione seus arquivos</h2>
+        <p>Envie extratos de conta e faturas de cartão, um por vez ou juntos no mesmo lote.</p>
+      </div>
       {batch.rows.some((row) => needsPdfPassword(row.message)) && (
         <>
           <p>
@@ -77,7 +80,7 @@ export function AutomaticImportBatch({
             setPassword('');
           }}
         >
-          Selecionar arquivos em lote
+          Selecionar arquivos
         </Button>
         {ready > 0 && (
           <Button disabled={batch.busy} onClick={() => void batch.confirm()}>
@@ -91,7 +94,9 @@ export function AutomaticImportBatch({
         )}
       </div>
       <p className="field-help">
-        PDF com texto, CSV ou XLSX · até 20 arquivos · 10 MB por arquivo · 100 MB por lote.
+        PDF com texto, CSV ou XLSX · até 20 arquivos
+        <br />
+        10 MB por arquivo · 100 MB por lote
       </p>
       {batch.error && <p role="alert">{batch.error}</p>}
       <ul className="automatic-import-rows" aria-live="polite">

@@ -121,3 +121,11 @@ The compact shared header keeps the financial-visibility control at a minimum 44
 The card wallet retains a compact PageHeader with an accessible level-one heading, even when the visual header is supplied by the shared app shell.
 
 Planning uses one canonical level-one page title; the visible “Visão futura” subtitle is level two with the existing visual styling preserved.
+
+## App opening and loading HUD
+
+The application uses one branded opening across session and workspace initialization. The first mobile opening in a tab gives the mark and wordmark time to appear, then the opening fades into the app. Reduced motion removes the extra hold and animation. Internal route loading retains the app shell.
+
+The shared loading component uses HUD shapes for ledger rows, fields, account balance, planning, cards, summaries and charts. The placeholders reuse semantic surfaces and respect reduced motion. Keep modal descriptions for context the user needs to make a decision.
+
+The Planning hero links to Accounts for balance review. The account-by-account composition remains available from the dashboard's monthly details. In Planning, green bars indicate income progress, gold indicates spending within budget and coral indicates overspending.

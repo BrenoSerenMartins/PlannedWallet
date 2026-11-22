@@ -20,6 +20,7 @@ export function useAutomaticImportBatch(onComplete: () => void) {
   const mounted = useRef(true);
   const workspace = useRef<string | null>(null);
   const password = useRef('');
+  const cpfSecret = useRef('');
   const stopped = useRef(false);
   useEffect(() => {
     mounted.current = true;
@@ -27,6 +28,7 @@ export function useAutomaticImportBatch(onComplete: () => void) {
       mounted.current = false;
       stopped.current = true;
       password.current = '';
+      cpfSecret.current = '';
     };
   }, []);
   const active = () => {
@@ -36,8 +38,9 @@ export function useAutomaticImportBatch(onComplete: () => void) {
   function stop() {
     stopped.current = true;
     password.current = '';
+    cpfSecret.current = '';
   }
-  async function analyze(files: File[], secret: string) {
+  async function analyze(files: File[], secret: string, cpf = '') {
     if (running.current) return;
     setError('');
     if (files.length > 20 || files.reduce((sum, file) => sum + file.size, 0) > 100 * 1024 * 1024) {
@@ -46,6 +49,7 @@ export function useAutomaticImportBatch(onComplete: () => void) {
     }
     workspace.current = getRequestWorkspace();
     password.current = secret;
+    cpfSecret.current = cpf;
     stopped.current = false;
     running.current = true;
     setBusy(true);
@@ -77,7 +81,7 @@ export function useAutomaticImportBatch(onComplete: () => void) {
         seen.add(fingerprint);
         row.detected = await request<DetectedImport>('/imports/detect', {
           method: 'POST',
-          body: sourceForm(row.file, secret),
+          body: sourceForm(row.file, secret, cpf),
         });
         active();
         if (
@@ -108,7 +112,6 @@ export function useAutomaticImportBatch(onComplete: () => void) {
       }
       if (stopped.current || !mounted.current || getRequestWorkspace() !== workspace.current) break;
     }
-    if (!queue.some((row) => row.status === 'ready')) password.current = '';
     running.current = false;
     if (mounted.current) setBusy(false);
   }
@@ -149,8 +152,11 @@ export function useAutomaticImportBatch(onComplete: () => void) {
         row.destination = destination;
         const result =
           row.detected!.kind === 'card_invoice'
-            ? await importInvoice(row, destination, password.current, active)
-            : await importStatement(row, destination, `batch:${row.id}`, active);
+            ? await importInvoice(row, destination, password.current, active, cpfSecret.current)
+            : await importStatement(row, destination, `batch:${row.id}`, active, {
+                password: password.current,
+                cpf: cpfSecret.current,
+              });
         Object.assign(row, result);
       } catch (cause) {
         row.status = 'error';
@@ -161,12 +167,27 @@ export function useAutomaticImportBatch(onComplete: () => void) {
       }
       if (stopped.current || !mounted.current || getRequestWorkspace() !== workspace.current) break;
     }
-    password.current = '';
+    if (
+      !queue.some(
+        (row) => row.status === 'review' || row.status === 'error' || row.status === 'ready',
+      )
+    ) {
+      password.current = '';
+      cpfSecret.current = '';
+    }
     running.current = false;
     if (mounted.current) {
       setBusy(false);
       if (getRequestWorkspace() === workspace.current) onComplete();
     }
   }
-  return { rows, busy, error, analyze, confirm, stop };
+  return {
+    rows,
+    busy,
+    error,
+    analyze,
+    confirm,
+    stop,
+    reviewCredentials: () => ({ password: password.current, cpf: cpfSecret.current }),
+  };
 }

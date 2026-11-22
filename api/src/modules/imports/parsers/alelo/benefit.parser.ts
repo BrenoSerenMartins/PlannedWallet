@@ -1,3 +1,7 @@
+import {
+  pdfPasswords,
+  type PdfCredentials,
+} from '../../../../core/financial-files/pdf-passwords.js';
 import { UnprocessableEntityException } from '@nestjs/common';
 import { dateOnly } from '../../../../core/rest/index.js';
 import type { ParsedStatement, StatementRow, TextCell } from '../../contracts/statement.js';
@@ -72,10 +76,10 @@ export function parseAleloPages(pages: TextCell[][]): ParsedStatement {
     items,
   };
 }
-export async function extractAleloStatement(buffer: Buffer) {
+export async function extractAleloStatement(buffer: Buffer, credentials: PdfCredentials = {}) {
   const result = await readStatementWorker<{ pages: TextCell[][] }>(
     new URL('../../../../core/financial-files/pdf-worker.mjs', import.meta.url),
-    buffer,
+    { buffer, passwords: pdfPasswords(credentials) },
   );
   return parseAleloPages(result.pages);
 }

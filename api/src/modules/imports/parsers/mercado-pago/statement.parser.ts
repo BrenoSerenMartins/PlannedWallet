@@ -1,3 +1,7 @@
+import {
+  pdfPasswords,
+  type PdfCredentials,
+} from '../../../../core/financial-files/pdf-passwords.js';
 import { UnprocessableEntityException } from '@nestjs/common';
 import { dateOnly } from '../../../../core/rest/index.js';
 import type { ParsedStatement, StatementRow, TextCell } from '../../contracts/statement.js';
@@ -57,10 +61,13 @@ export function parseMercadoPagoPages(pages: TextCell[][]): ParsedStatement {
   return reconcileStatement({ openingBalance, closingBalance, items, sourceFormat: 'pdf' });
 }
 
-export async function extractStatement(buffer: Buffer): Promise<ParsedStatement> {
+export async function extractStatement(
+  buffer: Buffer,
+  credentials: PdfCredentials = {},
+): Promise<ParsedStatement> {
   const result = await readStatementWorker<{ pages: TextCell[][] }>(
     new URL('../../../../core/financial-files/pdf-worker.mjs', import.meta.url),
-    buffer,
+    { buffer, passwords: pdfPasswords(credentials) },
   );
   return parseMercadoPagoPages(result.pages);
 }

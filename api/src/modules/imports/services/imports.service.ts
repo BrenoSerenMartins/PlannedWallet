@@ -1,3 +1,4 @@
+import type { PdfCredentials } from '../../../core/financial-files/pdf-passwords.js';
 import {
   extractInstitutionStatement,
   mapInstitutionStatement,
@@ -50,12 +51,18 @@ export class ImportsService {
     buffer: Buffer,
     fileName = 'statement.pdf',
     institution = 'mercado_pago',
+    credentials?: PdfCredentials,
   ) {
     if (this.activeExtractions.has(userId))
       throw new ConflictException('Já existe uma leitura em andamento.');
     this.activeExtractions.add(userId);
     try {
-      const statement = await extractInstitutionStatement(institution, buffer, fileName);
+      const statement = await extractInstitutionStatement(
+        institution,
+        buffer,
+        fileName,
+        credentials,
+      );
       this.assertConsumerStatement(statement.reportType);
       return statement;
     } finally {
@@ -68,6 +75,7 @@ export class ImportsService {
     fileName = 'statement.pdf',
     billMonth = new Date().toISOString().slice(0, 7),
     password?: string,
+    cpf?: string,
   ) {
     if (this.activeExtractions.has(userId))
       throw new ConflictException('Já existe uma leitura em andamento.');
@@ -76,7 +84,10 @@ export class ImportsService {
       let lastError: unknown;
       for (const institution of ['alelo', 'mercado_pago', 'banco_do_brasil']) {
         try {
-          const statement = await extractInstitutionStatement(institution, buffer, fileName);
+          const statement = await extractInstitutionStatement(institution, buffer, fileName, {
+            password,
+            cpf,
+          });
           this.assertConsumerStatement(statement.reportType);
           const months = [
             ...new Set(statement.items.map((item) => item.transactionDate.slice(0, 7))),
@@ -98,7 +109,7 @@ export class ImportsService {
         }
       }
       try {
-        const invoice = await readCardInvoice(buffer, fileName, billMonth, password);
+        const invoice = await readCardInvoice(buffer, fileName, billMonth, password, cpf);
         return {
           total: invoice.total,
           automaticMonth: invoice.dueDate?.slice(0, 7) ?? null,

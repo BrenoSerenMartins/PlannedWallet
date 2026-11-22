@@ -17,6 +17,7 @@ export interface DetectedImport {
   total?: number;
   openingBalance?: number | null;
   closingBalance?: number | null;
+  billMonth?: string;
   automaticMonth?: string | null;
   months?: string[];
   periodStart?: string | null;
@@ -50,10 +51,13 @@ interface InvoicePreview {
   reconciliation: Array<{ confidence: string }>;
 }
 
-export function sourceForm(file: File, password = '') {
+export function sourceForm(file: File, password = '', cpf = '') {
   const form = new FormData();
   form.set('file', file);
-  if (password && file.name.toLowerCase().endsWith('.pdf')) form.set('password', password);
+  if (file.name.toLowerCase().endsWith('.pdf')) {
+    if (password) form.set('password', password);
+    if (cpf) form.set('cpf', cpf);
+  }
   return form;
 }
 export async function findDestinations(detected: DetectedImport): Promise<ImportDestination[]> {
@@ -107,10 +111,11 @@ export async function importInvoice(
   destination: ImportDestination,
   password: string,
   active: () => void,
+  cpf = '',
 ) {
   const month = row.detected!.automaticMonth!;
   active();
-  const form = sourceForm(row.file, password);
+  const form = sourceForm(row.file, password, cpf);
   form.set('billMonth', month);
   const preview = await request<InvoicePreview>(`/cards/${destination.id}/invoices/import`, {
     method: 'POST',
@@ -196,9 +201,10 @@ export async function importStatement(
   destination: ImportDestination,
   key: string,
   active: () => void,
+  credentials: { password?: string; cpf?: string } = {},
 ) {
   active();
-  const form = sourceForm(row.file);
+  const form = sourceForm(row.file, credentials.password, credentials.cpf);
   form.set('accountId', destination.id);
   let preview = await request<ImportBatch>('/imports', { method: 'POST', body: form });
   active();

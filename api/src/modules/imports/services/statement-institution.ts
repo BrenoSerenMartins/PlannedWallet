@@ -1,3 +1,4 @@
+import type { PdfCredentials } from '../../../core/financial-files/pdf-passwords.js';
 import { parseBancoDoBrasilCsv } from '../parsers/banco-do-brasil/account-csv.parser.js';
 import { UnprocessableEntityException } from '@nestjs/common';
 import type { ParsedStatement } from '../contracts/statement.js';
@@ -12,16 +13,18 @@ export async function extractInstitutionStatement(
   institution: string,
   buffer: Buffer,
   filename: string,
+  credentials?: PdfCredentials,
 ) {
   if (institution === 'banco_do_brasil' && filename.toLowerCase().endsWith('.csv'))
     return parseBancoDoBrasilCsv(buffer);
-  if (institution === 'mercado_pago') return extractMercadoPagoStatement(buffer, filename);
+  if (institution === 'mercado_pago')
+    return extractMercadoPagoStatement(buffer, filename, credentials);
   if (
     institution === 'alelo' &&
     filename.toLowerCase().endsWith('.pdf') &&
     buffer.subarray(0, 5).toString() === '%PDF-'
   )
-    return extractAleloStatement(buffer);
+    return extractAleloStatement(buffer, credentials);
   throw new UnprocessableEntityException(
     'Formato não suportado para esta instituição. Alelo aceita o PDF com texto de Alimentação; Mercado Pago aceita PDF, CSV e XLSX; Banco do Brasil aceita CSV.',
   );

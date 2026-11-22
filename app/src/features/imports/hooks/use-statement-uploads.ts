@@ -27,7 +27,11 @@ export function useStatementUploads(onComplete: (rows: StatementUpload[]) => voi
     stopped.current = true;
     setStopping(true);
   }
-  async function upload(files: File[], accountId: string) {
+  async function upload(
+    files: File[],
+    accountId: string,
+    credentials: { password?: string; cpf?: string } = {},
+  ) {
     if (running.current || !files.length || !accountId) return;
     const workspace = getRequestWorkspace();
     const current: StatementUpload[] = files.map((file) => ({ name: file.name, status: 'queued' }));
@@ -47,6 +51,10 @@ export function useStatementUploads(onComplete: (rows: StatementUpload[]) => voi
         const form = new FormData();
         form.set('accountId', accountId);
         form.set('file', files[index]);
+        if (files[index].name.toLowerCase().endsWith('.pdf')) {
+          if (credentials.password) form.set('password', credentials.password);
+          if (credentials.cpf) form.set('cpf', credentials.cpf);
+        }
         const result = await request<ImportBatch>('/imports', { method: 'POST', body: form });
         current[index] = {
           name: files[index].name,

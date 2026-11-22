@@ -3,7 +3,7 @@ import '../automatic-import.css';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../../../shared/ui/primitives';
-import { importBanks } from '../services/automatic-import-batch';
+import { importBanks, type AutomaticImportRow } from '../services/automatic-import-batch';
 import type { useAutomaticImportBatch } from '../hooks/use-automatic-import-batch';
 
 const states = {
@@ -22,10 +22,11 @@ export function AutomaticImportBatch({
   onReview,
 }: {
   batch: ReturnType<typeof useAutomaticImportBatch>;
-  onSelect: (password: string) => void;
-  onReview: (file: File) => void;
+  onSelect: (password: string, cpf: string) => void;
+  onReview: (row: AutomaticImportRow) => void;
 }) {
   const [password, setPassword] = useState('');
+  const [cpf, setCpf] = useState('');
   const ready = batch.rows.filter((row) => row.status === 'ready').length;
   return (
     <section className="panel automatic-import-batch" aria-label="Importação automática em lote">
@@ -34,6 +35,18 @@ export function AutomaticImportBatch({
         Selecione extratos e faturas de bancos e meses diferentes. Identificamos o tipo, o banco, o
         período e o destino antes de confirmar o lote.
       </p>
+      <label>
+        CPF do titular para PDFs protegidos (opcional)
+        <input
+          type="password"
+          inputMode="numeric"
+          autoComplete="off"
+          maxLength={14}
+          value={cpf}
+          disabled={batch.busy}
+          onChange={(event) => setCpf(event.target.value)}
+        />
+      </label>
       <label>
         Senha dos PDFs do lote (opcional)
         <input
@@ -49,7 +62,8 @@ export function AutomaticImportBatch({
         <Button
           disabled={batch.busy}
           onClick={() => {
-            onSelect(password);
+            onSelect(password, cpf);
+            setCpf('');
             setPassword('');
           }}
         >
@@ -115,7 +129,7 @@ export function AutomaticImportBatch({
               <Button
                 className="secondary compact"
                 disabled={batch.busy}
-                onClick={() => onReview(row.file)}
+                onClick={() => onReview(row)}
               >
                 Revisar individualmente
               </Button>

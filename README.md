@@ -50,7 +50,7 @@ Cada usuário acessa seus próprios espaços. Compartilhamento, convites e membr
 ## Formatos adicionais de importação
 
 - **Banco do Brasil:** extrato de conta corrente CSV com saldo anterior, saldos diários e saldo final conferidos; aceita UTF-8 e Windows-1252.
-- **Inter:** fatura PDF com lançamentos detalhados, incluindo o modelo protegido por senha. Informe a senha antes de selecionar o arquivo em Importações, ou no formulário de fatura do cartão. A senha não é salva.
+- **Inter:** fatura PDF com lançamentos detalhados, incluindo o modelo protegido por senha. Informe o CPF completo do titular (11 dígitos) ou a senha específica, no lote ou na revisão individual. O leitor tenta as variações usuais de CPF usadas pelos bancos. CPF e senha não são salvos.
 - **Itaú:** fatura PDF no modelo de duas colunas validado; compras parceladas sem ano explícito exibem aviso para revisão.
 - **C6:** CSV de compras da fatura; pagamentos anteriores ficam separados, enquanto estornos e créditos de pontos são preservados. O total é calculado pela soma do arquivo e precisa de conferência.
 - **Crediffato:** a captura de tela foi mapeada para transcrição revisada. A aplicação continua aceitando PDF/CSV, sem leitura automática de imagens.
@@ -58,6 +58,8 @@ Cada usuário acessa seus próprios espaços. Compartilhamento, convites e membr
 Em **Importações → Importar vários arquivos**, selecione até 20 arquivos (10 MB cada e 100 MB por lote). O sistema identifica os formatos suportados, banco, período e destinos compatíveis. Faturas usam o mês do vencimento; o CSV C6 `Fatura_AAAA-MM-DD.csv` usa o vencimento do nome exportado e mostra essa origem. Os lançamentos de extrato mantêm suas próprias datas, mesmo cobrindo mais de um mês.
 
 Use **Importar arquivos identificados** para confirmar os que estão prontos de uma vez. Arquivos repetidos são separados; falhas, dados insuficientes, múltiplos destinos e conflitos ficam em revisão sem bloquear os demais. Contas/cartões ausentes são criados por banco; em cartões novos sem fechamento informado no arquivo, o cadastro usa o dia 1 até ser ajustado. Não há reconhecimento genérico de imagens/OFX nesta etapa. Pagamentos de cartão só são vinculados automaticamente quando emissor, ciclo e valor têm correspondência única; os demais exigem revisão para não duplicar despesas.
+
+Para PDF protegido, preencha **CPF do titular** e/ou **Senha específica**. Se o arquivo pedir credenciais, **Revisar individualmente** leva ao formulário visível com o arquivo selecionado; preencha os campos e use **Tentar ler novamente**. A identificação já concluída no lote é reaproveitada. O CPF fica mascarado na tela e, junto da senha, permanece apenas na memória enquanto houver revisão pendente; sai da memória ao concluir o lote, pausar ou sair da tela.
 
 As prévias continuam exigindo revisão e confirmação. Reconhecer um formato não importa dados automaticamente nem comprova cobertura completa da conta.
 

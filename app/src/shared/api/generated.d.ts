@@ -3133,7 +3133,22 @@ export interface operations {
       path?: never;
       cookie?: never;
     };
-    requestBody?: never;
+    requestBody: {
+      content: {
+        'multipart/form-data': {
+          /** Format: binary */
+          file: string;
+          billMonth: string;
+          /** Format: password */
+          password?: string;
+          /**
+           * Format: password
+           * @description CPF used only to unlock the PDF; never persisted.
+           */
+          cpf?: string;
+        };
+      };
+    };
     responses: {
       201: {
         headers: {
@@ -4780,7 +4795,23 @@ export interface operations {
       path?: never;
       cookie?: never;
     };
-    requestBody?: never;
+    requestBody: {
+      content: {
+        'multipart/form-data': {
+          /** Format: binary */
+          file: string;
+          /** Format: uuid */
+          accountId: string;
+          /** Format: password */
+          password?: string;
+          /**
+           * Format: password
+           * @description CPF used only to unlock the PDF; never persisted.
+           */
+          cpf?: string;
+        };
+      };
+    };
     responses: {
       201: {
         headers: {
@@ -4856,7 +4887,22 @@ export interface operations {
       path?: never;
       cookie?: never;
     };
-    requestBody?: never;
+    requestBody: {
+      content: {
+        'multipart/form-data': {
+          /** Format: binary */
+          file: string;
+          billMonth?: string;
+          /** Format: password */
+          password?: string;
+          /**
+           * Format: password
+           * @description CPF used only to unlock the PDF; never persisted.
+           */
+          cpf?: string;
+        };
+      };
+    };
     responses: {
       201: {
         headers: {
@@ -5056,6 +5102,13 @@ export interface operations {
           file: string;
           version: number;
           resetClassification?: boolean;
+          /** Format: password */
+          password?: string;
+          /**
+           * Format: password
+           * @description CPF used only to unlock the PDF; never persisted.
+           */
+          cpf?: string;
         };
       };
     };

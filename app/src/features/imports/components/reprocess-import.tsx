@@ -15,6 +15,8 @@ export function ReprocessImport({
     [busy, setBusy] = useState(false),
     [error, setError] = useState('');
   const { success: setSuccess } = useNotifications();
+  const [cpf, setCpf] = useState('');
+  const [password, setPassword] = useState('');
   const [resetClassification, setResetClassification] = useState(false);
   const input = useRef<HTMLInputElement>(null);
   const allowed = batch.canReprocess ?? ['draft', 'history'].includes(batch.status);
@@ -31,6 +33,10 @@ export function ReprocessImport({
         body.append('file', file);
         body.append('version', String(batch.version));
         body.append('resetClassification', String(resetClassification));
+        if (file.name.toLowerCase().endsWith('.pdf')) {
+          if (cpf) body.set('cpf', cpf);
+          if (password) body.set('password', password);
+        }
       }
       await request(`/imports/${batch.id}/${file ? 'reprocess-file' : 'reprocess'}`, {
         method: 'POST',
@@ -46,6 +52,8 @@ export function ReprocessImport({
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Não foi possível reprocessar.');
     } finally {
+      setCpf('');
+      setPassword('');
       setBusy(false);
     }
   }
@@ -67,7 +75,15 @@ export function ReprocessImport({
       </Button>
       <Modal
         open={open}
-        onOpenChange={(value) => !busy && setOpen(value)}
+        onOpenChange={(value) => {
+          if (!busy) {
+            setOpen(value);
+            if (!value) {
+              setCpf('');
+              setPassword('');
+            }
+          }
+        }}
         title="Reprocessar importação"
         description="Atualize a análise antes de confirmar os movimentos."
       >
@@ -107,6 +123,29 @@ export function ReprocessImport({
               Para atualizar a leitura do PDF, CSV ou XLSX. Selecione o mesmo arquivo desta
               importação; o original não fica armazenado no app.
             </p>
+            <label>
+              CPF do titular do PDF (opcional)
+              <input
+                type="password"
+                inputMode="numeric"
+                maxLength={14}
+                autoComplete="off"
+                value={cpf}
+                disabled={busy}
+                onChange={(event) => setCpf(event.target.value)}
+              />
+            </label>
+            <label>
+              Senha específica do PDF (opcional)
+              <input
+                type="password"
+                autoComplete="off"
+                maxLength={128}
+                value={password}
+                disabled={busy}
+                onChange={(event) => setPassword(event.target.value)}
+              />
+            </label>
             <input
               ref={input}
               hidden

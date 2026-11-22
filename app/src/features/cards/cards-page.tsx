@@ -808,6 +808,7 @@ function CardInvoiceImportForm({
   const [replaceConfirmed, setReplaceConfirmed] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [password, setPassword] = useState('');
+  const [cpf, setCpf] = useState('');
   const [preview, setPreview] = useState<InvoiceImportPreview | null>(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -821,6 +822,7 @@ function CardInvoiceImportForm({
         form.set('billMonth', targetMonth);
         form.set('file', file);
         if (password) form.set('password', password);
+        if (cpf) form.set('cpf', cpf);
         setBusy(true);
         setError('');
         try {
@@ -835,6 +837,7 @@ function CardInvoiceImportForm({
           setError(cause instanceof Error ? cause.message : 'Não foi possível ler a fatura.');
         } finally {
           setPassword('');
+          setCpf('');
           setBusy(false);
         }
       }}
@@ -855,6 +858,17 @@ function CardInvoiceImportForm({
               type="file"
               accept=".pdf,.csv,application/pdf,text/csv"
               onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+            />
+          </label>
+          <label>
+            CPF do titular do PDF (opcional)
+            <input
+              type="password"
+              inputMode="numeric"
+              autoComplete="off"
+              maxLength={14}
+              value={cpf}
+              onChange={(event) => setCpf(event.target.value)}
             />
           </label>
           <label>

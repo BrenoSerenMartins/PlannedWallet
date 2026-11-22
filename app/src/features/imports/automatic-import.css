@@ -22,3 +22,7 @@
 .automatic-import-batch .inline-actions {
   flex-wrap: wrap;
 }
+
+.upload-panel[tabindex='-1'] {
+  scroll-margin-top: 5rem;
+}

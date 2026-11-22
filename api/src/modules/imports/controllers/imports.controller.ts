@@ -70,12 +70,31 @@ export class ImportsController {
   @Post()
   @ApiCreatedResponse({ type: ImportBatchResourceDto })
   @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['file', 'accountId'],
+      properties: {
+        file: { type: 'string', format: 'binary' },
+        accountId: { type: 'string', format: 'uuid' },
+        password: { type: 'string', format: 'password', maxLength: 128 },
+        cpf: {
+          type: 'string',
+          format: 'password',
+          maxLength: 32,
+          description: 'CPF used only to unlock the PDF; never persisted.',
+        },
+      },
+    },
+  })
   @UseInterceptors(
-    FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024, files: 1, fields: 1 } }),
+    FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024, files: 1, fields: 3 } }),
   )
   async upload(
     @Req() r: AuthenticatedRequest,
     @Body('accountId') accountId: string,
+    @Body('password') password: string | undefined,
+    @Body('cpf') cpf: string | undefined,
     @UploadedFile() file: Express.Multer.File,
   ) {
     if (!file) throw new UnprocessableEntityException('Selecione um extrato em PDF, CSV ou XLSX.');
@@ -90,6 +109,7 @@ export class ImportsController {
       file.buffer,
       file.originalname,
       account.institution,
+      { password, cpf },
     );
     return this.db.forUser(r.identity.id, () =>
       this.imports.upload(accountId, file.buffer, file.originalname, statement),
@@ -97,17 +117,42 @@ export class ImportsController {
   }
   @Post('detect')
   @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['file'],
+      properties: {
+        file: { type: 'string', format: 'binary' },
+        billMonth: { type: 'string' },
+        password: { type: 'string', format: 'password', maxLength: 128 },
+        cpf: {
+          type: 'string',
+          format: 'password',
+          maxLength: 32,
+          description: 'CPF used only to unlock the PDF; never persisted.',
+        },
+      },
+    },
+  })
   @UseInterceptors(
-    FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024, files: 1, fields: 2 } }),
+    FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024, files: 1, fields: 4 } }),
   )
   async detect(
     @Req() r: AuthenticatedRequest,
     @Body('billMonth') billMonth: string | undefined,
     @Body('password') password: string | undefined,
+    @Body('cpf') cpf: string | undefined,
     @UploadedFile() file: Express.Multer.File,
   ) {
     if (!file) throw new UnprocessableEntityException('Selecione um arquivo para identificar.');
-    return this.imports.detect(r.identity.id, file.buffer, file.originalname, billMonth, password);
+    return this.imports.detect(
+      r.identity.id,
+      file.buffer,
+      file.originalname,
+      billMonth,
+      password,
+      cpf,
+    );
   }
   @Patch(':id/items/:itemId')
   @ApiOkResponse({ type: ImportBatchResourceDto })
@@ -220,17 +265,26 @@ export class ImportsController {
         file: { type: 'string', format: 'binary' },
         version: { type: 'integer', minimum: 1 },
         resetClassification: { type: 'boolean' },
+        password: { type: 'string', format: 'password', maxLength: 128 },
+        cpf: {
+          type: 'string',
+          format: 'password',
+          maxLength: 32,
+          description: 'CPF used only to unlock the PDF; never persisted.',
+        },
       },
     },
   })
   @UseInterceptors(
-    FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024, files: 1, fields: 2 } }),
+    FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024, files: 1, fields: 4 } }),
   )
   async reprocessFile(
     @Req() r: AuthenticatedRequest,
     @Param('id') id: string,
     @Body('version') version: string,
     @Body('resetClassification') resetClassification: string | undefined,
+    @Body('password') password: string | undefined,
+    @Body('cpf') cpf: string | undefined,
     @UploadedFile() file: Express.Multer.File,
   ) {
     if (!file) throw new UnprocessableEntityException('Selecione o arquivo original.');
@@ -262,6 +316,7 @@ export class ImportsController {
       file.buffer,
       file.originalname,
       account.institution,
+      { password, cpf },
     );
     return this.db.forUser(r.identity.id, () =>
       this.reprocessing.reprocess(id, input.version, {

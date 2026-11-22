@@ -78,11 +78,17 @@ export class CardInvoiceImportsService {
     );
   }
 
-  async import(cardId: string, billMonth: string, file: Express.Multer.File, password?: string) {
+  async import(
+    cardId: string,
+    billMonth: string,
+    file: Express.Multer.File,
+    password?: string,
+    cpf?: string,
+  ) {
     const data = await this.cards.snapshot();
     if (!data.cards.some((card) => card.id === cardId))
       throw new NotFoundException('Cartão não encontrado.');
-    const parsed = await readCardInvoice(file.buffer, file.originalname, billMonth, password);
+    const parsed = await readCardInvoice(file.buffer, file.originalname, billMonth, password, cpf);
     if (parsed.dueDate && parsed.dueDate.slice(0, 7) !== billMonth)
       throw new ConflictException(
         `O vencimento identificado pertence a ${parsed.dueDate.slice(0, 7)}. Selecione esse mês para importar esta fatura.`,

@@ -303,6 +303,37 @@
       "post": {
         "operationId": "CardsController_importInvoice",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file", "billMonth"],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "billMonth": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password",
+                    "maxLength": 128
+                  },
+                  "cpf": {
+                    "type": "string",
+                    "format": "password",
+                    "maxLength": 32,
+                    "description": "CPF used only to unlock the PDF; never persisted."
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": ""
@@ -2509,6 +2540,38 @@
       "post": {
         "operationId": "ImportsController_upload",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file", "accountId"],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "accountId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password",
+                    "maxLength": 128
+                  },
+                  "cpf": {
+                    "type": "string",
+                    "format": "password",
+                    "maxLength": 32,
+                    "description": "CPF used only to unlock the PDF; never persisted."
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": "",
@@ -2611,6 +2674,37 @@
       "post": {
         "operationId": "ImportsController_detect",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file"],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "billMonth": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password",
+                    "maxLength": 128
+                  },
+                  "cpf": {
+                    "type": "string",
+                    "format": "password",
+                    "maxLength": 32,
+                    "description": "CPF used only to unlock the PDF; never persisted."
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": ""
@@ -2894,6 +2988,17 @@
                   },
                   "resetClassification": {
                     "type": "boolean"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password",
+                    "maxLength": 128
+                  },
+                  "cpf": {
+                    "type": "string",
+                    "format": "password",
+                    "maxLength": 32,
+                    "description": "CPF used only to unlock the PDF; never persisted."
                   }
                 }
               }

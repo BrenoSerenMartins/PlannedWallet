@@ -70,19 +70,37 @@ export class CardsController {
   }
   @Post(':id/invoices/import')
   @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['file', 'billMonth'],
+      properties: {
+        file: { type: 'string', format: 'binary' },
+        billMonth: { type: 'string' },
+        password: { type: 'string', format: 'password', maxLength: 128 },
+        cpf: {
+          type: 'string',
+          format: 'password',
+          maxLength: 32,
+          description: 'CPF used only to unlock the PDF; never persisted.',
+        },
+      },
+    },
+  })
   @UseInterceptors(
-    FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024, files: 1, fields: 2 } }),
+    FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024, files: 1, fields: 3 } }),
   )
   async importInvoice(
     @Req() r: AuthenticatedRequest,
     @Param('id') id: string,
     @Body('billMonth') billMonth: string,
     @Body('password') password: string | undefined,
+    @Body('cpf') cpf: string | undefined,
     @UploadedFile() file: Express.Multer.File,
   ) {
     if (!file) throw new UnprocessableEntityException('Selecione uma fatura em PDF ou CSV.');
     return this.db.forUser(r.identity.id, () =>
-      this.invoiceImports.import(requireUuid(id), billMonth, file, password),
+      this.invoiceImports.import(requireUuid(id), billMonth, file, password, cpf),
     );
   }
   @Post('invoices/:importId/confirm')

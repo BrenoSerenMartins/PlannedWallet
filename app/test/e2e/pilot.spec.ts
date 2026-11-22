@@ -5388,3 +5388,231 @@ for (const width of [390, 1440])
     expect(confirmed.sort()).toEqual(['2026-10', '2026-11', 'bb-2026-10']);
     await expectNoHorizontalOverflow(page);
   });
+
+test('individual review opens visibly and resumes a protected PDF after requesting the CPF', async ({
+  page,
+}) => {
+  await signedIn(page);
+  const cpf = '12345678900',
+    card = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+  let detections = 0,
+    uploaded = false;
+  await page.route('**/v1/imports/detect', (route) => {
+    detections++;
+    if (!route.request().postData()?.includes(cpf))
+      return route.fulfill({
+        status: 422,
+        json: {
+          title:
+            'PDF protegido. Informe o CPF do titular ou a senha específica para abrir o arquivo.',
+        },
+      });
+    return route.fulfill({
+      json: {
+        kind: 'card_invoice',
+        institution: 'inter',
+        billMonth: '2026-11',
+        automaticMonth: '2026-11',
+        dueDate: '2026-11-10',
+        summaryOnly: false,
+        itemCount: 1,
+        sourceFormat: 'pdf',
+      },
+    });
+  });
+  await page.route('**/v1/cards', (route) =>
+    route.fulfill({
+      json: route.request().method() === 'POST' ? { id: card } : { today: '2026-11-01', cards: [] },
+    }),
+  );
+  await page.route(`**/v1/cards/${card}/invoices/import`, (route) => {
+    expect(route.request().postData()).toContain(cpf);
+    uploaded = true;
+    return route.fulfill({
+      json: {
+        id: card,
+        cardId: card,
+        billMonth: '2026-11',
+        version: 1,
+        status: 'review',
+        parsed: {
+          total: 5000,
+          warnings: [],
+          lines: [
+            {
+              date: '2026-10-01',
+              description: 'Compra exemplo',
+              amount: 5000,
+              installmentNumber: null,
+              installmentCount: null,
+            },
+          ],
+        },
+        reconciliation: [],
+      },
+    });
+  });
+  await page.goto('/imports');
+  const chooser = page.waitForEvent('filechooser');
+  await page.getByRole('button', { name: 'Selecionar arquivos em lote' }).click();
+  await (
+    await chooser
+  ).setFiles({
+    name: 'protected.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from('%PDF-synthetic'),
+  });
+  const batch = page.getByRole('region', { name: 'Importação automática em lote' });
+  await batch.getByRole('button', { name: 'Revisar individualmente' }).click();
+  const review = page.getByRole('region', { name: 'Revisão individual de importação' });
+  await expect(review).toBeFocused();
+  await expect(review).toBeInViewport();
+  await expect(review.getByText('Arquivo em revisão: protected.pdf')).toBeVisible();
+  expect(detections).toBe(1);
+  const cpfInput = review.getByLabel('CPF do titular do PDF (opcional)');
+  await cpfInput.fill(cpf);
+  await review.getByRole('button', { name: 'Tentar ler novamente' }).click();
+  await expect(review.getByRole('button', { name: 'Ler e conciliar fatura' })).toBeVisible();
+  await expect(review.getByLabel('Vence dia', { exact: true })).toHaveValue('10');
+  await review.getByRole('button', { name: 'Ler e conciliar fatura' }).click();
+  await expect(review.getByRole('region', { name: 'Prévia da fatura importada' })).toBeVisible();
+  expect(uploaded).toBe(true);
+  await expect(cpfInput).toHaveValue('');
+  expect(
+    await page.evaluate(
+      (value) => Object.values(localStorage).some((entry) => entry.includes(value)),
+      cpf,
+    ),
+  ).toBe(false);
+});
+
+test('a recognized batch file opens individual routing without repeating its successful detection', async ({
+  page,
+}) => {
+  await signedIn(page);
+  let detections = 0;
+  await page.route('**/v1/imports/detect', (route) => {
+    detections++;
+    return route.fulfill({
+      json: {
+        kind: 'card_invoice',
+        institution: null,
+        billMonth: '2026-10',
+        automaticMonth: null,
+        itemCount: 1,
+        sourceFormat: 'csv',
+        summaryOnly: false,
+      },
+    });
+  });
+  await page.goto('/imports');
+  const chooser = page.waitForEvent('filechooser');
+  await page.getByRole('button', { name: 'Selecionar arquivos em lote' }).click();
+  await (
+    await chooser
+  ).setFiles({ name: 'unknown-month.csv', mimeType: 'text/csv', buffer: Buffer.from('synthetic') });
+  await page
+    .getByRole('region', { name: 'Importação automática em lote' })
+    .getByRole('button', { name: 'Revisar individualmente' })
+    .click();
+  const review = page.getByRole('region', { name: 'Revisão individual de importação' });
+  await expect(review).toBeFocused();
+  await expect(review).toBeInViewport();
+  await expectControlValue(review.getByLabel('Mês da fatura', { exact: true }), '2026-10');
+  expect(detections).toBe(1);
+});
+
+test('batch CPF unlock credentials survive analysis until upload and never enter persistent browser storage', async ({
+  page,
+}) => {
+  await signedIn(page);
+  const cpf = '12345678900',
+    id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+  let uploaded = false;
+  await page.route('**/v1/imports/detect', (route) => {
+    expect(route.request().postData()).toContain(cpf);
+    return route.fulfill({
+      json: {
+        kind: 'card_invoice',
+        institution: 'inter',
+        automaticMonth: '2026-11',
+        billMonth: '2026-11',
+        dueDate: '2026-11-10',
+        itemCount: 1,
+        sourceFormat: 'pdf',
+      },
+    });
+  });
+  await page.route('**/v1/cards/invoice-destinations?*', (route) =>
+    route.fulfill({ json: [{ id, name: 'Inter' }] }),
+  );
+  await page.route(`**/v1/cards/${id}/invoices/import`, (route) => {
+    expect(route.request().postData()).toContain(cpf);
+    uploaded = true;
+    return route.fulfill({
+      json: {
+        id,
+        billMonth: '2026-11',
+        status: 'review',
+        version: 1,
+        parsed: {},
+        reconciliation: [],
+      },
+    });
+  });
+  await page.route(`**/v1/cards/invoices/${id}/confirm`, (route) =>
+    route.fulfill({ json: { status: 'confirmed' } }),
+  );
+  await page.goto('/imports');
+  const batch = page.getByRole('region', { name: 'Importação automática em lote' });
+  await batch.getByLabel('CPF do titular para PDFs protegidos (opcional)').fill(cpf);
+  const chooser = page.waitForEvent('filechooser');
+  await batch.getByRole('button', { name: 'Selecionar arquivos em lote' }).click();
+  await (
+    await chooser
+  ).setFiles({
+    name: 'protected.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from('%PDF-synthetic'),
+  });
+  await batch.getByRole('button', { name: 'Importar 1 arquivo(s) identificado(s)' }).click();
+  await expect(batch.getByText('Importado', { exact: true })).toBeVisible();
+  expect(uploaded).toBe(true);
+  await expect(batch.getByLabel('CPF do titular para PDFs protegidos (opcional)')).toHaveValue('');
+  expect(
+    await page.evaluate(
+      (value) => Object.values(localStorage).some((entry) => entry.includes(value)),
+      cpf,
+    ),
+  ).toBe(false);
+});
+
+test('a new batch does not silently reuse credentials from the individual form', async ({
+  page,
+}) => {
+  await signedIn(page);
+  const cpf = '12345678900';
+  await page.route('**/v1/imports/detect', (route) => {
+    expect(route.request().postData()).not.toContain(cpf);
+    return route.fulfill({
+      status: 422,
+      json: { title: 'PDF protegido. Informe o CPF do titular.' },
+    });
+  });
+  await page.goto('/imports');
+  await page.getByLabel('CPF do titular do PDF (opcional)', { exact: true }).fill(cpf);
+  const chooser = page.waitForEvent('filechooser');
+  await page.getByRole('button', { name: 'Selecionar arquivos em lote' }).click();
+  await (
+    await chooser
+  ).setFiles({
+    name: 'new-owner.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from('%PDF-synthetic'),
+  });
+  await expect(
+    page
+      .getByRole('region', { name: 'Importação automática em lote' })
+      .getByText('PDF protegido. Informe o CPF do titular.', { exact: true }),
+  ).toBeVisible();
+});

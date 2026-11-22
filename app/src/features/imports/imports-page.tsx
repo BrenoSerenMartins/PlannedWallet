@@ -1,3 +1,4 @@
+import type { AutomaticImportRow } from './services/automatic-import-batch';
 import { AutomaticImportBatch } from './components/automatic-import-batch';
 import { useAutomaticImportBatch } from './hooks/use-automatic-import-batch';
 import '../../shared/ui/card-invoice-preview.css';
@@ -36,10 +37,13 @@ export function ImportsPage() {
   const input = useRef<HTMLInputElement>(null);
   const automaticSelection = useRef(false);
   const batchPassword = useRef('');
+  const batchCpf = useRef('');
+  const individualReview = useRef<HTMLElement>(null);
   const automaticBatch = useAutomaticImportBatch(() => {
     void client.invalidateQueries();
   });
   const [pdfPassword, setPdfPassword] = useState('');
+  const [pdfCpf, setPdfCpf] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [detected, setDetected] = useState<
     | {
@@ -57,6 +61,7 @@ export function ImportsPage() {
         itemCount: number;
         sourceFormat: string;
         billMonth: string;
+        dueDate?: string;
       }
     | null
   >(null);
@@ -117,7 +122,11 @@ export function ImportsPage() {
     queryFn: () => request<ImportBatch>(`/imports/${importId}`),
     enabled: !!importId,
   });
-  const chooseStatement = async (file: File) => {
+  const chooseStatement = async (
+    file: File,
+    known?: NonNullable<typeof detected>,
+    destinationId?: string,
+  ) => {
     setSelectedFile(file);
     setCardPreview(null);
     setReplaceConfirmed(false);
@@ -129,10 +138,13 @@ export function ImportsPage() {
       form.set('file', file);
       form.set('billMonth', billMonth);
       if (pdfPassword) form.set('password', pdfPassword);
-      const result = await request<Exclude<NonNullable<typeof detected>, null>>('/imports/detect', {
-        method: 'POST',
-        body: form,
-      });
+      if (pdfCpf) form.set('cpf', pdfCpf);
+      const result =
+        known ??
+        (await request<Exclude<NonNullable<typeof detected>, null>>('/imports/detect', {
+          method: 'POST',
+          body: form,
+        }));
       setDetected(result);
       setBillMonth(result.kind === 'card_invoice' ? result.billMonth : billMonth);
       if (result.kind === 'account_statement') {
@@ -141,7 +153,7 @@ export function ImportsPage() {
             item.institution === result.institution &&
             (result.institution !== 'alelo' || item.type === 'benefit_food'),
         );
-        setDestination(compatible[0]?.id ?? '__new__');
+        setDestination(destinationId ?? compatible[0]?.id ?? '__new__');
         setNewAccountName(
           result.institution === 'alelo'
             ? 'Alelo Alimentação'
@@ -150,8 +162,9 @@ export function ImportsPage() {
               : 'Mercado Pago',
         );
       } else {
-        setDestination('__new__');
+        setDestination(destinationId ?? '__new__');
         setNewCardName(result.institution ? invoiceIssuers[result.institution] : 'Meu cartão');
+        if (result.dueDate) setDueDay(result.dueDate.slice(8, 10));
       }
     } catch (cause) {
       setDetectError(
@@ -160,6 +173,49 @@ export function ImportsPage() {
     } finally {
       setDetecting(false);
     }
+  };
+  const reviewIndividually = (row: AutomaticImportRow) => {
+    setView('upload');
+    const credentials = automaticBatch.reviewCredentials();
+    setPdfPassword(credentials.password);
+    setPdfCpf(credentials.cpf);
+    let known: NonNullable<typeof detected> | undefined;
+    const source = row.detected;
+    if (source?.kind === 'card_invoice')
+      known = {
+        kind: 'card_invoice',
+        institution:
+          source.institution && Object.hasOwn(invoiceIssuers, source.institution)
+            ? (source.institution as keyof typeof invoiceIssuers)
+            : null,
+        reportType: 'card_invoice',
+        summaryOnly: source.summaryOnly ?? false,
+        itemCount: source.itemCount,
+        sourceFormat: source.sourceFormat,
+        billMonth: source.automaticMonth ?? source.billMonth ?? billMonth,
+        dueDate: source.dueDate ?? undefined,
+      };
+    if (
+      source?.kind === 'account_statement' &&
+      ['mercado_pago', 'alelo', 'banco_do_brasil'].includes(source.institution ?? '')
+    )
+      known = {
+        kind: 'account_statement',
+        institution: source.institution as 'mercado_pago' | 'alelo' | 'banco_do_brasil',
+        reportType: 'account_statement',
+        itemCount: source.itemCount,
+        sourceFormat: source.sourceFormat,
+      };
+    if (known) void chooseStatement(row.file, known, row.destination?.id);
+    else {
+      setSelectedFile(row.file);
+      setCardPreview(null);
+      setDetected(null);
+      setDetecting(false);
+      setDetectError(row.message ?? 'Revise as credenciais e tente ler o arquivo novamente.');
+    }
+    individualReview.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
+    individualReview.current?.focus({ preventScroll: true });
   };
   const continueStatement = async () => {
     if (!selectedFile || !detected || busy) return;
@@ -187,8 +243,8 @@ export function ImportsPage() {
         const form = new FormData();
         form.set('billMonth', billMonth);
         if (pdfPassword) form.set('password', pdfPassword);
+        if (pdfCpf) form.set('cpf', pdfCpf);
         form.set('file', selectedFile);
-        if (pdfPassword) form.set('password', pdfPassword);
         setCardPreview(
           await request<NonNullable<typeof cardPreview>>(`/cards/${cardId}/invoices/import`, {
             method: 'POST',
@@ -212,11 +268,13 @@ export function ImportsPage() {
           setDestination(accountId);
           await client.invalidateQueries({ queryKey: [session?.user.id, 'accounts'] });
         }
-        await uploads.upload([selectedFile], accountId);
+        await uploads.upload([selectedFile], accountId, { password: pdfPassword, cpf: pdfCpf });
       }
     } catch (cause) {
       setDetectError(cause instanceof Error ? cause.message : 'Não foi possível preparar a conta.');
     } finally {
+      setPdfPassword('');
+      setPdfCpf('');
       setSaving(false);
     }
   };
@@ -298,21 +356,31 @@ export function ImportsPage() {
           <div hidden={view !== 'upload'} className="view-content">
             <AutomaticImportBatch
               batch={automaticBatch}
-              onSelect={(password) => {
+              onSelect={(password, cpf) => {
                 automaticSelection.current = true;
                 batchPassword.current = password;
+                batchCpf.current = cpf;
                 input.current?.click();
               }}
-              onReview={(file) => {
-                void chooseStatement(file);
-              }}
+              onReview={reviewIndividually}
             />
             <div className="import-grid">
-              <section className="panel upload-panel">
+              <section
+                ref={individualReview}
+                tabIndex={-1}
+                aria-label="Revisão individual de importação"
+                aria-busy={detecting || saving}
+                className="panel upload-panel"
+              >
                 <span className="file-icon">
                   <FileText size={28} />
                 </span>
                 <h2>Selecione seus extratos</h2>
+                {selectedFile && (
+                  <p role="status">
+                    Arquivo em revisão: <strong>{selectedFile.name}</strong>
+                  </p>
+                )}
                 <p>
                   Mercado Pago: extratos PDF, CSV e XLSX. Banco do Brasil: extrato CSV. Alelo
                   Alimentação: PDF com texto, com revisão da cobertura e dos movimentos.
@@ -323,6 +391,19 @@ export function ImportsPage() {
                   <ErrorState error={accounts.error} />
                 ) : (
                   <>
+                    <label>
+                      CPF do titular do PDF (opcional)
+                      <input
+                        data-pdf-cpf
+                        type="password"
+                        inputMode="numeric"
+                        autoComplete="off"
+                        maxLength={14}
+                        value={pdfCpf}
+                        disabled={busy || detecting}
+                        onChange={(event) => setPdfCpf(event.target.value)}
+                      />
+                    </label>
                     <label>
                       Senha do PDF (se houver)
                       <input
@@ -341,6 +422,7 @@ export function ImportsPage() {
                           element.oncancel = () => {
                             automaticSelection.current = false;
                             batchPassword.current = '';
+                            batchCpf.current = '';
                           };
                       }}
                       type="file"
@@ -353,10 +435,14 @@ export function ImportsPage() {
                         e.target.value = '';
                         if (!files.length) return;
                         if (automaticSelection.current || files.length > 1) {
-                          const password = batchPassword.current || pdfPassword;
+                          const password = automaticSelection.current
+                            ? batchPassword.current
+                            : pdfPassword;
+                          const cpf = automaticSelection.current ? batchCpf.current : pdfCpf;
                           automaticSelection.current = false;
                           batchPassword.current = '';
-                          void automaticBatch.analyze(files, password);
+                          void automaticBatch.analyze(files, password, cpf);
+                          batchCpf.current = '';
                         } else void chooseStatement(files[0]);
                       }}
                     />
@@ -675,9 +761,18 @@ export function ImportsPage() {
                             {detectError}
                           </p>
                         )}
+                        <Button
+                          disabled={busy || detecting}
+                          onClick={() => {
+                            if (selectedFile) void chooseStatement(selectedFile);
+                          }}
+                        >
+                          Tentar ler novamente
+                        </Button>
                         <p className="field-help">
-                          Esse formato ainda não foi mapeado. Você pode cadastrar conta e movimentos
-                          manualmente.
+                          Confira a mensagem acima e tente novamente. Para PDF protegido, informe o
+                          CPF ou a senha nos campos acima. Se o formato não for suportado, use as
+                          opções de cadastro manual.
                         </p>
                         <div className="inline-actions">
                           <Link className="button secondary" to="/accounts">

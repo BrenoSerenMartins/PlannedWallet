@@ -1,3 +1,4 @@
+import { pdfPasswords } from './pdf-passwords.js';
 import { invoiceFilenameDate } from './invoice-filename-date.js';
 import { UnprocessableEntityException } from '@nestjs/common';
 import { parse } from 'csv-parse/sync';
@@ -152,6 +153,7 @@ export async function readCardInvoice(
   filename: string,
   billMonth: string,
   password?: string,
+  cpf?: string,
 ): Promise<ParsedCardInvoice> {
   if (password !== undefined && (typeof password !== 'string' || password.length > 128))
     throw new UnprocessableEntityException('A senha do PDF deve ter até 128 caracteres.');
@@ -162,7 +164,10 @@ export async function readCardInvoice(
   if (buffer.subarray(0, 5).toString() === '%PDF-') {
     const result = await readStatementWorker<{
       pages: Array<Array<{ text: string; x: number; y: number }>>;
-    }>(new URL('./pdf-worker.mjs', import.meta.url), { buffer, password });
+    }>(new URL('./pdf-worker.mjs', import.meta.url), {
+      buffer,
+      passwords: pdfPasswords({ password, cpf }),
+    });
     const rows = result.pages.map((page) => {
       const grouped = new Map<number, string[]>();
       for (const cell of page) {

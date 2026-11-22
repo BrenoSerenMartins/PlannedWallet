@@ -787,6 +787,7 @@ type InvoiceImportPreview = {
 function CardInvoiceImportForm({ cardId, month }: { cardId: string; month: string }) {
   const client = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
+  const [password, setPassword] = useState('');
   const [preview, setPreview] = useState<InvoiceImportPreview | null>(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -799,6 +800,7 @@ function CardInvoiceImportForm({ cardId, month }: { cardId: string; month: strin
         const form = new FormData();
         form.set('billMonth', month);
         form.set('file', file);
+        if (password) form.set('password', password);
         setBusy(true);
         setError('');
         try {
@@ -811,6 +813,7 @@ function CardInvoiceImportForm({ cardId, month }: { cardId: string; month: strin
         } catch (cause) {
           setError(cause instanceof Error ? cause.message : 'Não foi possível ler a fatura.');
         } finally {
+          setPassword('');
           setBusy(false);
         }
       }}
@@ -823,6 +826,16 @@ function CardInvoiceImportForm({ cardId, month }: { cardId: string; month: strin
               type="file"
               accept=".pdf,.csv,application/pdf,text/csv"
               onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+            />
+          </label>
+          <label>
+            Senha do PDF (se houver)
+            <input
+              type="password"
+              autoComplete="off"
+              maxLength={128}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
             />
           </label>
           <p className="field-help">

@@ -2,7 +2,8 @@ import { parentPort, workerData } from 'node:worker_threads';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 try {
   const task = getDocument({
-    data: new Uint8Array(workerData),
+    data: new Uint8Array(ArrayBuffer.isView(workerData) ? workerData : workerData.buffer),
+    password: workerData.password,
     useSystemFonts: true,
     isEvalSupported: false,
   });

@@ -323,9 +323,11 @@ export class CardsService implements CardForecast, ManagedBackup<CardsSnapshot> 
 
   private paymentsReportedByInvoice(
     payments: Array<{ active: boolean; paymentDate: string; amount: number }>,
-    movements: Array<{ date: string; description: string; amount: number }>,
+    movements: Array<{ date: string; description: string; amount: number; kind?: 'payment' }>,
   ) {
-    const reported = movements.filter((item) => /pagamento.*fatura/i.test(item.description));
+    const reported = movements.filter(
+      (item) => item.kind === 'payment' || /pagamento.*fatura/i.test(item.description),
+    );
     let included = 0;
     for (const payment of payments) {
       if (!payment.active) continue;

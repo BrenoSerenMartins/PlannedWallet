@@ -5101,3 +5101,106 @@ for (const width of [390, 1440]) {
     await expectNoHorizontalOverflow(page);
   });
 }
+
+test('protected invoice upload keeps the password transient through detection and preview', async ({
+  page,
+}) => {
+  await signedIn(page);
+  const cardId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+  const password = 'synthetic-pdf-password';
+  let detected = false;
+  let uploaded = false;
+  await page.route('**/v1/imports/detect', async (route) => {
+    expect(route.request().postData()).toContain(password);
+    detected = true;
+    await route.fulfill({
+      json: {
+        kind: 'card_invoice',
+        institution: 'inter',
+        summaryOnly: false,
+        itemCount: 1,
+        billMonth: '2026-11',
+        sourceFormat: 'pdf',
+      },
+    });
+  });
+  await page.route('**/v1/cards', async (route) => {
+    await route.fulfill({
+      json:
+        route.request().method() === 'POST' ? { id: cardId } : { today: '2026-11-01', cards: [] },
+    });
+  });
+  await page.route(`**/v1/cards/${cardId}/invoices/import`, async (route) => {
+    expect(route.request().postData()).toContain(password);
+    uploaded = true;
+    await route.fulfill({
+      json: {
+        id: cardId,
+        cardId,
+        billMonth: '2026-11',
+        version: 1,
+        status: 'review',
+        reconciliation: [],
+        parsed: {
+          total: 5000,
+          warnings: [],
+          lines: [
+            {
+              date: '2026-10-01',
+              description: 'Loja Exemplo',
+              amount: 5000,
+              installmentNumber: null,
+              installmentCount: null,
+            },
+          ],
+        },
+      },
+    });
+  });
+  await page.goto('/imports');
+  const passwordField = page.getByLabel('Senha do PDF (se houver)');
+  await passwordField.fill(password);
+  await page
+    .locator('input[type=file]')
+    .setInputFiles({
+      name: 'fatura.pdf',
+      mimeType: 'application/pdf',
+      buffer: Buffer.from('%PDF-synthetic'),
+    });
+  await expect(page.getByText('Fatura de cartão Inter · 1 compras reconhecidas')).toBeVisible();
+  await page.getByRole('button', { name: 'Ler e conciliar fatura' }).click();
+  await expect(page.getByRole('region', { name: 'Prévia da fatura importada' })).toBeVisible();
+  await expect(passwordField).toHaveValue('');
+  expect(detected && uploaded).toBe(true);
+  expect(
+    await page.evaluate(
+      (value) => Object.values(localStorage).some((entry) => entry.includes(value)),
+      password,
+    ),
+  ).toBe(false);
+  await expectNoHorizontalOverflow(page);
+});
+
+test('Banco do Brasil detection proposes its own account rather than a Mercado Pago destination', async ({
+  page,
+}) => {
+  await signedIn(page);
+  await page.route('**/v1/imports/detect', (route) =>
+    route.fulfill({
+      json: {
+        kind: 'account_statement',
+        institution: 'banco_do_brasil',
+        reportType: 'account_statement',
+        itemCount: 3,
+        sourceFormat: 'csv',
+      },
+    }),
+  );
+  await page.goto('/imports');
+  await page
+    .locator('input[type=file]')
+    .setInputFiles({ name: 'extrato.csv', mimeType: 'text/csv', buffer: Buffer.from('synthetic') });
+  await expect(page.getByText('Banco do Brasil · 3 movimentos identificados')).toBeVisible();
+  await expect(page.getByLabel('Nome da nova conta')).toHaveValue('Banco do Brasil');
+  await expectNoHorizontalOverflow(page);
+});

@@ -660,3 +660,57 @@ it('recalculates duplicate locks when another draft is confirmed before reproces
   });
   expect((await db.forUser(db.user, () => accounts.find(accountId))).balance).toBe(9900);
 });
+
+it('reprocesses and confirms BB CSV without merging repeated documents or accepting the wrong bank', async () => {
+  const bb = await db.forUser(db.user, () =>
+    accounts.create({
+      name: 'BB synthetic',
+      institution: 'banco_do_brasil',
+      type: 'checking',
+      openingBalance: 0,
+      openingDate: '2026-10-01',
+    }),
+  );
+  const buffer = Buffer.from(
+    '"Data","Lançamento","Detalhes","N° documento","Valor","Tipo Lançamento"\n"30/09/2026","Saldo Anterior","","","0,00",""\n"05/10/2026","Pix - Recebido","Origem exemplo","123","20,00","Entrada"\n"06/10/2026","Transferência enviada","Destino exemplo","456","-5,00","Saída"\n"06/10/2026","Transferência enviada","Destino exemplo","456","-2,00","Saída"\n"06/10/2026","Saldo do dia","","","13,00",""\n"31/10/2026","S A L D O","","","13,00",""',
+  );
+  const statement = await imports.extract(db.user, buffer, 'bb.csv', 'banco_do_brasil');
+  await expect(
+    db.forUser(db.user, () => imports.upload(account, buffer, 'bb.csv', statement)),
+  ).rejects.toThrow('instituição');
+  const preview = await db.forUser(db.user, () =>
+    imports.upload(bb.id, buffer, 'bb.csv', statement),
+  );
+  expect(preview.items).toHaveLength(3);
+  expect(preview.institution).toBe('banco_do_brasil');
+  const reprocessor = new ImportReprocessingService(
+    new ImportsRepository(db.service),
+    imports,
+    accounts,
+  );
+  const updated = await db.forUser(db.user, () =>
+    reprocessor.reprocess(preview.id, preview.version),
+  );
+  expect(updated.items.map((item) => item.transactionType)).toEqual([
+    'income',
+    'expense',
+    'expense',
+  ]);
+  await db.forUser(db.user, () =>
+    imports.confirm(updated.id, updated.version, 'confirm-bb-synthetic'),
+  );
+  expect((await db.forUser(db.user, () => accounts.find(bb.id))).balance).toBe(1300);
+  const transactions = (await db.forUser(db.user, () => ledger.exportRecords())).filter(
+    (item) => item.accountId === bb.id,
+  );
+  expect(transactions).toHaveLength(3);
+  expect(
+    transactions.every((item) =>
+      item.sourceEvidence?.some((proof) => proof.institution === 'banco_do_brasil'),
+    ),
+  ).toBe(true);
+  const repeated = await db.forUser(db.user, () =>
+    imports.upload(bb.id, buffer, 'bb.csv', statement),
+  );
+  expect(repeated.id).toBe(updated.id);
+});

@@ -78,11 +78,11 @@ export class CardInvoiceImportsService {
     );
   }
 
-  async import(cardId: string, billMonth: string, file: Express.Multer.File) {
+  async import(cardId: string, billMonth: string, file: Express.Multer.File, password?: string) {
     const data = await this.cards.snapshot();
     if (!data.cards.some((card) => card.id === cardId))
       throw new NotFoundException('Cartão não encontrado.');
-    const parsed = await readCardInvoice(file.buffer, file.originalname, billMonth);
+    const parsed = await readCardInvoice(file.buffer, file.originalname, billMonth, password);
     const fingerprint = await this.crypto.fingerprint(
       createHash('sha256').update(file.buffer).digest('hex'),
     );

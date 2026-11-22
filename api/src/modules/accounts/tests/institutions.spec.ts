@@ -5,7 +5,7 @@ import { CreateAccountDto } from '../dto/create-account.dto.js';
 import { UpdateAccountDto } from '../dto/update-account.dto.js';
 
 it('accepts only mapped institutions on public account creation', async () => {
-  for (const institution of ['mercado_pago', 'alelo']) {
+  for (const institution of ['mercado_pago', 'alelo', 'banco_do_brasil']) {
     const input = {
       name: 'Minha conta',
       institution,
@@ -13,7 +13,7 @@ it('accepts only mapped institutions on public account creation', async () => {
     };
     await expect(validateInput(CreateAccountDto, input)).resolves.toMatchObject(input);
   }
-  for (const institution of ['nubank', 'itau', 'inter', 'banco_do_brasil', 'other', 'unknown']) {
+  for (const institution of ['nubank', 'itau', 'inter', 'other', 'unknown']) {
     await expect(
       validateInput(CreateAccountDto, { name: 'Conta', institution, type: 'checking' }),
     ).rejects.toThrow();

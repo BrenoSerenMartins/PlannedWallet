@@ -6,10 +6,17 @@ export function importSourceEvidence(
     'sourceOperationId' | 'transactionDate' | 'amount' | 'balanceAfter' | 'metadata' | 'description'
   >,
   reportType: SourceEvidence['reportType'],
+  institution: SourceEvidence['institution'] = 'mercado_pago',
 ): SourceEvidence | null {
   if (!item.sourceOperationId) return null;
   return {
-    ruleVersion: reportType === 'settlement' ? 'mercado-pago/edi/4' : 'mercado-pago/account/2',
+    ...(institution !== 'mercado_pago' ? { institution } : {}),
+    ruleVersion:
+      institution === 'banco_do_brasil'
+        ? 'banco-do-brasil/account-csv/1'
+        : reportType === 'settlement'
+          ? 'mercado-pago/edi/4'
+          : 'mercado-pago/account/2',
     reportType,
     description: item.description,
     ...(item.metadata?.storeId ? { storeId: item.metadata.storeId } : {}),

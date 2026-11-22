@@ -66,13 +66,14 @@ export class ImportsService {
     buffer: Buffer,
     fileName = 'statement.pdf',
     billMonth = new Date().toISOString().slice(0, 7),
+    password?: string,
   ) {
     if (this.activeExtractions.has(userId))
       throw new ConflictException('Já existe uma leitura em andamento.');
     this.activeExtractions.add(userId);
     try {
       let lastError: unknown;
-      for (const institution of ['alelo', 'mercado_pago']) {
+      for (const institution of ['alelo', 'mercado_pago', 'banco_do_brasil']) {
         try {
           const statement = await extractInstitutionStatement(institution, buffer, fileName);
           this.assertConsumerStatement(statement.reportType);
@@ -88,7 +89,7 @@ export class ImportsService {
         }
       }
       try {
-        const invoice = await readCardInvoice(buffer, fileName, billMonth);
+        const invoice = await readCardInvoice(buffer, fileName, billMonth, password);
         return {
           kind: 'card_invoice',
           institution: invoice.institution ?? null,
@@ -129,7 +130,7 @@ export class ImportsService {
   }
   async sourceAccount(accountId: string) {
     const account = await this.accounts.find(accountId);
-    if (!['mercado_pago', 'alelo'].includes(account.institution))
+    if (!['mercado_pago', 'alelo', 'banco_do_brasil'].includes(account.institution))
       throw new UnprocessableEntityException('Esta instituição ainda não possui importador.');
     return account;
   }
@@ -161,8 +162,13 @@ export class ImportsService {
           ? classifyMercadoPagoMovement(item)
           : item.transactionType,
     }));
-    const planned = await this.reconciliation.plan(accountId, reportType, normalized);
     const account = await this.accounts.find(accountId);
+    const planned = await this.reconciliation.plan(
+      accountId,
+      reportType,
+      normalized,
+      account.institution as ParsedStatement['institution'],
+    );
     const activeCategories = await this.categories.list();
     const suggestions = await this.counterparties.suggest(
       accountId,
@@ -278,7 +284,8 @@ export class ImportsService {
     const account = await this.accounts.find(accountId, true);
     if (
       (statement.reportType === 'benefit_statement') !== (account.institution === 'alelo') ||
-      !['alelo', 'mercado_pago'].includes(account.institution)
+      !['alelo', 'mercado_pago', 'banco_do_brasil'].includes(account.institution) ||
+      (account.institution === 'banco_do_brasil') !== (statement.institution === 'banco_do_brasil')
     )
       throw new UnprocessableEntityException('O arquivo não corresponde à instituição da conta.');
     if (account.institution === 'alelo' && account.type !== 'benefit_food')

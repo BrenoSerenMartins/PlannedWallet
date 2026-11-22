@@ -13,6 +13,8 @@ Frontend features compose focused components and data hooks. Theme/auth/workspac
 
 ## Implemented scope
 
+Additional mapped files include Banco do Brasil checking CSV, detailed Inter/Itaú invoice PDFs and C6 card CSV. Password-protected invoice PDFs accept a transient password. Mercado Pago readers remain supported; Crediffato screenshots require reviewed manual transcription rather than OCR. See [statement imports](statement-imports.md) for format and validation limits.
+
 The pilot includes accounts and reviewed balance references, ledger/transfers/refunds, statement import and reconciliation for supported Mercado Pago/Alelo layouts, agents and classification rules, monthly planning, commitments/cashflow, cards/bills and manually valued investments/net worth. Workspace selection is an open directory, with seven-day trash retention. Backup v10 includes planning, agents, balance history, commitments, cards and wealth records. Fuzzy name/abbreviation candidates already exist and require explicit confirmation.
 
 Primary mobile routes use compact contextual controls. Destinations inside More keep visible titles. Financial operations require connectivity; the PWA caches the shell, not financial API responses.

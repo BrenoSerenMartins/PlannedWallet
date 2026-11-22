@@ -47,6 +47,16 @@ Cada usuário acessa seus próprios espaços. Compartilhamento, convites e membr
 | Qualidade          | Vitest, PGlite, Playwright, Oxlint e Prettier                 |
 | Execução           | Node.js 24, npm workspaces e Docker                           |
 
+## Formatos adicionais de importação
+
+- **Banco do Brasil:** extrato de conta corrente CSV com saldo anterior, saldos diários e saldo final conferidos; aceita UTF-8 e Windows-1252.
+- **Inter:** fatura PDF com lançamentos detalhados, incluindo o modelo protegido por senha. Informe a senha antes de selecionar o arquivo em Importações, ou no formulário de fatura do cartão. A senha não é salva.
+- **Itaú:** fatura PDF no modelo de duas colunas validado; compras parceladas sem ano explícito exibem aviso para revisão.
+- **C6:** CSV de compras da fatura; pagamentos anteriores ficam separados, enquanto estornos e créditos de pontos são preservados. O total é calculado pela soma do arquivo e precisa de conferência.
+- **Crediffato:** a captura de tela foi mapeada para transcrição revisada. A aplicação continua aceitando PDF/CSV, sem leitura automática de imagens.
+
+As prévias continuam exigindo revisão e confirmação. Reconhecer um formato não importa dados automaticamente nem comprova cobertura completa da conta.
+
 ## Executar localmente
 
 ### 1. Instalar dependências

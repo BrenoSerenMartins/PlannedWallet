@@ -19,7 +19,11 @@ export function ImportSourceSummary({ batch }: { batch: ImportBatch }) {
         )}
         <p className="field-help">
           {batch.fileName} ·{' '}
-          {batch.institution === 'alelo' ? 'Extrato Alelo.' : 'Extrato de conta Mercado Pago.'}{' '}
+          {batch.institution === 'alelo'
+            ? 'Extrato Alelo.'
+            : batch.institution === 'banco_do_brasil'
+              ? 'Extrato Banco do Brasil.'
+              : 'Extrato de conta Mercado Pago.'}{' '}
           Valores e referências preservados para conferência.
         </p>
         <section className="review-summary">

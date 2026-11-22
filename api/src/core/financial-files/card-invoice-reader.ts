@@ -1,7 +1,8 @@
 import { UnprocessableEntityException } from '@nestjs/common';
 import { parse } from 'csv-parse/sync';
 import { readStatementWorker } from './worker-reader.js';
-import { dateOnly } from '../rest/index.js';
+import { money, date, installments, validate } from './invoice-values.js';
+import { readDetailedInvoice } from './detailed-invoice-reader.js';
 
 export type CardInvoiceLine = {
   date: string;
@@ -21,74 +22,8 @@ export type ParsedCardInvoice = {
   balanceBreakdown?: { purchases: number; previousBalance: number; paymentsAndCredits: number };
   dueDate?: string;
   issuedOn?: string;
-  movements?: Array<{ date: string; description: string; amount: number }>;
+  movements?: Array<{ date: string; description: string; amount: number; kind?: 'payment' }>;
 };
-
-function money(raw: string) {
-  const token = raw.replace(/\s|R\$/gi, '').trim();
-  const negative = token.startsWith('(') && token.endsWith(')');
-  const normalized = token.replace(/[()]/g, '');
-  const value = normalized.includes(',')
-    ? normalized.replace(/\./g, '').replace(',', '.')
-    : /\.\d{1,2}$/.test(normalized)
-      ? normalized
-      : normalized.replace(/\./g, '');
-  const amount = /^-?\d+(?:\.\d{1,2})?$/.test(value) ? Number(value) : NaN;
-  if (!Number.isFinite(amount) || Math.abs(amount) > 1_000_000_000)
-    throw new UnprocessableEntityException('A fatura contém um valor que não foi reconhecido.');
-  return Math.round(amount * 100) * (negative ? -1 : 1);
-}
-function date(raw: string, billMonth: string) {
-  const iso = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (iso) return dateOnly(`${iso[1]}-${iso[2]}-${iso[3]}`);
-  const parts = raw.split(/[/.-]/).map(Number);
-  if (parts.length === 3) {
-    const [a, b, c] = parts;
-    const year = c < 100 ? 2000 + c : c;
-    return dateOnly(
-      `${String(year).padStart(4, '0')}-${String(b).padStart(2, '0')}-${String(a).padStart(2, '0')}`,
-    );
-  }
-  if (parts.length === 2) {
-    const [day, month] = parts;
-    let year = Number(billMonth.slice(0, 4));
-    const billMonthNumber = Number(billMonth.slice(5, 7));
-    if (month > billMonthNumber + 1) year--;
-    return dateOnly(`${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`);
-  }
-  throw new UnprocessableEntityException('A fatura contém uma data que não foi reconhecida.');
-}
-function installments(text: string) {
-  const match = text.match(/(?:^|\s)(\d{1,3})\s*\/\s*(\d{1,3})(?:\s|$)/);
-  if (!match) return { installmentNumber: null, installmentCount: null };
-  const installmentNumber = Number(match[1]),
-    installmentCount = Number(match[2]);
-  if (installmentNumber < 1 || installmentCount < installmentNumber || installmentCount > 120)
-    throw new UnprocessableEntityException('A fatura contém uma parcela que não foi reconhecida.');
-  return { installmentNumber, installmentCount };
-}
-function validate(
-  lines: CardInvoiceLine[],
-  billMonth: string,
-  sourceFormat: 'csv' | 'pdf',
-  total?: number,
-): ParsedCardInvoice {
-  if (!lines.length || lines.length > 500)
-    throw new UnprocessableEntityException(
-      'Não encontrei compras suficientes para revisar nesta fatura.',
-    );
-  const sum = lines.reduce((totalMinor, line) => totalMinor + line.amount, 0);
-  return {
-    billMonth,
-    total: total ?? sum,
-    lines,
-    sourceFormat,
-    warnings:
-      total === undefined
-        ? ['Total calculado pela soma das compras; confira antes de conciliar.']
-        : [],
-  };
-}
 
 export function readMercadoPagoInvoice(
   pages: string[][],
@@ -215,7 +150,10 @@ export async function readCardInvoice(
   buffer: Buffer,
   filename: string,
   billMonth: string,
+  password?: string,
 ): Promise<ParsedCardInvoice> {
+  if (password !== undefined && (typeof password !== 'string' || password.length > 128))
+    throw new UnprocessableEntityException('A senha do PDF deve ter até 128 caracteres.');
   if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(billMonth))
     throw new UnprocessableEntityException('Informe o mês da fatura no formato AAAA-MM.');
   if (!buffer.length || buffer.length > 10 * 1024 * 1024)
@@ -223,7 +161,7 @@ export async function readCardInvoice(
   if (buffer.subarray(0, 5).toString() === '%PDF-') {
     const result = await readStatementWorker<{
       pages: Array<Array<{ text: string; x: number; y: number }>>;
-    }>(new URL('./pdf-worker.mjs', import.meta.url), buffer);
+    }>(new URL('./pdf-worker.mjs', import.meta.url), { buffer, password });
     const rows = result.pages.map((page) => {
       const grouped = new Map<number, string[]>();
       for (const cell of page) {
@@ -232,6 +170,8 @@ export async function readCardInvoice(
       }
       return [...grouped.values()].map((row) => row.join(' ').replace(/\s+/g, ' ').trim());
     });
+    const detailed = readDetailedInvoice(result.pages, billMonth);
+    if (detailed) return detailed;
     const mercadoPago = readMercadoPagoInvoice(rows, billMonth);
     if (mercadoPago) return mercadoPago;
     const cover = readInvoiceCover(rows[0] ?? [], billMonth);
@@ -299,11 +239,24 @@ export async function readCardInvoice(
     );
   if (rows.length > 500)
     throw new UnprocessableEntityException('A fatura deve ter no máximo 500 lançamentos.');
+  const movements: NonNullable<ParsedCardInvoice['movements']> = [];
+  const c6 = ['nome no cartao', 'final do cartao', 'valor (em us$)', 'cotacao (em r$)'].every(
+    (name) => header.includes(name),
+  );
   const lines = rows
     .map((row): CardInvoiceLine | null => {
       const description = (row[descriptionIndex] ?? '').trim();
       if (!description)
         throw new UnprocessableEntityException('O CSV contém uma compra sem descrição.');
+      if (c6 && /^inclusao de pagamento$/i.test(description)) {
+        movements.push({
+          date: date(row[dateIndex] ?? '', billMonth),
+          description,
+          amount: Math.abs(money(row[amountIndex] ?? '')),
+          kind: 'payment',
+        });
+        return null;
+      }
       if (
         /pagamento\s+(?:da\s+)?fatura|pagto.*fatura|saldo anterior|fatura anterior/i.test(
           description,
@@ -320,5 +273,10 @@ export async function readCardInvoice(
       };
     })
     .filter((line): line is CardInvoiceLine => line !== null);
-  return validate(lines, billMonth, 'csv');
+  const result = validate(lines, billMonth, 'csv');
+  if (rows.some((row) => /^\d{2}[/.-]\d{2}$/.test(row[dateIndex] ?? '')))
+    result.warnings.push(
+      'Datas sem ano foram estimadas pelo mês da fatura. Confira antes de confirmar.',
+    );
+  return { ...result, ...(c6 ? { institution: 'c6' as const } : {}), movements };
 }

@@ -32,11 +32,12 @@ export function ImportsPage() {
   const navigate = useNavigate();
   const client = useQueryClient();
   const input = useRef<HTMLInputElement>(null);
+  const [pdfPassword, setPdfPassword] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [detected, setDetected] = useState<
     | {
         kind: 'account_statement';
-        institution: 'mercado_pago' | 'alelo';
+        institution: 'mercado_pago' | 'alelo' | 'banco_do_brasil';
         reportType: string;
         itemCount: number;
         sourceFormat: string;
@@ -117,6 +118,7 @@ export function ImportsPage() {
       const form = new FormData();
       form.set('file', file);
       form.set('billMonth', billMonth);
+      if (pdfPassword) form.set('password', pdfPassword);
       const result = await request<Exclude<NonNullable<typeof detected>, null>>('/imports/detect', {
         method: 'POST',
         body: form,
@@ -130,7 +132,13 @@ export function ImportsPage() {
             (result.institution !== 'alelo' || item.type === 'benefit_food'),
         );
         setDestination(compatible[0]?.id ?? '__new__');
-        setNewAccountName(result.institution === 'alelo' ? 'Alelo Alimentação' : 'Mercado Pago');
+        setNewAccountName(
+          result.institution === 'alelo'
+            ? 'Alelo Alimentação'
+            : result.institution === 'banco_do_brasil'
+              ? 'Banco do Brasil'
+              : 'Mercado Pago',
+        );
       } else {
         setDestination('__new__');
         setNewCardName(result.institution ? invoiceIssuers[result.institution] : 'Meu cartão');
@@ -168,13 +176,16 @@ export function ImportsPage() {
         }
         const form = new FormData();
         form.set('billMonth', billMonth);
+        if (pdfPassword) form.set('password', pdfPassword);
         form.set('file', selectedFile);
+        if (pdfPassword) form.set('password', pdfPassword);
         setCardPreview(
           await request<NonNullable<typeof cardPreview>>(`/cards/${cardId}/invoices/import`, {
             method: 'POST',
             body: form,
           }),
         );
+        setPdfPassword('');
       } else {
         let accountId = destination;
         if (destination === '__new__') {
@@ -282,8 +293,8 @@ export function ImportsPage() {
                 </span>
                 <h2>Selecione seus extratos</h2>
                 <p>
-                  Mercado Pago: extratos PDF, CSV e XLSX. Alelo Alimentação: PDF com texto, com
-                  revisão da cobertura e dos movimentos.
+                  Mercado Pago: extratos PDF, CSV e XLSX. Banco do Brasil: extrato CSV. Alelo
+                  Alimentação: PDF com texto, com revisão da cobertura e dos movimentos.
                 </p>
                 {accounts.isPending ? (
                   <Loading />
@@ -291,6 +302,17 @@ export function ImportsPage() {
                   <ErrorState error={accounts.error} />
                 ) : (
                   <>
+                    <label>
+                      Senha do PDF (se houver)
+                      <input
+                        type="password"
+                        autoComplete="off"
+                        maxLength={128}
+                        value={pdfPassword}
+                        disabled={busy || detecting}
+                        onChange={(event) => setPdfPassword(event.target.value)}
+                      />
+                    </label>
                     <input
                       ref={input}
                       type="file"
@@ -449,7 +471,7 @@ export function ImportsPage() {
                         <p role="status" className="field-help">
                           {detected.kind === 'card_invoice'
                             ? `Fatura de cartão${detected.institution ? ' ' + invoiceIssuers[detected.institution] : ''} · ${detected.summaryOnly ? 'Resumo identificado' : detected.itemCount + ' compras reconhecidas'}`
-                            : `${detected.institution === 'alelo' ? 'Alelo Alimentação' : 'Mercado Pago'} · ${detected.itemCount} movimentos identificados`}
+                            : `${detected.institution === 'alelo' ? 'Alelo Alimentação' : detected.institution === 'banco_do_brasil' ? 'Banco do Brasil' : 'Mercado Pago'} · ${detected.itemCount} movimentos identificados`}
                         </p>
                         {detected.kind === 'card_invoice' ? (
                           <>

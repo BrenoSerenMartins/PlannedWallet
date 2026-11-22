@@ -50,7 +50,9 @@ export function AccountRecord({
               ? 'Mercado Pago'
               : a.institution === 'alelo'
                 ? 'Alelo'
-                : a.institution}{' '}
+                : a.institution === 'banco_do_brasil'
+                  ? 'Banco do Brasil'
+                  : a.institution}{' '}
             · {product}
           </p>
           {a.balanceBasis?.reviewRequired ? (

@@ -98,15 +98,16 @@ export class ImportsController {
   @Post('detect')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
-    FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024, files: 1, fields: 1 } }),
+    FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024, files: 1, fields: 2 } }),
   )
   async detect(
     @Req() r: AuthenticatedRequest,
     @Body('billMonth') billMonth: string | undefined,
+    @Body('password') password: string | undefined,
     @UploadedFile() file: Express.Multer.File,
   ) {
     if (!file) throw new UnprocessableEntityException('Selecione um arquivo para identificar.');
-    return this.imports.detect(r.identity.id, file.buffer, file.originalname, billMonth);
+    return this.imports.detect(r.identity.id, file.buffer, file.originalname, billMonth, password);
   }
   @Patch(':id/items/:itemId')
   @ApiOkResponse({ type: ImportBatchResourceDto })

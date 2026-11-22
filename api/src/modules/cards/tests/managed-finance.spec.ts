@@ -1928,7 +1928,7 @@ it('applies an invoice balance with earlier debt and preserves settled bank paym
       ],
       randomUUID(),
       async () => [{ purchaseId: null, confidence: 'unmatched' }],
-      [{ date: '2026-11-05', description: 'Pagamento da fatura', amount: 1000 }],
+      [{ date: '2026-11-05', description: 'PAGAMENTO ON LINE', amount: 1000, kind: 'payment' }],
     ),
   );
   const result = await currentCard(card.id);

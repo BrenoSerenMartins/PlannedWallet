@@ -62,17 +62,18 @@ export class CardsController {
   @Post(':id/invoices/import')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
-    FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024, files: 1, fields: 1 } }),
+    FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024, files: 1, fields: 2 } }),
   )
   async importInvoice(
     @Req() r: AuthenticatedRequest,
     @Param('id') id: string,
     @Body('billMonth') billMonth: string,
+    @Body('password') password: string | undefined,
     @UploadedFile() file: Express.Multer.File,
   ) {
     if (!file) throw new UnprocessableEntityException('Selecione uma fatura em PDF ou CSV.');
     return this.db.forUser(r.identity.id, () =>
-      this.invoiceImports.import(requireUuid(id), billMonth, file),
+      this.invoiceImports.import(requireUuid(id), billMonth, file, password),
     );
   }
   @Post('invoices/:importId/confirm')

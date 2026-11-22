@@ -18,6 +18,7 @@ export class ImportReconciliationService {
     accountId: string,
     reportType: SourceEvidence['reportType'],
     items: SavedImportItem[],
+    institution: SourceEvidence['institution'] = 'mercado_pago',
   ) {
     const dates = items
       .flatMap((i) => [
@@ -87,7 +88,7 @@ export class ImportReconciliationService {
               occurrence,
               ruleVersion: 'alelo/food-pdf/1',
             }
-          : importSourceEvidence(item, reportType);
+          : importSourceEvidence(item, reportType, institution);
       if (reportType === 'benefit_statement' && item.linkedTransactionId && !item.confirmNew) {
         const proof = indexed.byId
           .get(item.linkedTransactionId)

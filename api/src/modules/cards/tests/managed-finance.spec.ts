@@ -2181,3 +2181,39 @@ it('learns a card issuer from confirmed encrypted sources without exposing anoth
   ).toBe(false);
   expect(await run(() => service.destinations('__proto__'))).toEqual([]);
 });
+
+it('deletes card history while keeping the bank payment and a valid backup', async () => {
+  const { card, bank } = await makeCard('Card to delete');
+  await purchase(card.id, card.version, 12000, 1);
+  const version = (await currentCard(card.id)).version;
+  await run(() =>
+    cards.pay(
+      card.id,
+      '2026-11',
+      {
+        mode: 'create',
+        accountId: bank.id,
+        date: '2026-11-15',
+        amount: 3000,
+      },
+      String(version),
+      randomUUID(),
+    ),
+  );
+  const deleteVersion = (await currentCard(card.id)).version;
+  const key = randomUUID();
+  await run(() => cards.remove(card.id, String(deleteVersion), key));
+  expect(await run(() => cards.remove(card.id, String(deleteVersion), key))).toEqual({
+    id: card.id,
+  });
+  expect(await currentCard(card.id)).toBeUndefined();
+  expect((await run(() => accounts.find(bank.id))).balance).toBe(97000);
+  const exported = await run(() => backup.backup());
+  expect(exported.accounts.some((account) => account.id === card.accountId)).toBe(false);
+  expect(exported.transactions.some((entry) => entry.accountId === card.accountId)).toBe(false);
+  expect(exported.transactions).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ accountId: bank.id, amount: -3000, managedKind: null }),
+    ]),
+  );
+});

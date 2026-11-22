@@ -1,3 +1,4 @@
+import { cardArtwork, issuerLogos } from '../../cards/art/catalog';
 import { money } from '../../../shared/formatting/money';
 import '../automatic-import.css';
 import { useState } from 'react';
@@ -87,9 +88,20 @@ export function AutomaticImportBatch({
             <strong>{row.file.name}</strong>
             <span>{states[row.status]}</span>
             {row.detected && (
-              <p>
-                {importBanks[row.detected.institution ?? ''] ?? 'Banco não identificado'} ·{' '}
-                {row.detected.kind === 'card_invoice' ? 'Fatura' : 'Extrato'} ·{' '}
+              <p className="automatic-import-bank">
+                {row.detected.kind === 'card_invoice' &&
+                  issuerLogos[row.detected.institution ?? ''] && (
+                    <img
+                      src={issuerLogos[row.detected.institution ?? '']}
+                      alt=""
+                      width={24}
+                      height={24}
+                    />
+                  )}
+                {(row.detected.artwork && cardArtwork[row.detected.artwork]?.label) ||
+                  importBanks[row.detected.institution ?? ''] ||
+                  'Banco não identificado'}{' '}
+                · {row.detected.kind === 'card_invoice' ? 'Fatura' : 'Extrato'} ·{' '}
                 {row.detected.automaticMonth ??
                   row.detected.months?.join(', ') ??
                   'Mês não identificado'}{' '}

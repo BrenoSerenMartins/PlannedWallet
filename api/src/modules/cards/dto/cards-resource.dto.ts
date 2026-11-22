@@ -1,5 +1,8 @@
+import { CARD_ARTWORK, type CardArtwork } from '../../../core/integration/cards.js';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 export class CreditCardDto {
+  @ApiPropertyOptional({ enum: [...CARD_ARTWORK], nullable: true })
+  artwork?: CardArtwork | null;
   @ApiProperty({ type: String }) id!: string;
   @ApiProperty({ type: String }) accountId!: string;
   @ApiProperty({ type: String, nullable: true }) paymentAccountId!: string | null;

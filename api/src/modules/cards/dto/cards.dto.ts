@@ -1,3 +1,4 @@
+import { CARD_ARTWORK, type CardArtwork } from '../../../core/integration/cards.js';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsBoolean,
@@ -12,6 +13,10 @@ import {
   Min,
 } from 'class-validator';
 export class SaveCardDto {
+  @ApiPropertyOptional({ enum: [...CARD_ARTWORK], nullable: true })
+  @IsOptional()
+  @IsIn(CARD_ARTWORK)
+  artwork?: CardArtwork | null;
   @ApiProperty({ type: String }) @IsString() @Length(1, 100) name!: string;
   @ApiPropertyOptional({ type: String, nullable: true }) @IsOptional() @IsUUID() paymentAccountId?:
     string | null;

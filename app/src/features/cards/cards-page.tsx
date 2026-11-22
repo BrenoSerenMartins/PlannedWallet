@@ -1,3 +1,4 @@
+import { cardArtwork } from './art/catalog';
 import '../../shared/ui/card-invoice-preview.css';
 import { useFinancialVisibility } from '../../shared/privacy/financial-visibility';
 import { MonthPicker } from '../../shared/ui/controls/month-picker';
@@ -38,7 +39,7 @@ import { CardPaymentForm } from './components/card-payment-form';
 import { CardRecurring } from './components/card-recurring';
 import './cards.css';
 type Dialog =
-  | { kind: 'new' | 'edit' | 'purchase' | 'opening' | 'pay' | 'invoice' }
+  | { kind: 'new' | 'edit' | 'purchase' | 'opening' | 'pay' | 'invoice' | 'delete' }
   | { kind: 'refund' | 'undoRefund' | 'undoOpening'; entry: CardEntry }
   | { kind: 'undoPayment'; payment: CardPayment }
   | { kind: 'category' | 'cancelPurchase'; purchase: CardPurchase };
@@ -86,7 +87,7 @@ export function CardsPage() {
   };
   useEffect(() => {
     const selector = selectorRef.current;
-    if (!selector || !card) return;
+    if (!selector || !card || window.matchMedia('(min-width: 851px)').matches) return;
     const selected = Array.from(
       selector.querySelectorAll<HTMLButtonElement>('[data-card-id]'),
     ).find((item) => item.dataset.cardId === card.id);
@@ -163,6 +164,7 @@ export function CardsPage() {
                   role="group"
                   aria-label="Escolher cartão"
                   onScroll={() => {
+                    if (window.matchMedia('(min-width: 851px)').matches) return;
                     if (swipeTimer.current) clearTimeout(swipeTimer.current);
                     swipeTimer.current = setTimeout(() => {
                       const selector = selectorRef.current;
@@ -186,58 +188,74 @@ export function CardsPage() {
                     }, 100);
                   }}
                 >
-                  {cards.map((c) => (
-                    <div className="credit-card-frame" key={c.id}>
-                      <button
-                        type="button"
-                        className={`panel credit-selector-item ${c.id === card?.id ? 'selected' : ''}`}
-                        data-card-id={c.id}
-                        aria-pressed={c.id === card?.id}
-                        onClick={() => update({ card: c.id })}
-                      >
-                        <span>
-                          <CreditIcon size={20} />
-                          <strong>{c.name}</strong>
-                          {c.archived && <small>Arquivado</small>}
-                        </span>
-                        <span>
-                          Fatura / dívida atual<strong>{value(c.debt)}</strong>
-                        </span>
-                        {c.limit > 0 ? (
-                          <>
-                            <span className="credit-limit">
-                              <span
-                                style={{
-                                  width: visible
-                                    ? `${Math.min(100, (c.debt / c.limit) * 100)}%`
-                                    : '0%',
-                                }}
+                  {cards.map((c) => {
+                    const art = c.artwork ? cardArtwork[c.artwork] : undefined;
+                    return (
+                      <div className="credit-card-frame" key={c.id}>
+                        <button
+                          type="button"
+                          className={`panel credit-selector-item ${c.id === card?.id ? 'selected' : ''} ${art ? 'has-artwork' : ''}`}
+                          data-card-id={c.id}
+                          aria-pressed={c.id === card?.id}
+                          onClick={() => update({ card: c.id })}
+                        >
+                          <span>
+                            {art?.src ? (
+                              <img
+                                className="credit-card-artwork"
+                                src={art.src}
+                                alt={art.label}
+                                width={60}
+                                height={60}
                               />
-                            </span>
-                            <small>
-                              Disponível {value(c.availableLimit)} de {value(c.limit)}
-                            </small>
-                          </>
-                        ) : (
-                          <small>Limite não informado</small>
+                            ) : (
+                              <CreditIcon size={20} aria-hidden="true" />
+                            )}
+                            <strong>{c.name}</strong>
+                            {c.archived && <small>Arquivado</small>}
+                          </span>
+                          <span>
+                            Fatura do mês
+                            <strong>
+                              {value(c.bills.find((item) => item.month === month)?.total ?? 0)}
+                            </strong>
+                          </span>
+                          {c.limit > 0 ? (
+                            <>
+                              <span className="credit-limit">
+                                <span
+                                  style={{
+                                    width: visible
+                                      ? `${Math.min(100, (c.debt / c.limit) * 100)}%`
+                                      : '0%',
+                                  }}
+                                />
+                              </span>
+                              <small>
+                                Disponível {value(c.availableLimit)} de {value(c.limit)}
+                              </small>
+                            </>
+                          ) : (
+                            <small>Limite não informado</small>
+                          )}
+                          {c.credit > 0 && <small>Crédito no cartão {value(c.credit)}</small>}
+                        </button>
+                        {c.id === card?.id && (
+                          <Tooltip text="Editar cartão">
+                            <button
+                              type="button"
+                              className="credit-card-edit"
+                              aria-label="Editar cartão"
+                              onClick={() => setDialog({ kind: 'edit' })}
+                              disabled={!navigator.onLine}
+                            >
+                              <Pencil size={16} />
+                            </button>
+                          </Tooltip>
                         )}
-                        {c.credit > 0 && <small>Crédito no cartão {value(c.credit)}</small>}
-                      </button>
-                      {c.id === card?.id && (
-                        <Tooltip text="Editar cartão">
-                          <button
-                            type="button"
-                            className="credit-card-edit"
-                            aria-label="Editar cartão"
-                            onClick={() => setDialog({ kind: 'edit' })}
-                            disabled={!navigator.onLine}
-                          >
-                            <Pencil size={16} />
-                          </button>
-                        </Tooltip>
-                      )}
-                    </div>
-                  ))}
+                      </div>
+                    );
+                  })}
                   <div className="credit-card-frame credit-card-frame-new">
                     <button
                       type="button"
@@ -293,7 +311,7 @@ export function CardsPage() {
                         return (
                           <div className="card-limit-overview">
                             <div className="card-limit-heading">
-                              <span>Limite comprometido</span>
+                              <span>Limite cadastrado</span>
                               <strong>{value(card.limit)}</strong>
                             </div>
                             <div
@@ -347,7 +365,7 @@ export function CardsPage() {
                       return (
                         <div className="card-hud-tiles">
                           <article>
-                            <span>Melhor dia</span>
+                            <span>Melhor dia de compra</span>
                             <strong>Dia {closingDate.getDate()}</strong>
                             <small>Após fechamento</small>
                           </article>
@@ -355,6 +373,11 @@ export function CardsPage() {
                             <span>Média mensal · 6 meses</span>
                             <strong>{value(average)}</strong>
                             <small>{percent === null ? 'Sem limite' : `${percent}% usado`}</small>
+                          </article>
+                          <article className="card-committed-tile">
+                            <span>Total comprometido</span>
+                            <strong>{value(card.debt)}</strong>
+                            <small>Saldo devedor do cartão</small>
                           </article>
                         </div>
                       );
@@ -654,27 +677,53 @@ export function CardsPage() {
         title={
           dialog?.kind === 'new'
             ? 'Novo cartão'
-            : dialog?.kind === 'edit'
-              ? 'Editar cartão'
-              : dialog?.kind === 'purchase'
-                ? 'Compra no cartão'
-                : dialog?.kind === 'invoice'
-                  ? 'Importar fatura'
-                  : dialog?.kind === 'pay'
-                    ? 'Pagamento da fatura'
-                    : dialog?.kind === 'opening'
-                      ? 'Dívida anterior'
-                      : dialog?.kind === 'refund'
-                        ? 'Estorno no cartão'
-                        : dialog?.kind === 'category'
-                          ? 'Categoria da compra'
-                          : 'Revisar correção'
+            : dialog?.kind === 'delete'
+              ? 'Excluir cartão'
+              : dialog?.kind === 'edit'
+                ? 'Editar cartão'
+                : dialog?.kind === 'purchase'
+                  ? 'Compra no cartão'
+                  : dialog?.kind === 'invoice'
+                    ? 'Importar fatura'
+                    : dialog?.kind === 'pay'
+                      ? 'Pagamento da fatura'
+                      : dialog?.kind === 'opening'
+                        ? 'Dívida anterior'
+                        : dialog?.kind === 'refund'
+                          ? 'Estorno no cartão'
+                          : dialog?.kind === 'category'
+                            ? 'Categoria da compra'
+                            : 'Revisar correção'
         }
         description="Confira os valores antes de confirmar."
       >
         {dialog?.kind === 'new' && <CardForm write={write} onSaved={() => saved()} />}
         {dialog?.kind === 'edit' && card && (
-          <CardForm card={card} write={write} onSaved={() => saved()} />
+          <>
+            <CardForm card={card} write={write} onSaved={() => saved()} />
+            <Button
+              type="button"
+              className="secondary"
+              onClick={() => setDialog({ kind: 'delete' })}
+            >
+              <Trash2 size={16} /> Excluir cartão
+            </Button>
+          </>
+        )}
+        {dialog?.kind === 'delete' && card && (
+          <FinanceForm
+            label="Excluir definitivamente"
+            onSubmit={async () => {
+              await write(`/cards/${card.id}`, undefined, card.version, 'DELETE');
+              saved();
+            }}
+          >
+            <p>
+              Excluir <strong>{card.name}</strong> remove suas faturas, compras, parcelas e
+              importações do histórico. Pagamentos lançados na conta bancária continuam no extrato.
+            </p>
+            <p>Esta ação não pode ser desfeita.</p>
+          </FinanceForm>
         )}
         {dialog?.kind === 'purchase' && card && (
           <CardPurchaseForm card={card} write={write} onSaved={saved} />

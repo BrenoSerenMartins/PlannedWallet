@@ -448,6 +448,21 @@
       }
     },
     "/v1/cards/{id}": {
+      "delete": {
+        "operationId": "CardsController_remove",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": ["Cards"]
+      },
       "patch": {
         "operationId": "CardsController_update",
         "parameters": [],
@@ -3961,6 +3976,22 @@
       "CardViewDto": {
         "type": "object",
         "properties": {
+          "artwork": {
+            "type": "string",
+            "enum": [
+              "mercado-pago-visa",
+              "inter-gold",
+              "inter-platinum",
+              "inter-prime",
+              "inter-win",
+              "inter",
+              "itau",
+              "c6-bank",
+              "c6-carbon",
+              "itau-azul-platinum"
+            ],
+            "nullable": true
+          },
           "id": {
             "type": "string"
           },
@@ -4058,6 +4089,22 @@
       "SaveCardDto": {
         "type": "object",
         "properties": {
+          "artwork": {
+            "type": "string",
+            "enum": [
+              "mercado-pago-visa",
+              "inter-gold",
+              "inter-platinum",
+              "inter-prime",
+              "inter-win",
+              "inter",
+              "itau",
+              "c6-bank",
+              "c6-carbon",
+              "itau-azul-platinum"
+            ],
+            "nullable": true
+          },
           "name": {
             "type": "string"
           },
@@ -4083,6 +4130,22 @@
       "CreditCardDto": {
         "type": "object",
         "properties": {
+          "artwork": {
+            "type": "string",
+            "enum": [
+              "mercado-pago-visa",
+              "inter-gold",
+              "inter-platinum",
+              "inter-prime",
+              "inter-win",
+              "inter",
+              "itau",
+              "c6-bank",
+              "c6-carbon",
+              "itau-azul-platinum"
+            ],
+            "nullable": true
+          },
           "id": {
             "type": "string"
           },

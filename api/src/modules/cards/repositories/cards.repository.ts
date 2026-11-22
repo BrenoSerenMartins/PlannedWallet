@@ -56,6 +56,7 @@ export class CardsRepository {
         accountId: r.account_id,
         paymentAccountId: r.payment_account_id,
         name: r.name,
+        artwork: r.artwork ?? null,
         closingDay: r.closing_day,
         dueDay: r.due_day,
         limit: Number(r.limit_minor),
@@ -120,6 +121,7 @@ export class CardsRepository {
       account_id: r.accountId,
       payment_account_id: r.paymentAccountId,
       name: r.name,
+      artwork: r.artwork ?? null,
       closing_day: r.closingDay,
       due_day: r.dueDay,
       limit_minor: r.limit,
@@ -229,7 +231,7 @@ export class CardsRepository {
   }
   async update(r: CreditCard) {
     await this.db.query(
-      'UPDATE wallet.credit_cards SET name=$3,payment_account_id=$4,closing_day=$5,due_day=$6,limit_minor=$7,archived=$8,version=version+1 WHERE user_id=$1 AND id=$2',
+      'UPDATE wallet.credit_cards SET name=$3,payment_account_id=$4,closing_day=$5,due_day=$6,limit_minor=$7,archived=$8,artwork=$9,version=version+1 WHERE user_id=$1 AND id=$2',
       [
         this.db.userId,
         r.id,
@@ -239,7 +241,27 @@ export class CardsRepository {
         r.dueDay,
         r.limit,
         r.archived,
+        r.artwork ?? null,
       ],
+    );
+  }
+  async removeCard(id: string, accountId: string) {
+    await this.db.query(
+      `UPDATE wallet.monthly_plans SET card_plans=(
+        SELECT coalesce(jsonb_agg(plan ORDER BY ordering), '[]'::jsonb)
+        FROM jsonb_array_elements(card_plans) WITH ORDINALITY AS item(plan, ordering)
+        WHERE plan->>'cardId' IS DISTINCT FROM $2::text
+      ), version=version+1, updated_at=now()
+      WHERE user_id=$1 AND card_plans @> jsonb_build_array(jsonb_build_object('cardId',$2::text))`,
+      [this.db.userId, id],
+    );
+    await this.db.query('DELETE FROM wallet.credit_cards WHERE user_id=$1 AND id=$2', [
+      this.db.userId,
+      id,
+    ]);
+    await this.db.query(
+      "UPDATE wallet.financial_accounts SET archived_at=now(),version=version+1 WHERE user_id=$1 AND id=$2 AND type='credit_card'",
+      [this.db.userId, accountId],
     );
   }
   async bump(id: string) {

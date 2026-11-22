@@ -26,3 +26,13 @@
 .upload-panel[tabindex='-1'] {
   scroll-margin-top: 5rem;
 }
+
+.automatic-import-bank img {
+  display: inline-block;
+  object-fit: contain;
+  padding: 2px;
+  margin-inline-end: 6px;
+  border-radius: 5px;
+  vertical-align: middle;
+  background: #fff;
+}

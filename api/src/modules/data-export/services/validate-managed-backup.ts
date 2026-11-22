@@ -1,3 +1,4 @@
+import { CARD_ARTWORK } from '../../../core/integration/cards.js';
 import { UnprocessableEntityException } from '@nestjs/common';
 import type {
   BackupPayload,
@@ -101,6 +102,7 @@ export function validateManagedBackup(b: BackupPayload, unique: (id: string) => 
     text(c.name, 100);
     version(c.version);
     bool(c.archived);
+    if (c.artwork != null && !CARD_ARTWORK.includes(c.artwork)) fail();
     num(c.limit);
     if (
       !Number.isInteger(c.closingDay) ||

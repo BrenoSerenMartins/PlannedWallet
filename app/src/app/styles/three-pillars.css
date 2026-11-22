@@ -401,6 +401,23 @@
   aspect-ratio: 1.586 / 1;
   scroll-snap-align: center;
 }
+@media (min-width: 851px) {
+  :root[data-ui='bento'] body .page-content .cards-page .credit-selector {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    padding: 4px 2px 12px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scroll-snap-type: none;
+    scroll-padding-inline: 0;
+  }
+  :root[data-ui='bento'] body .page-content .cards-page .credit-card-frame {
+    width: 100%;
+    min-width: 0;
+    min-height: 180px;
+  }
+}
 :root[data-ui='bento'] body .page-content .cards-page .credit-selector-item,
 :root[data-ui='bento'] body .page-content .cards-page .credit-selector-item.selected {
   position: relative;
@@ -440,11 +457,25 @@
   flex-wrap: nowrap;
 }
 :root[data-ui='bento'] body .page-content .cards-page .credit-selector-item > span:first-child {
-  justify-content: flex-start;
-  padding: 0 42px 0 48px;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding-inline: 42px;
+  min-width: 0;
 }
 :root[data-ui='bento'] body .page-content .cards-page .credit-selector-item > span:first-child svg {
   color: var(--gold-soft);
+  flex-shrink: 0;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .cards-page
+  .credit-selector-item
+  > span:first-child
+  strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 :root[data-ui='bento'] body .page-content .cards-page .credit-selector-item > span:nth-child(2) {
   align-items: end;
@@ -640,7 +671,7 @@
 }
 :root[data-ui='bento'] body .page-content .card-hud-tiles {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 }
 :root[data-ui='bento'] body .page-content .card-hud-tiles article {
@@ -902,10 +933,7 @@
   min-height: 30px;
   color: var(--danger);
 }
-:root[data-ui='bento'] body .page-content .cards-page .card-hud-tiles article:first-child > strong {
-  font-size: 24px;
-  letter-spacing: -0.03em;
-}
+
 :root[data-ui='bento'] body .page-content .card-recurring-section .section-heading {
   display: flex;
   align-items: center;
@@ -1061,47 +1089,11 @@
     min-width: 0;
   }
   :root[data-ui='bento'] body .page-content .cards-page .card-bill-toolbar {
-    align-items: center;
-    flex-wrap: nowrap;
-    gap: 6px;
+    align-items: flex-start;
+    flex-direction: column;
   }
   :root[data-ui='bento'] body .page-content .cards-page .card-bill-toolbar > .inline-actions {
-    margin-left: auto;
-  }
-  :root[data-ui='bento'] body .page-content .cards-page .card-bill-toolbar .selected-card-metadata {
-    font-size: 10px;
-  }
-  :root[data-ui='bento'] body .page-content .cards-page .card-bill-toolbar > .inline-actions {
-    gap: 4px;
-  }
-  :root[data-ui='bento']
-    body
-    .page-content
-    .cards-page
-    .card-bill-toolbar
-    > .inline-actions
-    .button {
-    padding-inline: 8px;
-    font-size: 10px;
-  }
-  :root[data-ui='bento']
-    body
-    .page-content
-    .cards-page
-    .card-bill-toolbar
-    > .inline-actions
-    .button.secondary {
-    font-size: 0;
-  }
-  :root[data-ui='bento']
-    body
-    .page-content
-    .cards-page
-    .card-bill-toolbar
-    > .inline-actions
-    .button.secondary::after {
-    content: 'Dívida';
-    font-size: 10px;
+    flex-wrap: wrap;
   }
   :root[data-ui='bento'] body .page-content .cards-page .card-projection-heading {
     align-items: flex-start;
@@ -2128,4 +2120,64 @@
   align-items: center;
   justify-content: space-between;
   box-sizing: border-box;
+}
+
+:root[data-ui='bento'] body .page-content .cards-page .card-bill-stats > div {
+  grid-template-rows: auto 1fr;
+  align-content: start;
+  gap: 8px;
+  text-align: left;
+}
+:root[data-ui='bento'] body .page-content .cards-page .card-bill-stats > div > span {
+  min-height: 24px;
+  align-items: center;
+}
+:root[data-ui='bento'] body .page-content .cards-page .card-bill-stats strong {
+  align-self: start;
+  font-size: clamp(1.125rem, 2.4vw, 1.75rem);
+  line-height: 1.2;
+}
+@media (max-width: 600px) {
+  :root[data-ui='bento'] body .page-content .cards-page .card-hud-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  :root[data-ui='bento'] body .page-content .cards-page .card-committed-tile {
+    grid-column: 1 / -1;
+  }
+  :root[data-ui='bento'] body .page-content .cards-page .card-bill-stats > div {
+    padding: 10px;
+    grid-template-rows: minmax(36px, auto) auto;
+  }
+  :root[data-ui='bento'] body .page-content .cards-page .card-bill-stats > div > span {
+    font-size: 12px;
+    align-self: start;
+  }
+  :root[data-ui='bento'] body .page-content .cards-page .card-bill-stats .help-tip {
+    width: 24px;
+    height: 24px;
+    min-height: 24px;
+  }
+}
+
+:root[data-ui='bento']
+  body
+  .page-content
+  .cards-page
+  .credit-selector-item.has-artwork.selected::before {
+  display: none;
+}
+:root[data-ui='bento']
+  body
+  .page-content
+  .cards-page
+  .credit-selector-item.has-artwork
+  > span:first-child {
+  padding-inline: 32px;
+}
+:root[data-ui='bento'] body .page-content .cards-page .credit-card-artwork {
+  width: 52px;
+  height: 52px;
+  flex: none;
+  object-fit: contain;
+  border-radius: 8px;
 }

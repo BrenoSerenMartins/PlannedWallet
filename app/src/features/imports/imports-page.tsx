@@ -1,6 +1,20 @@
-import type { AutomaticImportRow } from './services/automatic-import-batch';
+import {
+  findDestinations,
+  type AutomaticImportRow,
+  type ImportDestination,
+} from './services/automatic-import-batch';
 import { AutomaticImportBatch } from './components/automatic-import-batch';
 import { useAutomaticImportBatch } from './hooks/use-automatic-import-batch';
+import {
+  artworkIssuerLogos,
+  issuerLogos,
+  cardArtwork,
+  cardArtworkIssuer,
+  cardArtworksForIssuer,
+  invoiceIssuers,
+  suggestCardArtwork,
+  type CardArtworkId,
+} from '../cards/art/catalog';
 import '../../shared/ui/card-invoice-preview.css';
 import { FileText as EmptyStateIcon } from 'lucide-react';
 import { Select } from '../../shared/ui/controls/select';
@@ -19,12 +33,6 @@ import { jsonBody, request } from '../../shared/api/client';
 import type { Account, CardsSummary, ImportBatch } from '../../shared/api/resources';
 import { Button, EmptyState, ErrorState, Loading } from '../../shared/ui/primitives';
 import { money } from '../../shared/formatting/money';
-const invoiceIssuers = {
-  mercado_pago: 'Mercado Pago',
-  inter: 'Inter',
-  itau: 'Itaú',
-  c6: 'C6 Bank',
-};
 const monthLabel = (month: string) =>
   new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(
     new Date(`${month}-01T12:00:00`),
@@ -56,6 +64,7 @@ export function ImportsPage() {
     | {
         kind: 'card_invoice';
         institution: keyof typeof invoiceIssuers | null;
+        artwork?: CardArtworkId | null;
         summaryOnly: boolean;
         reportType: 'card_invoice';
         itemCount: number;
@@ -73,6 +82,14 @@ export function ImportsPage() {
   const [saving, setSaving] = useState(false);
   const [billMonth, setBillMonth] = useState(new Date().toISOString().slice(0, 7));
   const [newCardName, setNewCardName] = useState('Meu cartão');
+  const [manualArtwork, setManualArtwork] = useState<CardArtworkId | '' | undefined>();
+  const newCardArtwork =
+    manualArtwork ??
+    (detected?.kind === 'card_invoice' ? detected.artwork : null) ??
+    suggestCardArtwork(
+      newCardName,
+      detected?.kind === 'card_invoice' ? detected.institution : null,
+    );
   const [closingDay, setClosingDay] = useState('10');
   const [dueDay, setDueDay] = useState('20');
   const [cardPreview, setCardPreview] = useState<{
@@ -108,10 +125,28 @@ export function ImportsPage() {
     queryKey: [session?.user.id, 'accounts'],
     queryFn: () => request<Account[]>('/accounts'),
   });
+  const cardIssuer = detected?.kind === 'card_invoice' ? detected.institution : null;
   const cards = useQuery({
-    queryKey: [session?.user.id, 'cards', billMonth],
-    queryFn: () => request<CardsSummary>(`/cards?month=${billMonth}`),
+    queryKey: [session?.user.id, 'cards', 'import-destinations', cardIssuer],
+    queryFn: async (): Promise<ImportDestination[]> => {
+      if (detected?.kind === 'card_invoice' && cardIssuer) return findDestinations(detected);
+      const summary = await request<CardsSummary>('/cards');
+      return summary.cards.filter((card) => !card.archived).map(({ id, name }) => ({ id, name }));
+    },
+    enabled: detected?.kind === 'card_invoice',
   });
+  const compatibleCards = cards.data ?? [];
+  const cardDestination =
+    destination === '__auto__'
+      ? !cards.data
+        ? ''
+        : compatibleCards.length === 1 && cardIssuer
+          ? compatibleCards[0].id
+          : compatibleCards.length === 0
+            ? '__new__'
+            : ''
+      : destination;
+  const availableArtwork = cardArtworksForIssuer(cardIssuer);
   const history = useQuery({
     queryKey: [session?.user.id, 'imports'],
     queryFn: () =>
@@ -146,6 +181,7 @@ export function ImportsPage() {
           body: form,
         }));
       setDetected(result);
+      setManualArtwork(undefined);
       setBillMonth(result.kind === 'card_invoice' ? result.billMonth : billMonth);
       if (result.kind === 'account_statement') {
         const compatible = (accounts.data ?? []).filter(
@@ -162,7 +198,7 @@ export function ImportsPage() {
               : 'Mercado Pago',
         );
       } else {
-        setDestination(destinationId ?? '__new__');
+        setDestination(destinationId ?? '__auto__');
         setNewCardName(result.institution ? invoiceIssuers[result.institution] : 'Meu cartão');
         if (result.dueDate) setDueDay(result.dueDate.slice(8, 10));
       }
@@ -190,6 +226,7 @@ export function ImportsPage() {
             : null,
         reportType: 'card_invoice',
         summaryOnly: source.summaryOnly ?? false,
+        artwork: source.artwork,
         itemCount: source.itemCount,
         sourceFormat: source.sourceFormat,
         billMonth: source.automaticMonth ?? source.billMonth ?? billMonth,
@@ -223,13 +260,21 @@ export function ImportsPage() {
     setDetectError('');
     try {
       if (detected.kind === 'card_invoice') {
-        let cardId = destination;
-        if (destination === '__new__') {
+        if (
+          !cards.data ||
+          !cardDestination ||
+          (cardDestination !== '__new__' &&
+            !compatibleCards.some((card) => card.id === cardDestination))
+        )
+          return;
+        let cardId = cardDestination;
+        if (cardDestination === '__new__') {
           const created = await request<{ id: string }>('/cards', {
             method: 'POST',
             headers: { 'Idempotency-Key': crypto.randomUUID() },
             body: jsonBody({
               name: newCardName.trim(),
+              artwork: newCardArtwork || null,
               paymentAccountId: null,
               closingDay: Number(closingDay),
               dueDay: Number(dueDay),
@@ -628,21 +673,38 @@ export function ImportsPage() {
                             <label>
                               Cartão de destino
                               <Select
-                                value={destination}
-                                disabled={busy || cards.isPending}
+                                value={cardDestination}
+                                optionIcons={Object.fromEntries([
+                                  ['__new__', issuerLogos[cardIssuer ?? '']],
+                                  ...compatibleCards.map((item) => [
+                                    item.id,
+                                    issuerLogos[
+                                      cardIssuer ??
+                                        cardArtworkIssuer(suggestCardArtwork(item.name)) ??
+                                        ''
+                                    ],
+                                  ]),
+                                ])}
+                                disabled={busy || !cards.data}
                                 onChange={(e) => setDestination(e.target.value)}
                               >
-                                <option value="__new__">Criar cartão com esta fatura</option>
-                                {cards.data?.cards
-                                  .filter((item) => !item.archived)
-                                  .map((item) => (
-                                    <option value={item.id} key={item.id}>
-                                      {item.name}
-                                    </option>
-                                  ))}
+                                <option value="" disabled>
+                                  Selecione um cartão
+                                </option>
+                                <option value="__new__">
+                                  {cardIssuer
+                                    ? `Criar cartão ${invoiceIssuers[cardIssuer]}`
+                                    : 'Criar cartão com esta fatura'}
+                                </option>
+                                {compatibleCards.map((item) => (
+                                  <option value={item.id} key={item.id}>
+                                    {item.name}
+                                  </option>
+                                ))}
                               </Select>
                             </label>
-                            {destination === '__new__' && (
+                            {cards.isError && <ErrorState error={cards.error} />}
+                            {cardDestination === '__new__' && (
                               <>
                                 <label>
                                   Nome do cartão
@@ -652,6 +714,23 @@ export function ImportsPage() {
                                     value={newCardName}
                                     onChange={(e) => setNewCardName(e.target.value)}
                                   />
+                                </label>
+                                <label>
+                                  Modelo do cartão
+                                  <Select
+                                    value={newCardArtwork}
+                                    optionIcons={artworkIssuerLogos}
+                                    onChange={(event) =>
+                                      setManualArtwork(event.target.value as CardArtworkId | '')
+                                    }
+                                  >
+                                    {!cardIssuer && <option value="">Visual padrão</option>}
+                                    {availableArtwork.map((id) => (
+                                      <option key={id} value={id}>
+                                        {cardArtwork[id].label}
+                                      </option>
+                                    ))}
+                                  </Select>
                                 </label>
                                 <div className="form-grid">
                                   <label>
@@ -727,8 +806,9 @@ export function ImportsPage() {
                             busy ||
                             !navigator.onLine ||
                             (detected.kind === 'card_invoice' &&
-                              destination === '__new__' &&
-                              !newCardName.trim()) ||
+                              (!cards.data ||
+                                !cardDestination ||
+                                (cardDestination === '__new__' && !newCardName.trim()))) ||
                             (detected.kind === 'account_statement' &&
                               destination === '__new__' &&
                               !newAccountName.trim())

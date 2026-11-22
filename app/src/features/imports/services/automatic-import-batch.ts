@@ -1,3 +1,4 @@
+import { suggestCardArtwork, type CardArtworkId } from '../../cards/art/catalog';
 import { jsonBody, request } from '../../../shared/api/client';
 import type { Account, ImportBatch, CardsSummary } from '../../../shared/api/resources';
 
@@ -12,6 +13,7 @@ export const importBanks: Record<string, string> = {
 export interface DetectedImport {
   kind: 'account_statement' | 'card_invoice';
   institution: string | null;
+  artwork?: CardArtworkId | null;
   itemCount: number;
   sourceFormat: string;
   total?: number;
@@ -98,6 +100,7 @@ export async function createDestination(
     headers: { 'Idempotency-Key': key },
     body: jsonBody({
       name: bank,
+      artwork: detected.artwork ?? (suggestCardArtwork(bank) || null),
       paymentAccountId: null,
       closingDay: 1,
       dueDay: Number(detected.dueDate?.slice(8, 10) ?? 1),

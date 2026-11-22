@@ -13,7 +13,9 @@ import { Check, ChevronDown } from 'lucide-react';
 import { ControlPopover } from './control-popover';
 import { emitControlValue, useControlLabel } from './control-utils';
 
-export type SelectProps = Omit<SelectHTMLAttributes<HTMLSelectElement>, 'multiple' | 'size'>;
+export type SelectProps = Omit<SelectHTMLAttributes<HTMLSelectElement>, 'multiple' | 'size'> & {
+  optionIcons?: Readonly<Record<string, string | undefined>>;
+};
 interface Choice {
   value: string;
   label: string;
@@ -72,6 +74,7 @@ export function Select({
   required,
   onChange,
   onInvalid,
+  optionIcons,
   ...props
 }: SelectProps) {
   const generated = useId(),
@@ -127,6 +130,17 @@ export function Select({
         break;
       }
     }
+  }
+  function optionLabel(choice?: Choice) {
+    const icon = choice && optionIcons?.[choice.value];
+    return icon ? (
+      <span className="select-label-with-icon">
+        <img src={icon} alt="" width={24} height={24} />
+        <span>{choice.label}</span>
+      </span>
+    ) : (
+      <span>{choice?.label ?? 'Selecionar'}</span>
+    );
   }
   return (
     <span className={`select-field ${className}`}>
@@ -194,7 +208,7 @@ export function Select({
           }
         }}
       >
-        <span>{options[current]?.label ?? 'Selecionar'}</span>
+        {optionLabel(options[current])}
         <ChevronDown size={15} aria-hidden="true" />
       </button>
       <select
@@ -260,7 +274,7 @@ export function Select({
                 }}
                 onClick={() => commit(index)}
               >
-                <span>{option.label}</span>
+                {optionLabel(option)}
                 <Check
                   size={15}
                   aria-hidden="true"

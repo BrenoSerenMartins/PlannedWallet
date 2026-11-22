@@ -1,3 +1,15 @@
+import { Select } from '../../../shared/ui/controls/select';
+import {
+  artworkIssuerLogos,
+  cardArtwork,
+  cardArtworkIssuer,
+  cardArtworksForIssuer,
+  invoiceIssuers,
+  issuerLogos,
+  type CardIssuer,
+  suggestCardArtwork,
+  type CardArtworkId,
+} from '../art/catalog';
 import { MonthPicker } from '../../../shared/ui/controls/month-picker';
 import { DatePicker } from '../../../shared/ui/controls/date-picker';
 import { useState } from 'react';
@@ -22,7 +34,13 @@ export function CardForm({
   onSaved: () => void;
 }) {
   const choices = useFinanceChoices();
+  const [manualArtwork, setArtwork] = useState<CardArtworkId | '' | undefined>(
+    card?.artwork ?? undefined,
+  );
   const [name, setName] = useState(card?.name ?? '');
+  const [manualIssuer, setManualIssuer] = useState<CardIssuer | '' | undefined>();
+  const issuer = manualIssuer ?? cardArtworkIssuer(manualArtwork ?? suggestCardArtwork(name)) ?? '';
+  const artwork = issuer ? (manualArtwork ?? suggestCardArtwork(name, issuer)) : '';
   const [closing, setClosing] = useState(String(card?.closingDay ?? 10));
   const [due, setDue] = useState(String(card?.dueDay ?? 20));
   const [limit, setLimit] = useState(card ? moneyInput(card.limit) : '');
@@ -36,6 +54,7 @@ export function CardForm({
             card ? `/cards/${card.id}` : '/cards',
             {
               name,
+              artwork: artwork || null,
               paymentAccountId: null,
               closingDay: Number(closing),
               dueDay: Number(due),
@@ -58,6 +77,40 @@ export function CardForm({
             placeholder="Meu cartão"
           />
         </label>
+        <label>
+          Banco
+          <Select
+            value={issuer}
+            optionIcons={issuerLogos}
+            onChange={(event) => {
+              setManualIssuer(event.target.value as CardIssuer | '');
+              setArtwork(undefined);
+            }}
+          >
+            <option value="">Outro ou não identificado</option>
+            {Object.entries(invoiceIssuers).map(([id, label]) => (
+              <option key={id} value={id}>
+                {label}
+              </option>
+            ))}
+          </Select>
+        </label>
+        {issuer && (
+          <label>
+            Modelo do cartão
+            <Select
+              value={artwork}
+              optionIcons={artworkIssuerLogos}
+              onChange={(event) => setArtwork(event.target.value as CardArtworkId)}
+            >
+              {cardArtworksForIssuer(issuer).map((id) => (
+                <option key={id} value={id}>
+                  {cardArtwork[id].label}
+                </option>
+              ))}
+            </Select>
+          </label>
+        )}
         <p className="field-help">
           A conta de origem é escolhida em cada pagamento ou identificada pela transação vinculada.
         </p>

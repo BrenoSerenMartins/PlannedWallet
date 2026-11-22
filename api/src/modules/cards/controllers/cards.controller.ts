@@ -2,6 +2,7 @@ import { ManagedEntryDto } from '../../../core/integration/managed-entry-dto.js'
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Headers,
   Inject,
@@ -140,6 +141,15 @@ export class CardsController {
   ) {
     const dto = await validateInput(SaveCardDto, body);
     return this.db.forUser(r.identity.id, () => this.cards.create(dto, key));
+  }
+  @Delete(':id')
+  remove(
+    @Req() r: AuthenticatedRequest,
+    @Param('id') id: string,
+    @Headers('if-match') version: string,
+    @Headers('idempotency-key') key: string,
+  ) {
+    return this.db.forUser(r.identity.id, () => this.cards.remove(requireUuid(id), version, key));
   }
   @Patch(':id')
   @ApiBody({ type: SaveCardDto })

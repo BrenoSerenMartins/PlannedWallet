@@ -122,6 +122,7 @@ export class ImportsService {
           warnings: invoice.warnings,
           kind: 'card_invoice',
           institution: invoice.institution ?? null,
+          artwork: invoice.artwork ?? null,
           reportType: 'card_invoice',
           summaryOnly: invoice.summaryOnly ?? false,
           itemCount: invoice.lines.length,

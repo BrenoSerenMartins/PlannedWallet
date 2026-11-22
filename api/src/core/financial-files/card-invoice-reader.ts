@@ -1,3 +1,4 @@
+import type { CardArtwork } from '../integration/cards.js';
 import { pdfPasswords } from './pdf-passwords.js';
 import { invoiceFilenameDate } from './invoice-filename-date.js';
 import { UnprocessableEntityException } from '@nestjs/common';
@@ -20,6 +21,7 @@ export type ParsedCardInvoice = {
   sourceFormat: 'csv' | 'pdf';
   warnings: string[];
   institution?: 'mercado_pago' | 'inter' | 'itau' | 'c6';
+  artwork?: CardArtwork;
   summaryOnly?: boolean;
   balanceBreakdown?: { purchases: number; previousBalance: number; paymentsAndCredits: number };
   dueDate?: string;
@@ -148,6 +150,49 @@ export function readInvoiceCover(rows: string[], billMonth: string): ParsedCardI
   };
 }
 
+export function identifyInvoiceArtwork(
+  institution: ParsedCardInvoice['institution'],
+  pages: string[][],
+): CardArtwork | undefined {
+  const matches = new Set<CardArtwork>();
+  for (const [pageIndex, rows] of pages.entries()) {
+    for (const value of rows) {
+      const row = value
+        .normalize('NFD')
+        .replace(/\p{Diacritic}/gu, '')
+        .trim()
+        .toLowerCase();
+      if (/^(?:\d{1,2}[./-]\d{1,2}|conheca|compare|solicite|peca|saiba)/.test(row)) continue;
+      if (pageIndex > 0 && !/^(?:cartao|produto|modalidade)\b/.test(row)) continue;
+      if (
+        institution === 'mercado_pago' &&
+        /^(?:cartao\s+(?:de credito\s+)?(?:mercado pago\s+)?visa|mercado pago visa)\b/.test(row)
+      )
+        matches.add('mercado-pago-visa');
+      if (institution === 'inter') {
+        const model = row.match(
+          /^(?:cartao\s+(?:de credito\s+)?(?:mastercard\s+)?inter|inter|produto\s*:\s*inter)\s+(gold|platinum|prime|win)\b/,
+        )?.[1];
+        if (model === 'gold' || model === 'platinum' || model === 'prime' || model === 'win')
+          matches.add(`inter-${model}`);
+      }
+      if (
+        institution === 'itau' &&
+        /^(?:cartao\s+|produto\s*:\s*)?(?:itau\s+azul|azul(?:\s+itau)?)\s+(?:mastercard\s+)?platinum\b/.test(
+          row,
+        )
+      )
+        matches.add('itau-azul-platinum');
+      if (
+        institution === 'c6' &&
+        /^(?:cartao\s+|produto\s*:\s*)?c6\s*(?:bank\s+)?carbon(?:black)?\b/.test(row)
+      )
+        matches.add('c6-carbon');
+    }
+  }
+  return matches.size === 1 ? [...matches][0] : undefined;
+}
+
 export async function readCardInvoice(
   buffer: Buffer,
   filename: string,
@@ -176,12 +221,14 @@ export async function readCardInvoice(
       }
       return [...grouped.values()].map((row) => row.join(' ').replace(/\s+/g, ' ').trim());
     });
-    const detailed = readDetailedInvoice(result.pages, billMonth);
-    if (detailed) return detailed;
-    const mercadoPago = readMercadoPagoInvoice(rows, billMonth);
-    if (mercadoPago) return mercadoPago;
-    const cover = readInvoiceCover(rows[0] ?? [], billMonth);
-    if (cover) return cover;
+    const recognized =
+      readDetailedInvoice(result.pages, billMonth) ??
+      readMercadoPagoInvoice(rows, billMonth) ??
+      readInvoiceCover(rows[0] ?? [], billMonth);
+    if (recognized) {
+      const artwork = identifyInvoiceArtwork(recognized.institution, rows);
+      return artwork ? { ...recognized, artwork } : recognized;
+    }
     const lines: CardInvoiceLine[] = [];
     let invoiceTotal: number | undefined;
     for (const page of rows) {

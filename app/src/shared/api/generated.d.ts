@@ -254,7 +254,7 @@ export interface paths {
     get?: never;
     put?: never;
     post?: never;
-    delete?: never;
+    delete: operations['CardsController_remove'];
     options?: never;
     head?: never;
     patch: operations['CardsController_update'];
@@ -1856,6 +1856,19 @@ export interface components {
       canceled: boolean;
     };
     CardViewDto: {
+      /** @enum {string|null} */
+      artwork?:
+        | 'mercado-pago-visa'
+        | 'inter-gold'
+        | 'inter-platinum'
+        | 'inter-prime'
+        | 'inter-win'
+        | 'inter'
+        | 'itau'
+        | 'c6-bank'
+        | 'c6-carbon'
+        | 'itau-azul-platinum'
+        | null;
       id: string;
       accountId: string;
       paymentAccountId: string | null;
@@ -1879,6 +1892,19 @@ export interface components {
       cards: components['schemas']['CardViewDto'][];
     };
     SaveCardDto: {
+      /** @enum {string|null} */
+      artwork?:
+        | 'mercado-pago-visa'
+        | 'inter-gold'
+        | 'inter-platinum'
+        | 'inter-prime'
+        | 'inter-win'
+        | 'inter'
+        | 'itau'
+        | 'c6-bank'
+        | 'c6-carbon'
+        | 'itau-azul-platinum'
+        | null;
       name: string;
       paymentAccountId?: string | null;
       closingDay: number;
@@ -1887,6 +1913,19 @@ export interface components {
       archived?: boolean;
     };
     CreditCardDto: {
+      /** @enum {string|null} */
+      artwork?:
+        | 'mercado-pago-visa'
+        | 'inter-gold'
+        | 'inter-platinum'
+        | 'inter-prime'
+        | 'inter-win'
+        | 'inter'
+        | 'itau'
+        | 'c6-bank'
+        | 'c6-carbon'
+        | 'itau-azul-platinum'
+        | null;
       id: string;
       accountId: string;
       paymentAccountId: string | null;
@@ -3234,6 +3273,23 @@ export interface operations {
         content: {
           'application/json': components['schemas']['CreditCardDto'];
         };
+      };
+    };
+  };
+  CardsController_remove: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };

@@ -107,6 +107,48 @@ export class CardsService implements CardForecast, ManagedBackup<CardsSnapshot> 
     });
     return this.card(id);
   }
+  async remove(id: string, version: string, key: string) {
+    return this.receipts.execute('card.remove', key, { id, version }, async () => {
+      const initial = await this.card(id);
+      const snapshot = await this.repo.snapshot();
+      const paymentDebits = snapshot.payments.flatMap((payment) =>
+        payment.cardId === id && !payment.voided && payment.debitId ? [payment.debitId] : [],
+      );
+      const debits = await this.ledger.managedEntries(paymentDebits);
+      for (const accountId of [
+        ...new Set([initial.accountId, ...debits.map((entry) => entry.accountId)]),
+      ].sort())
+        await this.accounts.find(accountId, true);
+      await this.repo.lock();
+      requireVersion((await this.card(id)).version, version);
+      const { data, live } = await this.calculated();
+      for (const payment of data.payments.filter((item) => item.cardId === id && !item.voided)) {
+        if (
+          !payment.debitId ||
+          !payment.creditId ||
+          !live.has(payment.debitId) ||
+          !live.has(payment.creditId)
+        )
+          throw new ConflictException('Revise o vínculo de pagamento antes de excluir o cartão.');
+        await this.ledger.detachManagedTransfer(
+          payment.debitId,
+          payment.creditId,
+          payment.id,
+          'card',
+          'debit',
+          payment.originalDebit ?? { transactionType: 'expense', categoryId: null },
+        );
+      }
+      const entries = data.entries.filter((entry) => entry.cardId === id);
+      entries.sort((a, b) => Number(b.kind === 'refund') - Number(a.kind === 'refund'));
+      for (const row of entries) {
+        const entry = row.transactionId ? live.get(row.transactionId) : undefined;
+        if (entry) await this.ledger.reverseManaged(entry.id, entry.version, 'card');
+      }
+      await this.repo.removeCard(id, initial.accountId);
+      return { id };
+    });
+  }
   private async ensureBill(card: CreditCard, month: string) {
     validCardMonth(month);
     const existing = (await this.repo.snapshot()).bills.find(

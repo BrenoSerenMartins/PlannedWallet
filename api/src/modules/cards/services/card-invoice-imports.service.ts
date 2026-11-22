@@ -19,6 +19,28 @@ function normalized(value: string) {
     .replace(/[^a-z0-9]/g, '');
 }
 
+function issuerFromName(name: string): ParsedCardInvoice['institution'] {
+  const words = name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+  if (/\b(mercado\s*pago|mp)\b/.test(words)) return 'mercado_pago';
+  if (/\binter\b/.test(words)) return 'inter';
+  if (/\b(itau|itaucard)\b/.test(words)) return 'itau';
+  if (/\bc6(?:\s*bank)?\b/.test(words)) return 'c6';
+}
+
+function cardIssuer(card: {
+  name: string;
+  artwork?: string | null;
+}): ParsedCardInvoice['institution'] {
+  if (card.artwork === 'mercado-pago-visa') return 'mercado_pago';
+  if (card.artwork === 'c6-bank' || card.artwork === 'c6-carbon') return 'c6';
+  if (card.artwork === 'itau' || card.artwork === 'itau-azul-platinum') return 'itau';
+  if (card.artwork?.startsWith('inter')) return 'inter';
+  return issuerFromName(card.name);
+}
+
 @Injectable()
 export class CardInvoiceImportsService {
   constructor(
@@ -86,9 +108,17 @@ export class CardInvoiceImportsService {
     cpf?: string,
   ) {
     const data = await this.cards.snapshot();
-    if (!data.cards.some((card) => card.id === cardId))
-      throw new NotFoundException('Cartão não encontrado.');
+    const card = data.cards.find((item) => item.id === cardId && !item.archived);
+    if (!card) throw new NotFoundException('Cartão ativo não encontrado.');
     const parsed = await readCardInvoice(file.buffer, file.originalname, billMonth, password, cpf);
+    const destinationIssuer = cardIssuer(card);
+    if (
+      parsed.institution &&
+      destinationIssuer &&
+      parsed.institution !== destinationIssuer &&
+      (card.artwork || !(await this.imports.institutionCards(parsed.institution)).includes(card.id))
+    )
+      throw new ConflictException('O cartão de destino deve ser do mesmo emissor da fatura.');
     if (parsed.dueDate && parsed.dueDate.slice(0, 7) !== billMonth)
       throw new ConflictException(
         `O vencimento identificado pertence a ${parsed.dueDate.slice(0, 7)}. Selecione esse mês para importar esta fatura.`,
@@ -120,21 +150,16 @@ export class CardInvoiceImportsService {
   }
 
   async destinations(institution: string) {
-    const patterns: Record<string, RegExp> = {
-      mercado_pago: /\bmercado\s*pago\b/i,
-      inter: /\binter\b/i,
-      itau: /\bitau\b/i,
-      c6: /\bc6\b/i,
-    };
-    if (!Object.hasOwn(patterns, institution)) return [];
+    if (!['mercado_pago', 'inter', 'itau', 'c6'].includes(institution)) return [];
     const known = new Set(await this.imports.institutionCards(institution));
     const data = await this.cards.snapshot();
     return data.cards
       .filter(
         (card) =>
           !card.archived &&
-          (known.has(card.id) ||
-            patterns[institution].test(card.name.normalize('NFD').replace(/[\u0300-\u036f]/g, ''))),
+          (card.artwork
+            ? cardIssuer(card) === institution
+            : known.has(card.id) || cardIssuer(card) === institution),
       )
       .map((card) => ({ id: card.id, name: card.name }));
   }

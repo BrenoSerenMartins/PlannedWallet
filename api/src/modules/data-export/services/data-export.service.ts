@@ -45,17 +45,19 @@ export class DataExportService {
     @Optional() @Inject(GOALS_BACKUP) private readonly goals?: GoalsBackup,
   ) {}
   async backup(): Promise<BackupPayload> {
+    const cards = (await this.cards?.exportManaged()) ?? {
+      cards: [],
+      bills: [],
+      purchases: [],
+      entries: [],
+      payments: [],
+    };
+    const cardAccounts = new Set(cards.cards.map((card) => card.accountId));
     return {
       format: 'plannedwallet',
       version: 13,
       goals: (await this.goals?.exportManaged()) ?? { goals: [] },
-      cards: (await this.cards?.exportManaged()) ?? {
-        cards: [],
-        bills: [],
-        purchases: [],
-        entries: [],
-        payments: [],
-      },
+      cards,
       wealth: (await this.wealth?.exportManaged()) ?? {
         holdings: [],
         events: [],
@@ -72,7 +74,9 @@ export class DataExportService {
       monthlyPlans: await this.planning.exportRecords(),
       currency: 'BRL',
       exportedAt: new Date().toISOString(),
-      accounts: await this.accounts.exportRecords(),
+      accounts: (await this.accounts.exportRecords()).filter(
+        (account) => account.type !== 'credit_card' || !this.cards || cardAccounts.has(account.id),
+      ),
       categories: await this.categories.exportRecords(),
       transactions: await this.ledger.exportRecords(),
     };

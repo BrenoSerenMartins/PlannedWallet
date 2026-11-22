@@ -1,3 +1,16 @@
+export const CARD_ARTWORK = [
+  'mercado-pago-visa',
+  'inter-gold',
+  'inter-platinum',
+  'inter-prime',
+  'inter-win',
+  'inter',
+  'itau',
+  'c6-bank',
+  'c6-carbon',
+  'itau-azul-platinum',
+] as const;
+export type CardArtwork = (typeof CARD_ARTWORK)[number];
 export interface CreditCardBill {
   id: string;
   cardId: string;
@@ -10,6 +23,7 @@ export interface CreditCard {
   accountId: string;
   paymentAccountId: string | null;
   name: string;
+  artwork?: CardArtwork | null;
   closingDay: number;
   dueDay: number;
   limit: number;

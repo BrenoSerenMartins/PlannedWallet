@@ -72,6 +72,6 @@ Seu mês mostra Entradas, Saídas e Resultado do mês diretamente. Métricas man
 
 ### Cabeçalho da Home e seletor de espaços
 
-No desktop, a saudação da Home fica na mesma linha de Métricas, privacidade e notificações. A área principal segue em uma coluna: saldo, filtro do mês e indicadores. Os atalhos rápidos ficam no mobile.
+No desktop, a saudação da Home fica na mesma linha de Métricas, privacidade e notificações. A área principal segue em uma coluna: saldo, filtro do mês, Entradas e Saídas lado a lado e Resultado em largura total. Os indicadores do mês compartilham altura mínima, padding e raio com os cards de dívida, investimentos e patrimônio. Os atalhos rápidos ficam no mobile.
 
 O seletor de espaços usa o mesmo controle na barra lateral e no topo mobile. Ele lista os espaços e oferece Novo espaço, que abre o formulário existente e seleciona o espaço criado. O gerenciamento fica em Sistema no desktop e em Mais no mobile.

@@ -453,38 +453,40 @@
     grid-area: auto / 1 / auto / -1;
     min-width: 0;
   }
+  .home-month-column {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  :root[data-ui='bento'] body .page-content .bento-dashboard .home-month-column > .income-kpi {
+    grid-column: 1;
+  }
+  :root[data-ui='bento'] body .page-content .bento-dashboard .home-month-column > .expense-kpi {
+    grid-column: 2;
+  }
   :root[data-ui='bento'] body .page-content .bento-dashboard .quick-actions {
     display: none;
   }
+  :root[data-ui='bento']
+    body
+    .page-content
+    .bento-dashboard
+    :is(.home-month-column > .bento-kpi, .finance-overview-links > a) {
+    min-block-size: 136px;
+    padding: 22px;
+    border-radius: var(--radius-lg);
+  }
   :root[data-ui='bento'] body .page-content .bento-dashboard .home-month-column > .bento-kpi {
-    grid-template-columns: 40px minmax(0, 1fr) auto;
-    column-gap: 12px;
-    row-gap: 2px;
-    padding: 14px 16px;
+    grid-template-columns: 32px minmax(0, 1fr);
+    align-content: center;
+    gap: 10px;
   }
   .home-month-column .bento-kpi > .kpi-icon {
-    grid-row: 1 / span 2;
-  }
-  .home-month-column .bento-kpi > .kpi-label {
-    grid-column: 2;
-    padding: 0;
-  }
-  .home-month-column .bento-kpi > strong {
-    grid-column: 3;
-    grid-row: 1;
-    text-align: end;
-  }
-  .home-month-column .bento-kpi > .metric-footnote {
-    grid-column: 3;
-    grid-row: 2;
-    text-align: end;
+    width: 32px;
+    height: 32px;
   }
   .home-month-column .bento-kpi > .kpi-ring {
-    position: static;
-    grid-column: 2;
-    grid-row: 2;
-    width: 16px;
-    height: 16px;
+    inset: 22px 22px auto auto;
+    width: 24px;
+    height: 24px;
   }
   :root[data-ui='bento'] body .page-content .wealth-overview {
     grid-template-columns: repeat(2, minmax(0, 1fr));

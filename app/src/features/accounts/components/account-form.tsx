@@ -125,10 +125,10 @@ export function AccountForm({ onSaved, account }: { onSaved: () => void; account
       )}
       <details className="finance-disclosure">
         <summary>Categorias padrão (opcional)</summary>
-        <p className="field-help">
-          Usadas apenas quando não houver escolha manual nem regra reconhecida. Não altera
-          lançamentos existentes.
-        </p>
+        <HelpTip
+          label="Quando usar categorias padrão"
+          text="Aplicadas quando não houver escolha manual nem regra reconhecida. Os lançamentos existentes são preservados."
+        />
         <label>
           Receita padrão
           <CategorySelect
@@ -150,13 +150,16 @@ export function AccountForm({ onSaved, account }: { onSaved: () => void; account
           />
         </label>
       </details>
-      <p className="field-help">
-        {legacyInstitution
-          ? 'Esta conta anterior foi preservada com seu histórico. Novas contas estão disponíveis para Mercado Pago, Alelo, Banco do Brasil e C6 Bank.'
-          : institution === 'alelo'
-            ? 'Benefício não é limite de crédito nem dinheiro livre. A importação validada é para Alimentação. Importe seu histórico e use Corrigir saldo se precisar registrar uma diferença.'
-            : 'Importe seu histórico em qualquer ordem ou adicione movimentos manualmente. Se precisar ajustar o valor registrado, use Corrigir saldo na conta.'}
-      </p>
+      <HelpTip
+        label="Como usar esta conta"
+        text={
+          legacyInstitution
+            ? 'Esta conta anterior foi preservada com seu histórico. Novas contas estão disponíveis para Mercado Pago, Alelo, Banco do Brasil e C6 Bank.'
+            : institution === 'alelo'
+              ? 'Benefício não é limite de crédito nem dinheiro livre. A importação validada é para Alimentação. Importe seu histórico e use Corrigir saldo se precisar registrar uma diferença.'
+              : 'Importe seu histórico em qualquer ordem ou adicione movimentos manualmente. Se precisar ajustar o valor registrado, use Corrigir saldo na conta.'
+        }
+      />
       {error && (
         <p className="form-error" role="alert">
           {error}

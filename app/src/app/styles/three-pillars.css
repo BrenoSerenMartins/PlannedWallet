@@ -15,8 +15,8 @@
   max-width: 100%;
   align-items: center;
   gap: 4px;
-  flex-wrap: wrap;
-  overflow: visible;
+  flex-wrap: nowrap;
+  overflow-x: auto;
   padding: 4px;
   border: var(--border-subtle);
   border-radius: var(--radius-md);
@@ -2334,4 +2334,30 @@
   height: 44px;
   min-width: 44px;
   min-height: 44px;
+}
+
+@media (min-width: 1024px) {
+  :root[data-ui='bento'] body .page-content .cards-page .physical-card-frame.credit-card-frame-new {
+    display: block;
+    min-width: 0;
+    padding: 0;
+  }
+
+  :root[data-ui='bento'] body .page-content .cards-page .credit-card-new.physical-card-face {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    aspect-ratio: auto;
+    min-height: 56px;
+    padding: 8px;
+  }
+
+  body .cards-page .line-icon-action {
+    width: 32px;
+    min-width: 32px;
+    height: 32px;
+    min-height: 32px;
+  }
 }

@@ -1,3 +1,4 @@
+import { ContactRound } from 'lucide-react';
 import { CounterpartyIdentityForm } from './counterparty-identity-form';
 import { CounterpartyRelationForm } from './counterparty-relation-form';
 import { ClassificationRuleEditor } from './classification-rule-editor';
@@ -34,13 +35,17 @@ export function CounterpartyPanel({
     settlement: 'EDI antigo',
     benefit_statement: 'Benefício',
   };
+  const activeRules = agent.rules.filter((rule) => rule.enabled).length;
   return (
     <details className="panel counterparty-panel">
       <summary>
+        <span className="counterparty-avatar" aria-hidden="true">
+          <ContactRound size={18} />
+        </span>
         <strong>{agent.name}</strong>
-        <span>
-          {agent.enabled ? 'Ativo' : 'Desativado'} · {agent.rules.filter((r) => r.enabled).length}{' '}
-          {agent.rules.filter((r) => r.enabled).length === 1 ? 'regra ativa' : 'regras ativas'}
+        {!agent.enabled && <small>Desativado</small>}
+        <span className="counterparty-rule-count">
+          {activeRules} {activeRules === 1 ? 'regra' : 'regras'}
         </span>
       </summary>
       <div className="form-stack counterparty-content">

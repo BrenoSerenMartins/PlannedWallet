@@ -1,3 +1,4 @@
+import { HelpTip } from '../../../shared/ui/tooltip';
 import { DatePicker } from '../../../shared/ui/controls/date-picker';
 import { Select } from '../../../shared/ui/controls/select';
 import { useState } from 'react';
@@ -121,10 +122,10 @@ export function CardPaymentForm({
         </label>
         {mode === 'link' ? (
           <>
-            <p className="field-help">
-              Vincula a saída existente e a trata como transferência para o cartão. Ela deixa de ser
-              uma segunda despesa; o valor registrado na conta é preservado.
-            </p>
+            <HelpTip
+              label="Como funciona o vínculo"
+              text="A saída vira uma transferência para o cartão. Seu valor é preservado e a despesa não é duplicada."
+            />
             <details className="finance-period">
               <summary>Período da busca</summary>
               <div className="form-grid">
@@ -187,11 +188,10 @@ export function CardPaymentForm({
                 ainda não estiver na conta.
               </p>
             )}
-            <p className="field-help">
-              Só aparecem saídas livres da conta escolhida. Pagamentos já vinculados ficam em
-              “Pagamentos e vínculos” na fatura. Valores acima do pendente não podem ser vinculados
-              integralmente a esta fatura.
-            </p>
+            <HelpTip
+              label="Quais pagamentos aparecem"
+              text="A lista inclui saídas disponíveis da conta. Pagamentos vinculados ficam na fatura. O valor vinculado não pode superar o saldo pendente."
+            />
             {selected && (
               <p className="finance-review">
                 Será vinculado {money(Math.abs(selected.amount))}, em{' '}
@@ -221,10 +221,10 @@ export function CardPaymentForm({
                 onChange={(e) => setDate(e.target.value)}
               />
             </label>
-            <p className="field-help">
-              Registra uma transferência da conta para o cartão. Você pode pagar parte da fatura; o
-              restante continua pendente. Esta ação não faz pagamentos no banco.
-            </p>
+            <HelpTip
+              label="Como registrar um pagamento"
+              text="O registro é uma transferência, inclusive para pagamento parcial. O pagamento no banco é feito separadamente."
+            />
           </>
         )}
       </FinanceForm>

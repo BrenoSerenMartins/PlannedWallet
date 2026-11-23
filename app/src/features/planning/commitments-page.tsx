@@ -2,7 +2,7 @@ import { IconAction } from '../../shared/ui/icon-action';
 import { CalendarDays as EmptyStateIcon } from 'lucide-react';
 import { Select } from '../../shared/ui/controls/select';
 import { MonthPicker } from '../../shared/ui/controls/month-picker';
-import { Tooltip } from '../../shared/ui/tooltip';
+import { HelpTip, Tooltip } from '../../shared/ui/tooltip';
 import { useNotifications } from '../../shared/feedback/notification-provider';
 import { PageHeader } from '../../shared/ui/page-header';
 import { useState } from 'react';
@@ -136,10 +136,14 @@ export function CommitmentsPage() {
           </section>
           {!!query.data.cardBills?.length && (
             <section className="panel card-forecast-links">
-              <h2>Faturas na previsão</h2>
-              <p className="field-help">
-                Já estão incluídas nos valores a pagar. Registre ou vincule pagamentos em Cartões.
-              </p>
+              <h2 className="field-assistance">
+                Faturas na previsão{' '}
+                <HelpTip
+                  label="Como as faturas entram na previsão"
+                  text="O valor a pagar já inclui essas faturas. Registre ou vincule pagamentos em Cartões."
+                />
+              </h2>
+
               <ul className="card-entry-list">
                 {query.data.cardBills.map((b) => (
                   <li key={`${b.cardId}:${b.billMonth}`}>
@@ -201,17 +205,20 @@ export function CommitmentsPage() {
           )}
           {!items.length ? (
             <EmptyState
-              icon={<EmptyStateIcon size={28} strokeWidth={1.5} />}
-              title={
-                query.data.schedules.length
-                  ? 'Nenhum vencimento neste filtro'
-                  : 'Seus próximos compromissos, organizados'
+              icon={<EmptyStateIcon size={24} strokeWidth={1.5} />}
+              title="Nenhum compromisso encontrado"
+              action={
+                !query.data.schedules.length && (
+                  <Button
+                    className="compact"
+                    disabled={!navigator.onLine}
+                    onClick={() => setDialog('new')}
+                  >
+                    Adicionar compromisso
+                  </Button>
+                )
               }
-            >
-              {query.data.schedules.length
-                ? 'Escolha outra situação, conta ou período para consultar os vencimentos.'
-                : 'Use Novo compromisso para cadastrar contas e receitas previstas. Só viram lançamentos quando você confirmar.'}
-            </EmptyState>
+            />
           ) : (
             <ul className="commitment-list">
               {items.map((item) => (

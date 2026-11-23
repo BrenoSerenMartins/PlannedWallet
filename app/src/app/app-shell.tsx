@@ -265,13 +265,6 @@ function ShellContent() {
             <span className="header-notifications">
               <NotificationCenter />
             </span>
-            <NavLink
-              to="/settings"
-              className="icon-button mobile-settings-link"
-              aria-label="Ajustes"
-            >
-              <Settings size={18} aria-hidden="true" />
-            </NavLink>
             {!online && (
               <span className="connection-chip" aria-label="Sem conexão">
                 <WifiOff size={16} />

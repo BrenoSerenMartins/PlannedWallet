@@ -1,9 +1,11 @@
 import { useFinancialVisibility } from '../../../shared/privacy/financial-visibility';
 import { Link } from 'react-router-dom';
-import { ArrowUpRight, Landmark } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import type { Account } from '../../../shared/api/resources';
 import { money } from '../../../shared/formatting/money';
 import { ActionMenu } from '../../../shared/ui/action-menu';
+import { accountOptionIcons } from '../../../shared/branding/account-icons';
+import { Tooltip } from '../../../shared/ui/tooltip';
 import { BalanceReference } from '../../../shared/ui/balance-reference';
 
 export function AccountRecord({
@@ -35,11 +37,8 @@ export function AccountRecord({
   return (
     <article className="panel account-record">
       <div className="account-record-main">
-        <span
-          className={`bank-icon large ${a.institution === 'mercado_pago' ? 'mp' : ''}`}
-          aria-hidden="true"
-        >
-          {a.institution === 'mercado_pago' ? 'mp' : <Landmark size={22} />}
+        <span className="bank-icon large" aria-hidden="true">
+          <img src={accountOptionIcons([a])[a.id]} alt="" width={24} height={24} />
         </span>
         <div className="account-record-identity">
           <h2>
@@ -91,9 +90,15 @@ export function AccountRecord({
             )}
           </div>
         </details>
-        <Link className="text-button account-movements-link" to={`/accounts/${a.id}`}>
-          Ver movimentações <ArrowUpRight size={15} />
-        </Link>
+        <Tooltip text="Ver movimentações">
+          <Link
+            className="icon-button account-movements-link"
+            aria-label="Ver movimentações"
+            to={`/accounts/${a.id}`}
+          >
+            <ArrowUpRight size={16} aria-hidden="true" />
+          </Link>
+        </Tooltip>
       </div>
     </article>
   );

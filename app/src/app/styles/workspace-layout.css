@@ -6,7 +6,7 @@
   --text-meta: 0.75rem;
   --text-secondary: #a1a1aa;
   --radius-hero: 22px;
-  --radius-bento: 18px;
+  --radius-bento: 16px;
   --radius-md: 12px;
   --sidebar-surface: #0c0c0f;
 }
@@ -265,7 +265,7 @@
   }
 
   :root[data-ui='bento'] body .premium-app .page-content {
-    padding-bottom: calc(116px + env(safe-area-inset-bottom));
+    padding-bottom: calc(112px + env(safe-area-inset-bottom));
   }
 
   :root[data-ui='bento']
@@ -631,13 +631,17 @@
 }
 
 :root[data-ui='bento'] {
-  --bg-base: #0a0a0c;
-  --bg-surface: #131418;
+  --bg-base: #09090b;
+  --bg-surface: #121215;
   --bg-elevated: #181a20;
-  --input-surface: #1f2128;
+  --input-surface: #18181c;
+  --input-border: rgba(255, 255, 255, 0.09);
+  --border-subtle: 1px solid rgba(255, 255, 255, 0.07);
+  --success-bg: rgba(34, 197, 94, 0.12);
   --action-gold: #e5c158;
   --success: #22c55e;
-  --danger: #f87171;
+  --danger: #ef4444;
+  --pending-accent: #f59e0b;
   --amount-neutral: #9ca3af;
   --disabled-accent: rgba(255, 255, 255, 0.06);
   --disabled-accent-text: #a1a1aa;
@@ -647,8 +651,12 @@
   --bg-surface: #fff;
   --bg-elevated: #edf0f4;
   --input-surface: #fff;
+  --input-border: rgba(36, 35, 42, 0.15);
+  --border-subtle: 1px solid rgba(36, 35, 42, 0.1);
+  --success-bg: rgba(8, 127, 91, 0.08);
   --success: #087f5b;
   --danger: #a6283d;
+  --pending-accent: #8c5307;
   --amount-neutral: #626873;
   --disabled-accent: #eceef2;
   --disabled-accent-text: #595e69;
@@ -726,10 +734,6 @@
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
 }
-.category-add-action {
-  grid-column: 1 / -1;
-  justify-self: end;
-}
 :root[data-ui='bento'] body .page-content .category-toolbar {
   row-gap: 12px;
 }
@@ -770,6 +774,7 @@
   .dialog-content
   :is(input:not([type='checkbox'], [type='radio'], [type='color']), textarea, .select-trigger) {
   background-color: var(--input-surface);
+  border-color: var(--input-border);
 }
 :root[data-ui='bento'] body :is(time, .forecast-preview-date, .card-bill-status) {
   font-variant-numeric: tabular-nums;
@@ -815,21 +820,8 @@
     padding: 0;
     min-height: 0;
   }
-  :root[data-ui='bento'] body .premium-app .app-header .mobile-settings-link {
-    display: grid;
-    place-items: center;
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
-    min-height: 36px;
-    padding: 0;
-    border-radius: 50%;
-  }
 }
 @media (min-width: 1024px) {
-  :root[data-ui='bento'] body .premium-app .app-header .mobile-settings-link {
-    display: none;
-  }
   :root[data-ui='bento'] body .premium-app .page-content {
     max-width: 1280px;
   }

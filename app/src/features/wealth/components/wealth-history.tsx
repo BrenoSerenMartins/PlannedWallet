@@ -1,3 +1,5 @@
+import { EmptyState } from '../../../shared/ui/primitives';
+import { HelpTip } from '../../../shared/ui/tooltip';
 import { useState } from 'react';
 import type { WealthSummary } from '../../../shared/api/resources';
 import { ViewSwitcher } from '../../../shared/ui/view-switcher';
@@ -30,7 +32,13 @@ export function WealthHistory({
   return (
     <section className="panel wealth-history">
       <div className="section-heading">
-        <h2>Evolução registrada</h2>
+        <h2 className="field-assistance">
+          Evolução registrada{' '}
+          <HelpTip
+            label="Como funciona a evolução"
+            text="O gráfico usa posições salvas na data do registro. Meses sem registro e avaliações antigas não são recalculados."
+          />
+        </h2>
         <ViewSwitcher
           label="Período da evolução patrimonial"
           value={range}
@@ -43,10 +51,7 @@ export function WealthHistory({
         />
       </div>
       {!points.length ? (
-        <p>
-          Guarde a posição atual para começar sua linha do tempo. O histórico será formado pelos
-          registros que você salvar.
-        </p>
+        <EmptyState title="Sem posições salvas" compact />
       ) : !visible ? (
         <p className="wealth-hidden-chart">Valores ocultos</p>
       ) : (
@@ -85,10 +90,7 @@ export function WealthHistory({
           </div>
         </>
       )}
-      <p className="field-help">
-        Os pontos representam posições salvas, usando os valores conhecidos naquela data. O gráfico
-        não reconstrói meses anteriores nem atualiza avaliações antigas automaticamente.
-      </p>
+
       {points.length > 0 && (
         <details className="finance-disclosure">
           <summary>Ver valores das posições</summary>

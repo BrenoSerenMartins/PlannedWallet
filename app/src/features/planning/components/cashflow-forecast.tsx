@@ -3,7 +3,8 @@ import { CompactForecast } from './compact-forecast';
 import { CommitmentForm } from './commitment-form';
 import { Modal } from '../../../shared/ui/primitives';
 import { Link } from 'react-router-dom';
-import { CalendarClock, ArrowRight } from 'lucide-react';
+import { HelpTip } from '../../../shared/ui/tooltip';
+import { ArrowRight } from 'lucide-react';
 import { dateToday, money, shortDate } from '../../../shared/formatting/money';
 import { Loading, ErrorState } from '../../../shared/ui/primitives';
 import { useCommitments } from '../hooks/use-commitments';
@@ -27,15 +28,18 @@ export function ForecastDetails({
     <>
       <div className="forecast-heading">
         <div>
-          <h2>Previsão de saldo</h2>
+          <h2 className="field-assistance">
+            Previsão de saldo
+            <HelpTip
+              label="Como calculamos a previsão"
+              text="Saldo registrado mais recebimentos e menos pagamentos pendentes, incluindo faturas. Valores concluídos ou dispensados ficam fora. O orçamento não é somado novamente."
+            />
+          </h2>
           <p>Até {shortDate(data.through)} · valores estimados</p>
         </div>
-        <CalendarClock size={20} aria-hidden="true" />
       </div>
       {!data.schedules.length && !data.cardBills?.length ? (
-        <p className="field-help">
-          Adicione contas a pagar e receitas a receber para prever quanto pode sobrar.
-        </p>
+        <p className="field-help">Sem compromissos previstos.</p>
       ) : (
         <>
           <div className="forecast-totals">
@@ -64,16 +68,12 @@ export function ForecastDetails({
           </div>
           {data.overdueCount > 0 && (
             <p className="forecast-warning">
-              Inclui {data.overdueCount} vencimento(s) anterior(es) a hoje ainda pendente(s):{' '}
-              {value(data.overdueExpense)} a pagar e {value(data.overdueIncome)} a receber,
-              considerando todas as contas. Confirme o que já aconteceu para melhorar a previsão.
+              {data.overdueCount} em atraso · {value(data.overdueExpense)} a pagar e{' '}
+              {value(data.overdueIncome)} a receber.
             </p>
           )}
           {unassigned > 0 && (
-            <p className="field-help">
-              Inclui {value(unassigned)} em faturas cuja conta será escolhida no pagamento. Esse
-              valor entra no total, sem ser atribuído a uma conta específica.
-            </p>
+            <p className="field-help">Inclui {value(unassigned)} em faturas sem conta vinculada.</p>
           )}
           <details className="forecast-accounts">
             <summary>Previsão por conta · benefícios e reservas separados</summary>
@@ -103,11 +103,6 @@ export function ForecastDetails({
               ))}
             </ul>
           </details>
-          <p className="field-help">
-            Saldo registrado + recebimentos pendentes − pagamentos pendentes. Faturas pendentes
-            também entram na previsão. Compromissos concluídos e dispensados ficam fora da previsão.
-            O orçamento mensal não é somado novamente.
-          </p>
         </>
       )}
     </>

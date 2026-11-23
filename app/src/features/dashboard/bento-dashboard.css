@@ -402,7 +402,7 @@
   grid-column: 1/8;
   grid-row: 5;
   padding: 22px;
-  min-height: 228px;
+  min-height: 176px;
   overflow: hidden;
 }
 .bento-card-heading {
@@ -461,7 +461,7 @@
   color: var(--text-secondary);
 }
 .trend-plot {
-  height: 112px;
+  height: 96px;
   margin-top: 12px;
   position: relative;
 }
@@ -934,7 +934,7 @@
   }
   :root[data-ui='bento'] .bento-dashboard .cashflow-trend {
     padding: 18px;
-    min-height: 220px;
+    min-height: 176px;
   }
   .bento-card-heading h2 {
     font-size: 14px;
@@ -1080,4 +1080,13 @@
   width: 100%;
   min-width: 0;
   max-width: 100%;
+}
+
+.bento-dashboard .hero-pockets > div {
+  padding: 4px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--gold-muted);
+}
+.bento-dashboard .recent-movements .transaction-icon {
+  border-radius: 50%;
 }

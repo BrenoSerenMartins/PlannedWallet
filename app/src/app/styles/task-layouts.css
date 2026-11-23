@@ -511,8 +511,8 @@ body .accounts-page .account-record {
   overflow: visible;
 }
 body .accounts-page .account-record-main {
-  padding: 26px 4px 10px;
-  gap: 20px;
+  padding: 12px 4px 4px;
+  gap: 12px;
   flex-wrap: nowrap;
 }
 body .accounts-page .account-record .bank-icon {
@@ -535,7 +535,7 @@ body .accounts-page .account-record-value strong {
 body .accounts-page .account-record-actions {
   border: 0;
   background: transparent;
-  padding: 0 4px 16px 72px;
+  padding: 0 4px 8px 64px;
   align-items: flex-start;
 }
 body .accounts-page .account-reference-actions {
@@ -557,37 +557,34 @@ body .account-record .action-menu-panel {
 @media (max-width: 600px) {
   body .accounts-page .account-record-main {
     display: grid;
-    grid-template-columns: 40px minmax(0, 1fr) 44px;
-    gap: 10px 12px;
-    padding: 22px 0 6px;
+    grid-template-columns: 36px minmax(0, 1fr) auto 42px;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 0 4px;
   }
   body .accounts-page .account-record .bank-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 13px;
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
   }
-  body .accounts-page .account-record-main > .action-menu {
-    grid-column: 3;
-    grid-row: 1;
+  body .accounts-page .account-record-identity {
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
   body .accounts-page .account-record-value {
-    grid-column: 2 / 4;
     margin: 0;
-    text-align: left;
+    text-align: end;
+  }
+  body .accounts-page .account-record-value strong {
+    font-size: var(--text-title);
+    white-space: nowrap;
   }
   body .accounts-page .account-record-value > span {
     font-size: 10px;
   }
   body .accounts-page .account-record-actions {
-    padding: 0 0 14px 52px;
-    gap: 4px 14px;
-    flex-wrap: wrap;
-  }
-  body .accounts-page .account-reference-actions {
-    flex: 1 1 100%;
-  }
-  body .accounts-page .account-movements-link {
-    padding: 0;
+    padding: 0 0 8px 44px;
+    gap: 8px;
   }
 }
 

@@ -48,15 +48,13 @@ export function RecentMovements({
       ) : (
         <EmptyState
           icon={<EmptyStateIcon size={28} strokeWidth={1.5} />}
-          title="Nenhum movimento neste mês"
+          title="Nenhum movimento no mês"
           action={
             <Link className="button secondary" to="/imports">
               Importar um extrato <Upload size={16} />
             </Link>
           }
-        >
-          Importe seu extrato ou registre um lançamento para acompanhar seu mês.
-        </EmptyState>
+        />
       )}
     </section>
   );

@@ -1,8 +1,9 @@
+import { IconAction } from '../../../shared/ui/icon-action';
 import { Flag } from 'lucide-react';
 import { Tooltip } from '../../../shared/ui/tooltip';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import type { Category, CategoryGroup } from '../../../shared/api/resources';
-import { Button, EmptyState } from '../../../shared/ui/primitives';
+import { EmptyState } from '../../../shared/ui/primitives';
 export function CategoryGroupPanel({
   group,
   categories,
@@ -62,11 +63,8 @@ export function CategoryGroupPanel({
               </Tooltip>
             </>
           )}
+          <IconAction label="Adicionar categoria" icon={<Plus size={17} />} onClick={onAdd} />
         </div>
-        <Button className="secondary compact category-add-action" onClick={onAdd}>
-          <Plus size={16} />
-          Adicionar categoria
-        </Button>
       </header>
       <div className="category-rows">
         {categories.map((category) => (

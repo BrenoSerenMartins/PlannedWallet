@@ -1,3 +1,5 @@
+import { MoneyField } from '../../../shared/ui/controls/money-field';
+import { HelpTip } from '../../../shared/ui/tooltip';
 import { DatePicker } from '../../../shared/ui/controls/date-picker';
 import { Select } from '../../../shared/ui/controls/select';
 import { useState } from 'react';
@@ -109,22 +111,22 @@ export function HoldingForm({
           <div className="form-grid">
             <label>
               Capital já investido (R$)
-              <input
+              <MoneyField
+                aria-label="Capital já investido (R$)"
                 required
-                inputMode="decimal"
                 maxLength={20}
                 value={capital}
-                onChange={(e) => setCapital(e.target.value)}
+                onValueChange={setCapital}
               />
             </label>
             <label>
               Valor total atualizado (R$)
-              <input
+              <MoneyField
+                aria-label="Valor total atualizado (R$)"
                 required
-                inputMode="decimal"
                 maxLength={20}
                 value={market}
-                onChange={(e) => setMarket(e.target.value)}
+                onValueChange={setMarket}
               />
             </label>
           </div>
@@ -138,11 +140,10 @@ export function HoldingForm({
               onChange={(e) => setDate(e.target.value)}
             />
           </label>
-          <p className="field-help">
-            Uma posição já existente não retira dinheiro da conta novamente. Para começar uma
-            aplicação nova, cadastre zerada e depois registre o aporte. Os valores são informados
-            por você, sem cotação automática.
-          </p>
+          <HelpTip
+            label="Como cadastrar um investimento"
+            text="Cadastre posições existentes sem movimentar a conta. Para uma aplicação nova, cadastre zerada e registre o aporte. As avaliações são manuais."
+          />
         </>
       )}
     </FinanceForm>
@@ -238,10 +239,10 @@ export function WealthItemForm({
           Arquivar e retirar esta posição do patrimônio
         </label>
       )}
-      <p className="field-help">
-        Este cadastro descreve uma posição patrimonial. Não cria receita, despesa ou pagamento. Não
-        repita contas, reservas, investimentos e dívidas de cartões que o app já considera.
-      </p>
+      <HelpTip
+        label="Como cadastrar uma posição"
+        text="Cadastre apenas ativos e dívidas que ainda não aparecem no patrimônio. O cadastro não gera movimentação."
+      />
     </FinanceForm>
   );
 }

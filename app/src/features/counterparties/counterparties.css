@@ -246,3 +246,32 @@ body .page-content .counterparty-panel > summary:focus-visible {
     width: 100%;
   }
 }
+
+body .counterparty-panel > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.counterparty-panel > summary > strong {
+  min-width: 0;
+  margin-inline-end: auto;
+}
+
+.counterparty-panel > summary .counterparty-avatar {
+  display: grid;
+  flex: 0 0 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  background: var(--gold-muted);
+  color: var(--gold-primary);
+}
+
+.counterparty-panel > summary .counterparty-rule-count {
+  flex: none;
+  padding: 4px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-elevated);
+  font-size: var(--text-meta);
+}

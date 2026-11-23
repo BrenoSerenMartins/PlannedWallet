@@ -1,3 +1,4 @@
+import { HelpTip } from '../../../shared/ui/tooltip';
 import { DatePicker } from '../../../shared/ui/controls/date-picker';
 import { Select } from '../../../shared/ui/controls/select';
 import { useState, type FormEvent } from 'react';
@@ -173,12 +174,17 @@ export function CommitmentForm({
           </label>
         )}
       </div>
-      <p className="field-help">
-        {schedule
-          ? 'A edição altera os vencimentos pendentes. Os concluídos mantêm seus dados.'
-          : 'O compromisso entra na previsão. O saldo só muda quando houver um lançamento realizado.'}{' '}
-        {frequency === 'monthly' && 'Em meses mais curtos, o vencimento cai no último dia.'}
-      </p>
+      <HelpTip
+        label="Como funcionam os compromissos"
+        text={[
+          schedule
+            ? 'Alterações valem para vencimentos pendentes. Os concluídos mantêm seus dados.'
+            : 'O compromisso entra na previsão. O saldo muda ao registrar o pagamento ou recebimento.',
+          frequency === 'monthly' ? 'Em meses mais curtos, o vencimento cai no último dia.' : '',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+      />
       {error && (
         <p className="form-error" role="alert">
           {error}

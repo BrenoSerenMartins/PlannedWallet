@@ -1,3 +1,4 @@
+import { HelpTip } from '../../shared/ui/tooltip';
 import { useState } from 'react';
 import '../goals/goals.css';
 import { useQuery } from '@tanstack/react-query';
@@ -41,9 +42,10 @@ export function RecognitionPage() {
         title="Revisão assistida"
         description="Revise sugestões de categoria, identificação e pagamento."
       />
-      <p className="field-help">
-        Até 500 lançamentos sem categoria. Suas escolhas manuais são preservadas.
-      </p>
+      <HelpTip
+        label="Como funciona a revisão"
+        text="A revisão inclui até 500 lançamentos sem categoria e preserva escolhas manuais."
+      />
       {error && (
         <p className="form-error" role="alert">
           {error}

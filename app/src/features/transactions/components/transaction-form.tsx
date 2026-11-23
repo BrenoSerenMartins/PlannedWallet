@@ -1,3 +1,4 @@
+import { MoneyField } from '../../../shared/ui/controls/money-field';
 import { accountOptionIcons } from '../../../shared/branding/account-icons';
 import { DatePicker } from '../../../shared/ui/controls/date-picker';
 import { Select } from '../../../shared/ui/controls/select';
@@ -160,17 +161,16 @@ export function TransactionForm({
           </button>
         ))}
       </div>
-      <label>
-        Valor (R$)
-        <input
-          className="amount-input"
-          required
-          inputMode="decimal"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          placeholder="0,00"
-        />
-      </label>
+      <div className="proportional-fields value-date-fields">
+        <label>
+          Valor (R$)
+          <MoneyField aria-label="Valor (R$)" required value={value} onValueChange={setValue} />
+        </label>
+        <label>
+          Data
+          <DatePicker required value={date} onChange={(e) => setDate(e.target.value)} />
+        </label>
+      </div>
       <label>
         Descrição
         <input
@@ -181,7 +181,7 @@ export function TransactionForm({
           placeholder="O que foi esse movimento?"
         />
       </label>
-      <div className="form-grid">
+      <div className="proportional-fields two-fields">
         <label>
           {kind === 'transfer' ? 'Conta de origem' : 'Conta'}
           <Select
@@ -204,47 +204,43 @@ export function TransactionForm({
             ))}
           </Select>
         </label>
-        <label>
-          Data
-          <DatePicker required value={date} onChange={(e) => setDate(e.target.value)} />
-        </label>
+        {kind === 'transfer' ? (
+          <label>
+            Conta de destino
+            <Select
+              required
+              optionIcons={accountIcons}
+              value={destination}
+              onChange={(e) => setDestination(e.target.value)}
+            >
+              <option value="">Selecione uma conta</option>
+              {accounts
+                .filter((a) => a.id !== account)
+                .map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.name}
+                  </option>
+                ))}
+            </Select>
+          </label>
+        ) : (
+          <label>
+            Categoria
+            <CategorySelect
+              categories={categories}
+              cardOptions={
+                kind === 'expense' ? cardsQuery.data?.cards.filter((c) => !c.archived) : []
+              }
+              type={kind}
+              value={category}
+              onChange={(e) => {
+                setCategory(e.target.value);
+                setCategoryTouched(true);
+              }}
+            />
+          </label>
+        )}
       </div>
-      {kind === 'transfer' ? (
-        <label>
-          Conta de destino
-          <Select
-            required
-            optionIcons={accountIcons}
-            value={destination}
-            onChange={(e) => setDestination(e.target.value)}
-          >
-            <option value="">Selecione uma conta</option>
-            {accounts
-              .filter((a) => a.id !== account)
-              .map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.name}
-                </option>
-              ))}
-          </Select>
-        </label>
-      ) : (
-        <label>
-          Categoria
-          <CategorySelect
-            categories={categories}
-            cardOptions={
-              kind === 'expense' ? cardsQuery.data?.cards.filter((c) => !c.archived) : []
-            }
-            type={kind}
-            value={category}
-            onChange={(e) => {
-              setCategory(e.target.value);
-              setCategoryTouched(true);
-            }}
-          />
-        </label>
-      )}
       {!entry &&
         !categoryTouched &&
         !category &&
@@ -268,8 +264,8 @@ export function TransactionForm({
           </label>
           <p className="field-help">
             {selectedBill
-              ? `Falta pagar: ${money(selectedBill.remaining)}. O pagamento usa a conta deste lançamento e não cria uma segunda despesa.`
-              : 'Nenhuma fatura encontrada neste mês. Escolha o mês da cobrança.'}
+              ? `Falta pagar: ${money(selectedBill.remaining)}`
+              : 'Sem fatura neste mês.'}
           </p>
         </div>
       )}

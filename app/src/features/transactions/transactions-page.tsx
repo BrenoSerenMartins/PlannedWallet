@@ -279,41 +279,6 @@ export function TransactionsPage() {
           description="Refine os critérios para filtrar suas movimentações."
         >
           <div className="movement-filter-form">
-            <div className="movement-period">
-              <label className="movement-preset">
-                <span>Período</span>
-                <Select
-                  aria-label="Período dos movimentos"
-                  value={period}
-                  onChange={(e) => changePeriod(e.target.value)}
-                >
-                  <option value="all">Todo o período</option>
-                  <option value="current">Mês atual</option>
-                  <option value="previous">Mês anterior</option>
-                  <option value="custom">Personalizado</option>
-                </Select>
-              </label>
-              <label className="movement-date">
-                <span>De</span>
-                <DatePicker
-                  ref={fromInput}
-                  value={from}
-                  onChange={(e) => setFrom(e.target.value)}
-                  aria-invalid={rangeInvalid}
-                  aria-describedby={rangeInvalid ? rangeErrorId : undefined}
-                />
-              </label>
-              <label className="movement-date">
-                <span>Até</span>
-                <DatePicker
-                  value={to}
-                  onChange={(e) => setTo(e.target.value)}
-                  aria-invalid={rangeInvalid}
-                  aria-describedby={rangeInvalid ? rangeErrorId : undefined}
-                />
-              </label>
-            </div>
-
             <div className="movement-filter-fields">
               <label>
                 Conciliação
@@ -355,6 +320,41 @@ export function TransactionsPage() {
                 />
               </label>
             </div>
+            <div className="movement-period">
+              <label className="movement-preset">
+                <span>Período</span>
+                <Select
+                  aria-label="Período dos movimentos"
+                  value={period}
+                  onChange={(e) => changePeriod(e.target.value)}
+                >
+                  <option value="all">Todo o período</option>
+                  <option value="current">Mês atual</option>
+                  <option value="previous">Mês anterior</option>
+                  <option value="custom">Personalizado</option>
+                </Select>
+              </label>
+              <label className="movement-date">
+                <span>De</span>
+                <DatePicker
+                  ref={fromInput}
+                  value={from}
+                  onChange={(e) => setFrom(e.target.value)}
+                  aria-invalid={rangeInvalid}
+                  aria-describedby={rangeInvalid ? rangeErrorId : undefined}
+                />
+              </label>
+              <label className="movement-date">
+                <span>Até</span>
+                <DatePicker
+                  value={to}
+                  onChange={(e) => setTo(e.target.value)}
+                  aria-invalid={rangeInvalid}
+                  aria-describedby={rangeInvalid ? rangeErrorId : undefined}
+                />
+              </label>
+            </div>
+
             <div className="movement-filter-tools">
               <button
                 className="text-button"

@@ -1,3 +1,5 @@
+import { Download } from 'lucide-react';
+import { IconAction } from '../../../shared/ui/icon-action';
 import { useEffect, useRef, useState } from 'react';
 import { request } from '../../../shared/api/client';
 import {
@@ -89,14 +91,12 @@ export function ExportMovements({
   return (
     <div>
       <a ref={downloadLink} hidden download="plannedwallet-movimentacoes.csv" aria-hidden="true" />
-      <button
-        type="button"
-        className="text-button"
+      <IconAction
+        label={busy ? 'Exportando…' : 'Exportar consulta CSV'}
+        icon={<Download size={16} aria-hidden="true" />}
         disabled={disabled || busy}
         onClick={() => void download()}
-      >
-        {busy ? 'Exportando…' : 'Exportar consulta CSV'}
-      </button>
+      />
       {error && <p role="alert">{error}</p>}
     </div>
   );

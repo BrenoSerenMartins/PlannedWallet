@@ -55,3 +55,9 @@ Selectable cards, input controls, upload dropzones, dialogs, menus, notification
 ### Polimento dos resumos financeiros
 
 Na Home, o cartão de compromissos empilha o saldo previsto e a lista, mantendo recebimentos e pagamentos lado a lado. Cada compromisso separa nome e valor dos metadados de conta, data e status. Em Cartões, a largura disponível no painel da fatura define duas ou quatro colunas no desktop, com valores em uma linha. No Planejamento, a barra das subcategorias e os valores de acompanhamento usam a largura inteira. Compromissos mantém um único caminho de volta pelo breadcrumb. O estilo do fieldset financeiro é global para manter os formulários de compartilhamento e categoria padrão consistentes ao abrir suas rotas diretamente.
+
+### Densidade dos formulários e navegação no PWA
+
+Lançamentos, cartões, compras e filtros avançados usam colunas proporcionais para campos curtos. Em telas mais estreitas, o seletor de período ocupa uma linha acima do intervalo de datas. O controle monetário compartilhado mantém a edição em reais, normaliza duas casas ao sair do campo e preserva a validação em centavos. Ajuda contextual usa o controle acionável por teclado e toque. Ícones de ação mantêm nomes acessíveis, e a conciliação distingue pendência de conferência por ícone e cor.
+
+No mobile, Ajustes fica no menu Mais e o conteúdo reserva a altura da dock e a área segura. Os filtros de movimentações rolam em uma linha. A lista de cartões mantém a ação de criação compacta no desktop. Home, Contas, Patrimônio, Categorias e Pessoas usam espaçamentos mais densos com os mesmos destinos e dados.

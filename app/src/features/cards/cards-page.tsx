@@ -1,3 +1,4 @@
+import { IconAction } from '../../shared/ui/icon-action';
 import { PageHeader } from '../../shared/ui/page-header';
 import { cardHudArtwork } from './art/catalog';
 import '../../shared/ui/card-invoice-preview.css';
@@ -13,6 +14,8 @@ import {
   Plus,
   Pencil,
   Trash2,
+  Tag,
+  RotateCcw,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -553,12 +556,12 @@ export function CardsPage() {
                                 {entry.amount > 0 ? ' de crédito' : ''}
                               </strong>
                               {entry.active && entry.kind === 'purchase' && (
-                                <button
-                                  className="text-button"
+                                <IconAction
+                                  label="Estornar"
+                                  icon={<RotateCcw size={16} />}
+                                  className="line-icon-action"
                                   onClick={() => setDialog({ kind: 'refund', entry })}
-                                >
-                                  Estornar
-                                </button>
+                                />
                               )}
                               {entry.active && entry.kind === 'refund' && (
                                 <button
@@ -650,22 +653,20 @@ export function CardsPage() {
                                 <span>{shortDate(p.purchaseDate)}</span>
                                 {!p.canceled && (
                                   <div className="inline-actions">
-                                    <button
-                                      className="text-button"
+                                    <IconAction
+                                      label="Categoria"
+                                      icon={<Tag size={16} />}
+                                      className="line-icon-action"
                                       onClick={() => setDialog({ kind: 'category', purchase: p })}
-                                    >
-                                      Categoria
-                                    </button>
-                                    <button
-                                      className="icon-button purchase-cancel-button"
-                                      aria-label={`Cancelar compra ${p.description}`}
-                                      title="Cancelar compra"
+                                    />
+                                    <IconAction
+                                      label={`Cancelar compra ${p.description}`}
+                                      icon={<Trash2 size={15} />}
+                                      className="purchase-cancel-button line-icon-action"
                                       onClick={() =>
                                         setDialog({ kind: 'cancelPurchase', purchase: p })
                                       }
-                                    >
-                                      <Trash2 size={15} />
-                                    </button>
+                                    />
                                   </div>
                                 )}
                               </div>

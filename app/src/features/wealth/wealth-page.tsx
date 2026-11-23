@@ -190,17 +190,24 @@ export function WealthPage() {
                 </div>
                 {!holdings.length ? (
                   <EmptyState
-                    icon={<EmptyStateIcon size={28} strokeWidth={1.5} />}
+                    icon={<EmptyStateIcon size={24} strokeWidth={1.5} />}
                     title={
                       data.holdings.length
-                        ? 'Nenhuma posição neste filtro'
-                        : 'Sua carteira, em um lugar'
+                        ? 'Nenhuma posição encontrada'
+                        : 'Sem investimentos cadastrados'
                     }
-                  >
-                    {data.holdings.length
-                      ? 'Experimente outro nome ou inclua as posições arquivadas.'
-                      : 'Use Novo investimento para cadastrar uma posição existente ou começar a registrar seus aportes.'}
-                  </EmptyState>
+                    action={
+                      !data.holdings.length && (
+                        <Button
+                          className="secondary compact"
+                          disabled={!navigator.onLine}
+                          onClick={() => setDialog({ kind: 'newHolding' })}
+                        >
+                          Cadastrar investimento
+                        </Button>
+                      )
+                    }
+                  />
                 ) : (
                   <ul className="investment-list">
                     {holdings.map((h) => (
@@ -266,12 +273,18 @@ export function WealthPage() {
                 </div>
                 {!data.items.length ? (
                   <EmptyState
-                    icon={<EmptyStateIcon size={28} strokeWidth={1.5} />}
-                    title="Complete sua visão patrimonial"
-                  >
-                    Cadastre bens e saldos de dívidas que ainda não estão representados nas contas,
-                    investimentos e cartões.
-                  </EmptyState>
+                    icon={<EmptyStateIcon size={24} strokeWidth={1.5} />}
+                    title="Sem bens ou dívidas"
+                    action={
+                      <Button
+                        className="secondary compact"
+                        disabled={!navigator.onLine}
+                        onClick={() => setDialog({ kind: 'item' })}
+                      >
+                        Cadastrar posição
+                      </Button>
+                    }
+                  />
                 ) : (
                   <ul className="wealth-item-list">
                     {data.items.map((i) => (

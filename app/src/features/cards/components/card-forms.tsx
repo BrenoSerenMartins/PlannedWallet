@@ -1,3 +1,7 @@
+import { Minus, Plus } from 'lucide-react';
+import { IconAction } from '../../../shared/ui/icon-action';
+import { HelpTip } from '../../../shared/ui/tooltip';
+import { MoneyField } from '../../../shared/ui/controls/money-field';
 import { Button } from '../../../shared/ui/primitives';
 import { Select } from '../../../shared/ui/controls/select';
 import {
@@ -70,34 +74,36 @@ export function CardForm({
           onSaved();
         }}
       >
-        <label>
-          Nome do cartão
-          <input
-            required
-            maxLength={100}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Meu cartão"
-          />
-        </label>
-        <label>
-          Banco
-          <Select
-            value={issuer}
-            optionIcons={issuerLogos}
-            onChange={(event) => {
-              setManualIssuer(event.target.value as CardIssuer | '');
-              setArtwork(undefined);
-            }}
-          >
-            <option value="">Outro ou não identificado</option>
-            {Object.entries(invoiceIssuers).map(([id, label]) => (
-              <option key={id} value={id}>
-                {label}
-              </option>
-            ))}
-          </Select>
-        </label>
+        <div className="proportional-fields value-date-fields">
+          <label>
+            Nome do cartão
+            <input
+              required
+              maxLength={100}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Meu cartão"
+            />
+          </label>
+          <label>
+            Banco
+            <Select
+              value={issuer}
+              optionIcons={issuerLogos}
+              onChange={(event) => {
+                setManualIssuer(event.target.value as CardIssuer | '');
+                setArtwork(undefined);
+              }}
+            >
+              <option value="">Outro ou não identificado</option>
+              {Object.entries(invoiceIssuers).map(([id, label]) => (
+                <option key={id} value={id}>
+                  {label}
+                </option>
+              ))}
+            </Select>
+          </label>
+        </div>
         {issuer && (
           <label>
             Modelo do cartão
@@ -114,12 +120,9 @@ export function CardForm({
             </Select>
           </label>
         )}
-        <p className="field-help">
-          A conta de origem é escolhida em cada pagamento ou identificada pela transação vinculada.
-        </p>
-        <div className="form-grid">
+        <div className="proportional-fields three-fields">
           <label>
-            Dia de fechamento
+            Fechamento
             <input
               required
               type="number"
@@ -130,7 +133,7 @@ export function CardForm({
             />
           </label>
           <label>
-            Dia de vencimento
+            Vencimento
             <input
               required
               type="number"
@@ -140,17 +143,16 @@ export function CardForm({
               onChange={(e) => setDue(e.target.value)}
             />
           </label>
+          <label>
+            Limite (R$)
+            <MoneyField
+              aria-label="Limite informado (R$)"
+              maxLength={20}
+              value={limit}
+              onValueChange={setLimit}
+            />
+          </label>
         </div>
-        <label>
-          Limite informado (R$)
-          <input
-            inputMode="decimal"
-            maxLength={20}
-            value={limit}
-            onChange={(e) => setLimit(e.target.value)}
-            placeholder="Opcional"
-          />
-        </label>
         {card && (
           <label className="finance-checkbox">
             <input
@@ -161,14 +163,12 @@ export function CardForm({
             Arquivar cartão quitado
           </label>
         )}
-        <p className="field-help">
-          Compras no dia do fechamento entram na próxima fatura. Em meses curtos, usamos o último
-          dia.{' '}
-          {card
-            ? 'Datas de faturas já registradas serão preservadas.'
-            : 'Depois de cadastrar, registre compras ou uma dívida anterior.'}{' '}
-          O limite é informativo.
-        </p>
+        <div className="field-assistance">
+          <HelpTip
+            label="Regras da fatura"
+            text="Compras no fechamento entram na próxima fatura. Em meses curtos, usamos o último dia. Faturas registradas mantêm as datas. O limite é informativo e a conta é escolhida no pagamento."
+          />
+        </div>
         {onDelete && (
           <Button type="button" className="destructive" onClick={onDelete}>
             Excluir cartão
@@ -224,28 +224,46 @@ export function CardPurchaseForm({
             placeholder="Estabelecimento ou compra"
           />
         </label>
-        <div className="form-grid">
+        <div className="proportional-fields value-date-fields">
           <label>
             Valor total da compra (R$)
-            <input
+            <MoneyField
+              aria-label="Valor total da compra (R$)"
               required
-              inputMode="decimal"
               maxLength={20}
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onValueChange={setAmount}
             />
           </label>
-          <label>
-            Quantidade de parcelas
-            <input
-              required
-              type="number"
-              min={1}
-              max={120}
-              value={installments}
-              onChange={(e) => setInstallments(e.target.value)}
-            />
-          </label>
+          <div className="installment-field">
+            <label htmlFor="purchase-installments">Parcelas</label>
+            <div className="installment-stepper">
+              <IconAction
+                label="Diminuir parcelas"
+                icon={<Minus size={14} />}
+                disabled={Number(installments) <= 1}
+                onClick={() => setInstallments(String(Math.max(1, Number(installments) - 1)))}
+              />
+              <input
+                id="purchase-installments"
+                aria-label="Quantidade de parcelas"
+                required
+                type="number"
+                min={1}
+                max={120}
+                value={installments}
+                onChange={(e) => setInstallments(e.target.value)}
+              />
+              <IconAction
+                label="Aumentar parcelas"
+                icon={<Plus size={14} />}
+                disabled={Number(installments) >= 120}
+                onClick={() => setInstallments(String(Math.min(120, Number(installments) + 1)))}
+              />
+            </div>
+          </div>
+        </div>
+        <div className="proportional-fields two-fields">
           <label>
             Data da compra
             <DatePicker
@@ -275,11 +293,10 @@ export function CardPurchaseForm({
             onChange={(e) => setMonth(e.target.value)}
           />
         </label>
-        <p className="field-help">
-          Deixe a primeira fatura em branco para calcular pelo fechamento. Informe o mês de
-          vencimento se o emissor atribuiu outra fatura. Cada parcela entra como despesa no mês da
-          sua fatura; a compra não retira dinheiro da conta agora.
-        </p>
+        <HelpTip
+          label="Como funciona a primeira fatura"
+          text="Deixe em branco para calcular pelo fechamento ou informe o mês atribuído pelo emissor. Cada parcela entra no mês da própria fatura, sem retirar dinheiro da conta agora."
+        />
       </FinanceForm>
     </FinanceChoices>
   );
@@ -309,31 +326,32 @@ export function CardOpeningForm({
         onSaved(billMonth);
       }}
     >
-      <label>
-        Valor anterior a pagar (R$)
-        <input
-          required
-          inputMode="decimal"
-          maxLength={20}
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-        />
-      </label>
-      <label>
-        Fatura de vencimento
-        <MonthPicker
-          required
-          min="1900-02"
-          max="9998-12"
-          value={billMonth}
-          onChange={(e) => setMonth(e.target.value)}
-        />
-      </label>
-      <p className="field-help">
-        Informe apenas a dívida que ainda não foi registrada. Cada inclusão soma ao mês escolhido,
-        sem criar uma despesa nova. Se houver outros valores anteriores, você pode adicioná-los
-        separadamente.
-      </p>
+      <div className="proportional-fields two-fields">
+        <label>
+          Valor anterior a pagar (R$)
+          <MoneyField
+            aria-label="Valor anterior a pagar (R$)"
+            required
+            maxLength={20}
+            value={value}
+            onValueChange={setValue}
+          />
+        </label>
+        <label>
+          Fatura de vencimento
+          <MonthPicker
+            required
+            min="1900-02"
+            max="9998-12"
+            value={billMonth}
+            onChange={(e) => setMonth(e.target.value)}
+          />
+        </label>
+      </div>
+      <HelpTip
+        label="Como registrar dívida anterior"
+        text="Informe apenas o saldo ainda não registrado. Cada inclusão soma à fatura escolhida sem criar uma despesa nova."
+      />
     </FinanceForm>
   );
 }

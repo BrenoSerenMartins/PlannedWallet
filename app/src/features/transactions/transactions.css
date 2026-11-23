@@ -315,11 +315,12 @@ body .transactions-page .movement-toolbar {
   min-height: 44px;
   border: 0;
   border-radius: 10px;
-  color: var(--muted);
-  background: transparent;
+  color: var(--pending-accent);
+  background: color-mix(in srgb, var(--pending-accent) 10%, transparent);
 }
 .movement-status.is-reconciled {
-  color: var(--positive);
+  color: var(--success);
+  background: var(--success-bg);
 }
 .movement-status:hover,
 .movement-status[aria-expanded='true'] {
@@ -374,12 +375,17 @@ body .transactions-page .movement-toolbar {
 }
 body .dialog-content .movement-period {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 20px;
 }
-body .dialog-content .movement-preset {
-  grid-column: 1 / -1;
+@media (max-width: 560px) {
+  body .dialog-content .movement-period {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  body .dialog-content .movement-preset {
+    grid-column: 1 / -1;
+  }
 }
 body .dialog-content .movement-preset .select-field,
 body .dialog-content .movement-date .date-field {
@@ -422,8 +428,12 @@ body .dialog-content .movement-filter-form .movement-period {
   margin: 0;
 }
 .movement-filter-fields {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   padding-block: 14px;
   border-block: 1px solid var(--border);
+}
+.movement-filter-fields > label:last-child {
+  grid-column: 1 / -1;
 }
 .movement-filter-tools {
   display: flex;

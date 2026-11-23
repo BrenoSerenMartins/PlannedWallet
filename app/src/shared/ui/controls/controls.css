@@ -452,3 +452,84 @@ body .toggle-field input[role='switch']:checked {
   margin: 0;
   padding: 0;
 }
+
+.proportional-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 12px;
+}
+
+.proportional-fields.two-fields {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.proportional-fields.three-fields {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.proportional-fields > * {
+  min-width: 0;
+}
+
+.money-field {
+  position: relative;
+  display: block;
+  min-width: 0;
+}
+
+.money-field > span {
+  position: absolute;
+  inset-inline-start: 10px;
+  top: 50%;
+  translate: 0 -50%;
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+
+body .dialog-content .money-field > input {
+  width: 100%;
+  padding-inline-start: 32px;
+  font-variant-numeric: tabular-nums;
+}
+
+.installment-field {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+}
+
+.installment-stepper {
+  display: grid;
+  grid-template-columns: auto minmax(32px, 1fr) auto;
+  align-items: center;
+  gap: 2px;
+}
+
+body .dialog-content .installment-stepper > input {
+  width: 100%;
+  min-width: 0;
+  padding-inline: 2px;
+  text-align: center;
+  appearance: textfield;
+  font-variant-numeric: tabular-nums;
+}
+
+.installment-stepper > input::-webkit-inner-spin-button {
+  appearance: none;
+}
+
+body .installment-stepper > .icon-button {
+  width: 28px;
+  min-width: 28px;
+  padding-inline: 0;
+}
+
+@media (max-width: 360px) {
+  .proportional-fields {
+    column-gap: 8px;
+  }
+
+  .proportional-fields.value-date-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

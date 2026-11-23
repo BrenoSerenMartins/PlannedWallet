@@ -5,7 +5,7 @@ import {
   ArrowLeftRight,
   ArrowUpRight,
   CheckCircle2,
-  CircleDashed,
+  Clock,
   Tag,
 } from 'lucide-react';
 import type { Account, Category, Transaction } from '../../../shared/api/resources';
@@ -185,7 +185,7 @@ export function MovementTable({
                       className={`movement-status ${reconciled ? 'is-reconciled' : ''}`}
                       aria-label={`Situação: ${status}`}
                     >
-                      {reconciled ? <CheckCircle2 size={16} /> : <CircleDashed size={16} />}
+                      {reconciled ? <CheckCircle2 size={16} /> : <Clock size={16} />}
                     </button>
                   </Tooltip>
                 </td>

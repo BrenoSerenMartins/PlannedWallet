@@ -1,9 +1,10 @@
+import { HelpTip } from '../../shared/ui/tooltip';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { components } from '../../shared/api/generated';
 import { request } from '../../shared/api/client';
 import { useFinanceWrite } from '../../shared/api/use-finance-write';
-import { Plus } from 'lucide-react';
+import { Pencil, Plus } from 'lucide-react';
 import { IconAction } from '../../shared/ui/icon-action';
 import { PageHeader } from '../../shared/ui/page-header';
 import { EmptyState, Button, Loading, ErrorState, Modal } from '../../shared/ui/primitives';
@@ -39,12 +40,14 @@ export function GoalsPage() {
       ) : (
         <>
           <div className="goals-overview">
-            <span>Reservado em metas</span>
+            <span className="field-assistance">
+              Reservado em metas{' '}
+              <HelpTip
+                label="Como funciona a reserva"
+                text="Reservar separa parte do saldo para a meta. A transferência entre contas é registrada em Movimentações."
+              />
+            </span>
             <strong>{money(query.data.allocated)}</strong>
-            <p>
-              Reservar não movimenta contas nem cria despesas. Transferências entre contas continuam
-              em Movimentações.
-            </p>
           </div>
           <details className="finance-disclosure">
             <summary>Saldo disponível para reservar por conta</summary>
@@ -85,9 +88,11 @@ export function GoalsPage() {
                     {g.deadline ? ` · prazo ${g.deadline.split('-').reverse().join('/')}` : ''}
                   </p>
                 </div>
-                <button className="text-button" onClick={() => setDialog(g)}>
-                  Editar meta
-                </button>
+                <IconAction
+                  label="Editar meta"
+                  icon={<Pencil size={16} />}
+                  onClick={() => setDialog(g)}
+                />
               </div>
               <div className="goal-metrics">
                 <div>

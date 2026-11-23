@@ -1791,6 +1791,47 @@
         "tags": ["Categories"]
       }
     },
+    "/v1/categories/workspace-import-default": {
+      "patch": {
+        "operationId": "CategoriesController_workspaceImportDefault",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkspaceImportDefaultDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "categoryId": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  },
+                  "required": ["categoryId"]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": ["Categories"]
+      }
+    },
     "/v1/categories/{id}": {
       "patch": {
         "operationId": "CategoriesController_update",
@@ -5505,6 +5546,9 @@
       "CategoryResourceDto": {
         "type": "object",
         "properties": {
+          "workspaceImportDefault": {
+            "type": "boolean"
+          },
           "groupId": {
             "type": "string",
             "nullable": true
@@ -5547,6 +5591,20 @@
           }
         },
         "required": ["name", "type", "color"]
+      },
+      "WorkspaceImportDefaultDto": {
+        "type": "object",
+        "properties": {
+          "categoryId": {
+            "type": "string",
+            "nullable": true
+          },
+          "expectedCategoryId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["categoryId", "expectedCategoryId"]
       },
       "CategoryGroupResourceDto": {
         "type": "object",

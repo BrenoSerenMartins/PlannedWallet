@@ -28,6 +28,7 @@ export class CategoryGroupResourceDto {
   @ApiProperty({ type: String }) color!: string;
 }
 export class CategoryResourceDto {
+  @ApiPropertyOptional({ type: Boolean }) workspaceImportDefault?: boolean;
   @ApiProperty({ type: String, nullable: true }) groupId!: string | null;
   @ApiProperty({ type: String, nullable: true }) groupName!: string | null;
   @ApiProperty({ type: String }) id!: string;

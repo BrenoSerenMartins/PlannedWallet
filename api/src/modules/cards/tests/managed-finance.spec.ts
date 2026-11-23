@@ -1177,8 +1177,8 @@ it('plans invoices by default, accepts payments from different accounts and pres
   });
 });
 
-it('confirms an imported invoice payment atomically and never duplicates its bank debit', async () => {
-  const imports = new ImportsService(
+function statementImports() {
+  return new ImportsService(
     new ImportsRepository(db.service),
     accounts,
     ledger,
@@ -1190,6 +1190,10 @@ it('confirms an imported invoice payment atomically and never duplicates its ban
     basis,
     cards,
   );
+}
+
+it('confirms an imported invoice payment atomically and never duplicates its bank debit', async () => {
+  const imports = statementImports();
   const bank = await account('Invoice import bank');
   const card = await run(() =>
     cards.create(
@@ -2248,5 +2252,65 @@ it('deletes card history while keeping the bank payment and a valid backup', asy
     expect.arrayContaining([
       expect.objectContaining({ accountId: bank.id, amount: -3000, managedKind: null }),
     ]),
+  );
+});
+
+it('requires explicit confirmation to replace a workspace import default and clears it on archive', async () => {
+  const first = await run(() =>
+    categories.save({ name: 'Gastos do mês', type: 'expense', color: '#f28a97' }),
+  );
+  const second = await run(() =>
+    categories.save({ name: 'Gastos gerais', type: 'expense', color: '#d4af37' }),
+  );
+  await run(() => categories.setWorkspaceImportDefault(first.id, null));
+  await expect(run(() => categories.setWorkspaceImportDefault(second.id, null))).rejects.toThrow(
+    'O padrão do espaço mudou',
+  );
+  await run(() => categories.setWorkspaceImportDefault(second.id, first.id));
+  expect(
+    (await run(() => categories.list())).filter((c) => c.workspaceImportDefault).map((c) => c.id),
+  ).toEqual([second.id]);
+  const bank = await run(() =>
+    accounts.create({
+      name: 'Padrão de importação do espaço',
+      institution: 'mercado_pago',
+      type: 'checking',
+      defaultExpenseCategoryId: first.id,
+    }),
+  );
+  const imports = statementImports();
+  const preview = await run(() =>
+    imports.upload(bank.id, Buffer.from('workspace-import-default'), 'despesas.csv', {
+      openingBalance: 10000,
+      closingBalance: 9600,
+      items: [
+        {
+          sourceRow: 1,
+          sourcePage: 1,
+          transactionDate: '2026-11-15',
+          description: 'Compra comum',
+          sourceOperationId: 'workspace-import-default-expense',
+          amount: -400,
+          balanceAfter: 9600,
+        },
+      ],
+    }),
+  );
+  expect(preview.items[0]).toMatchObject({
+    categoryId: second.id,
+    categoryExplanation: 'Categoria padrão de gastos',
+  });
+  const edited = await run(() =>
+    imports.review(
+      preview.id,
+      preview.items[0].id,
+      { selected: true, transactionType: 'expense', categoryId: first.id },
+      String(preview.version),
+    ),
+  );
+  expect(edited.items[0].categoryId).toBe(first.id);
+  await run(() => categories.archive(second.id));
+  expect((await run(() => categories.list(true))).some((c) => c.workspaceImportDefault)).toBe(
+    false,
   );
 });

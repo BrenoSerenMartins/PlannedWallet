@@ -77,6 +77,7 @@ export function CategoryGroupPanel({
               onClick={() => onEditCategory(category)}
             >
               <strong>{category.name}</strong>
+              {category.workspaceImportDefault && <small>Categoria padrão de gastos</small>}
               {searching && <small>{category.groupName}</small>}
             </button>
 

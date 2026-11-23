@@ -17,7 +17,7 @@ import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
 import { AuthenticatedUserGuard, type AuthenticatedRequest } from '../../../core/auth/index.js';
 import { DatabaseService } from '../../../core/database/index.js';
 import { validateInput } from '../../../core/http/index.js';
-import { CategoryDto } from '../dto/category.dto.js';
+import { CategoryDto, WorkspaceImportDefaultDto } from '../dto/category.dto.js';
 import { CategoriesService } from '../services/categories.service.js';
 @ApiTags('Categories')
 @ApiBearerAuth()
@@ -37,6 +37,21 @@ export class CategoriesController {
   async create(@Req() r: AuthenticatedRequest, @Body() body: unknown) {
     const dto = await validateInput(CategoryDto, body);
     return this.db.forUser(r.identity.id, () => this.categories.save(dto));
+  }
+  @Patch('workspace-import-default')
+  @ApiBody({ type: WorkspaceImportDefaultDto })
+  @ApiOkResponse({
+    schema: {
+      type: 'object',
+      properties: { categoryId: { type: 'string', nullable: true } },
+      required: ['categoryId'],
+    },
+  })
+  async workspaceImportDefault(@Req() r: AuthenticatedRequest, @Body() body: unknown) {
+    const dto = await validateInput(WorkspaceImportDefaultDto, body);
+    return this.db.forUser(r.identity.id, () =>
+      this.categories.setWorkspaceImportDefault(dto.categoryId, dto.expectedCategoryId),
+    );
   }
   @Patch(':id')
   @ApiBody({ type: CategoryDto })

@@ -39,6 +39,7 @@ export interface CategoryGroupResource {
   color: string;
 }
 export interface CategoryResource {
+  workspaceImportDefault?: boolean;
   groupId?: string | null;
   groupName?: string | null;
   id: string;

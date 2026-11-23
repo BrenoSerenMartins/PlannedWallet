@@ -1,4 +1,4 @@
-import { IsIn, IsString, Length, Matches, IsOptional, IsUUID } from 'class-validator';
+import { IsIn, IsString, Length, Matches, IsOptional, IsUUID, ValidateIf } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 export class CategoryGroupDto {
   @ApiProperty({ type: String }) @IsString() @Length(1, 80) @Matches(/\S/) name!: string;
@@ -9,4 +9,16 @@ export class CategoryGroupDto {
 export class CategoryDto extends CategoryGroupDto {
   @ApiPropertyOptional({ type: String, nullable: true }) @IsOptional() @IsUUID() groupId?:
     string | null;
+}
+
+export class WorkspaceImportDefaultDto {
+  @ApiProperty({ type: String, nullable: true })
+  @ValidateIf((_, value) => value !== null)
+  @IsUUID()
+  categoryId!: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  @ValidateIf((_, value) => value !== null)
+  @IsUUID()
+  expectedCategoryId!: string | null;
 }

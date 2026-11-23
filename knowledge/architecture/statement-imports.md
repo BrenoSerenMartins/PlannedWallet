@@ -404,3 +404,9 @@ Invoice payload protection covers the parsed source. Confirmed ledger entries, b
 The C6 account importer handles the personalized CSV/XLSX table and BRL OFX, including a ZIP containing a single CSV or OFX. The input password is passed only to the isolated reader. For C6 exports the UI explains that the password is the first six CPF digits. A protected batch can retry the same files and pass its credentials through upload. The parser does not infer opening or closing balances from partial exports. The OFX reader preserves FITID and uses posting dates.
 
 A local encrypted ZIP/OFX was verified with 109 movements. The provided encrypted CSV, XLSX and PDF samples had no movements. Synthetic CSV tests cover positive and negative values. The PDF reader identifies the personalized layout and reports empty exports. Importing movements from C6 PDFs requires a sample containing movements.
+
+### Categoria padrão de gastos
+
+Em Categorias, a bandeira de uma categoria de despesa permite definir o padrão do espaço inteiro. A troca mostra a categoria atual e a nova, e a API rejeita uma troca baseada num padrão desatualizado. O banco permite um padrão ativo por espaço e limpa a indicação ao arquivar a categoria.
+
+Novas despesas de extrato chegam à prévia preenchidas com a categoria do espaço, quando configurada. Esse padrão prevalece sobre a sugestão automática e o padrão da conta. A revisão ainda permite trocar ou limpar a categoria de cada item. Receitas, transferências, devoluções vinculadas, pagamentos de fatura e conciliações de movimentos existentes mantêm seus fluxos.

@@ -4,6 +4,7 @@ import {
   UnprocessableEntityException,
   NotFoundException,
   ConflictException,
+  PreconditionFailedException,
 } from '@nestjs/common';
 import type { CategoryReads } from '../../../core/integration/index.js';
 import { CategoriesRepository } from '../repositories/categories.repository.js';
@@ -114,6 +115,23 @@ export class CategoriesService implements CategoryReads {
     if (!input.groupId) return;
     if (!(await this.exportGroups()).some((g) => g.id === input.groupId && g.type === input.type))
       throw new UnprocessableEntityException('Grupo incompatível ou fora deste espaço.');
+  }
+  async setWorkspaceImportDefault(categoryId: string | null, expectedCategoryId: string | null) {
+    const group = await this.defaultGroup('expense');
+    await this.repository.lockGroups([group.id]);
+    const categories = await this.list();
+    const current = categories.find((item) => item.workspaceImportDefault)?.id ?? null;
+    if (current === categoryId) return { categoryId };
+    if (current !== expectedCategoryId)
+      throw new PreconditionFailedException(
+        'O padrão do espaço mudou. Reabra o formulário e confira a categoria atual.',
+      );
+    if (current) await this.repository.setWorkspaceImportDefault(current, false);
+    if (categoryId && !(await this.repository.setWorkspaceImportDefault(categoryId, true)).length)
+      throw new UnprocessableEntityException(
+        'Escolha uma categoria de despesa ativa neste espaço.',
+      );
+    return { categoryId };
   }
   async archive(id: string) {
     const category = (await this.list(true)).find((category) => category.id === id);

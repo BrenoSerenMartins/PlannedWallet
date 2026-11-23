@@ -212,6 +212,7 @@ export class ImportsService {
       account.institution as ParsedStatement['institution'],
     );
     const activeCategories = await this.categories.list();
+    const workspaceDefault = activeCategories.find((c) => c.workspaceImportDefault)?.id;
     const suggestions = await this.counterparties.suggest(
       accountId,
       reportType,
@@ -227,6 +228,23 @@ export class ImportsService {
                 ? { categoryId: null, classificationRuleId: null }
                 : {}),
             };
+      if (
+        workspaceDefault &&
+        item.transactionType === 'expense' &&
+        item.action === 'create' &&
+        !item.categoryChoiceExplicit &&
+        !item.cardId &&
+        !item.refundOfId
+      ) {
+        return {
+          counterpartyId: null,
+          ...item,
+          ...recognized,
+          categoryId: workspaceDefault,
+          classificationRuleId: null,
+          categoryExplanation: 'Categoria padrão de gastos',
+        };
+      }
       const candidate =
         item.transactionType === 'income'
           ? account.defaultIncomeCategoryId

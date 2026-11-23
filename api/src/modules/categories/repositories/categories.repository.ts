@@ -8,13 +8,21 @@ export class CategoriesRepository {
   constructor(@Inject(DatabaseService) private readonly db: DatabaseService) {}
   async list(includeArchived = false): Promise<CategoryResource[]> {
     return this.db.query(
-      `SELECT c.id,c.name,c.type,c.color,c.archived_at IS NOT NULL AS archived,c.group_id AS "groupId",g.name AS "groupName" FROM wallet.categories c LEFT JOIN wallet.category_groups g ON g.id=c.group_id WHERE c.user_id=$1 AND (c.archived_at IS NULL OR $2) ORDER BY g.name NULLS LAST,c.name,c.id`,
+      `SELECT c.id,c.name,c.type,c.color,c.workspace_import_default AS "workspaceImportDefault",c.archived_at IS NOT NULL AS archived,c.group_id AS "groupId",g.name AS "groupName" FROM wallet.categories c LEFT JOIN wallet.category_groups g ON g.id=c.group_id WHERE c.user_id=$1 AND (c.archived_at IS NULL OR $2) ORDER BY g.name NULLS LAST,c.name,c.id`,
       [this.db.userId, includeArchived],
+    );
+  }
+  async setWorkspaceImportDefault(id: string, enabled: boolean) {
+    return this.db.query(
+      `UPDATE wallet.categories SET workspace_import_default=$3
+       WHERE user_id=$1 AND id=$2 AND type='expense' AND archived_at IS NULL
+       RETURNING id`,
+      [this.db.userId, id, enabled],
     );
   }
   async archive(id: string) {
     await this.db.query(
-      'UPDATE wallet.categories SET archived_at=coalesce(archived_at,now()) WHERE user_id=$1 AND id=$2',
+      'UPDATE wallet.categories SET archived_at=coalesce(archived_at,now()),workspace_import_default=false WHERE user_id=$1 AND id=$2',
       [this.db.userId, id],
     );
   }

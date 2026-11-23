@@ -900,6 +900,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/categories/workspace-import-default': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch: operations['CategoriesController_workspaceImportDefault'];
+    trace?: never;
+  };
   '/v1/categories/{id}': {
     parameters: {
       query?: never;
@@ -2349,6 +2365,7 @@ export interface components {
       difference?: number;
     };
     CategoryResourceDto: {
+      workspaceImportDefault?: boolean;
       groupId: string | null;
       groupName: string | null;
       id: string;
@@ -2362,6 +2379,10 @@ export interface components {
       type: 'income' | 'expense';
       color: string;
       groupId?: string | null;
+    };
+    WorkspaceImportDefaultDto: {
+      categoryId: string | null;
+      expectedCategoryId: string | null;
     };
     CategoryGroupResourceDto: {
       isDefault: boolean;
@@ -4273,6 +4294,31 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['CategoryResourceDto'];
+        };
+      };
+    };
+  };
+  CategoriesController_workspaceImportDefault: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['WorkspaceImportDefaultDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            categoryId: string | null;
+          };
         };
       };
     };

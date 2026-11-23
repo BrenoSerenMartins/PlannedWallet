@@ -61,3 +61,7 @@ Na Home, o cartão de compromissos empilha o saldo previsto e a lista, mantendo 
 Lançamentos, cartões, compras e filtros avançados usam colunas proporcionais para campos curtos. Em telas mais estreitas, o seletor de período ocupa uma linha acima do intervalo de datas. O controle monetário compartilhado mantém a edição em reais, normaliza duas casas ao sair do campo e preserva a validação em centavos. Ajuda contextual usa o controle acionável por teclado e toque. Ícones de ação mantêm nomes acessíveis, e a conciliação distingue pendência de conferência por ícone e cor.
 
 No mobile, Ajustes fica no menu Mais e o conteúdo reserva a altura da dock e a área segura. Os filtros de movimentações rolam em uma linha. A lista de cartões mantém a ação de criação compacta no desktop. Home, Contas, Patrimônio, Categorias e Pessoas usam espaçamentos mais densos com os mesmos destinos e dados.
+
+### Carteira vertical de cartões
+
+Em telas a partir de 851 px, o seletor de cartões rola dentro de uma área de altura limitada, com encaixe vertical por proximidade. A carteira segue o fluxo da página e mantém os controles abaixo visíveis. Selecionar um cartão fora da área visível ajusta apenas a rolagem interna. Em telas menores, o carrossel continua horizontal. O teste de regressão usa três cartões para verificar a seleção e a separação entre a carteira e a barra de ações.

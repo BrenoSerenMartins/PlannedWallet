@@ -482,12 +482,6 @@ body .cards-workspace .card-detail {
 .account-record .warning-text {
   color: var(--warning);
 }
-@media (min-width: 851px) {
-  body .cards-workspace .credit-selector {
-    position: sticky;
-    top: 24px;
-  }
-}
 
 /* Accounts use the same quiet reading path as the day ledger. */
 body .accounts-page .page-header .area-navigation {

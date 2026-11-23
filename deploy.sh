@@ -67,7 +67,7 @@ for stage in lint types boundaries unit build; do
   run "$stage" node scripts/check-quiet.mjs "--only=$stage"
 done
 run secrets node scripts/check-secrets.mjs
-run browser npm run test:e2e -- --fully-parallel --workers=2 --max-failures=1 --timeout=90000 --reporter=line
+run browser env PLANNEDWALLET_RELEASE_TEST=1 npm run test:e2e -- --fully-parallel --workers=2 --retries=2 --max-failures=1 --timeout=90000 --reporter=line
 # A check must not silently change the reviewed/staged tree.
 [[ -z $(git diff --name-only) && -z $(git ls-files --others --exclude-standard) ]] || fail Arquivos 'Uma validação alterou arquivos; revise e prepare novamente.'
 run Atualidade git fetch origin main

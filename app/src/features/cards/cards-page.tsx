@@ -107,20 +107,30 @@ export function CardsPage() {
   };
   useEffect(() => {
     const selector = selectorRef.current;
-    if (!selector || !card || window.matchMedia('(min-width: 851px)').matches) return;
+    if (!selector || !card) return;
     const selected = Array.from(
       selector.querySelectorAll<HTMLButtonElement>('[data-card-id]'),
     ).find((item) => item.dataset.cardId === card.id);
-    if (selected) {
-      selector.scrollTo({
-        left:
-          selector.scrollLeft +
-          selected.getBoundingClientRect().left -
-          selector.getBoundingClientRect().left -
-          (selector.clientWidth - selected.offsetWidth) / 2,
-        behavior: 'smooth',
-      });
+    if (!selected) return;
+    const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      ? 'auto'
+      : 'smooth';
+    const viewport = selector.getBoundingClientRect();
+    if (window.matchMedia('(min-width: 851px)').matches) {
+      const frame = selected.parentElement!.getBoundingClientRect();
+      if (frame.top < viewport.top || frame.bottom > viewport.bottom) {
+        selector.scrollTo({ top: selector.scrollTop + frame.top - viewport.top - 4, behavior });
+      }
+      return;
     }
+    selector.scrollTo({
+      left:
+        selector.scrollLeft +
+        selected.getBoundingClientRect().left -
+        viewport.left -
+        (selector.clientWidth - selected.offsetWidth) / 2,
+      behavior,
+    });
   }, [card?.id, cards.length]);
   useEffect(
     () => () => {

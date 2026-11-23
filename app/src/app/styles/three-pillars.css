@@ -403,21 +403,29 @@
 }
 @media (min-width: 851px) {
   :root[data-ui='bento'] body .page-content .cards-page .credit-selector {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    align-content: start;
-    padding: 4px 2px 12px;
-    overflow-x: hidden;
-    overflow-y: auto;
-    scroll-snap-type: none;
-    scroll-padding-inline: 0;
+    flex-direction: column;
+    align-items: stretch;
+    max-inline-size: 420px;
+    max-block-size: clamp(240px, 48dvh, 356px);
+    margin-inline: auto;
+    padding: 4px 6px 12px;
+    overflow: hidden auto;
+    scroll-snap-type: y proximity;
+    scroll-padding: 4px 0 12px;
+    scrollbar-width: thin;
+    scrollbar-gutter: stable;
+  }
+  :root[data-ui='bento'] body .page-content .cards-page .credit-selector::-webkit-scrollbar {
+    display: block;
   }
   :root[data-ui='bento'] body .page-content .cards-page .credit-card-frame {
+    flex: 0 0 auto;
     width: 100%;
     min-width: 0;
-    min-height: 180px;
+    scroll-snap-align: start;
   }
 }
+
 :root[data-ui='bento'] body .page-content .cards-page .credit-selector-item,
 :root[data-ui='bento'] body .page-content .cards-page .credit-selector-item.selected {
   position: relative;

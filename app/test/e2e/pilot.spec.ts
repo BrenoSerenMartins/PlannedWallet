@@ -4883,7 +4883,7 @@ for (const suffix of [
     ).toBeVisible();
     await page.getByRole('textbox', { name: 'E-mail', exact: true }).fill('preview@example.test');
     await page.getByRole('button', { name: 'Enviar instruções', exact: true }).click();
-    await expect.poll(() => redirect).toBe('http://127.0.0.1:5173/reset-password');
+    await expect.poll(() => redirect).toBe(new URL('/reset-password', page.url()).href);
     await expect(page.getByRole('alert')).toHaveCount(0);
   });
 
@@ -5748,4 +5748,30 @@ test('batch invoice replacement stays in unified imports and requires explicit c
   await expect(review.getByText('Fatura confirmada.', { exact: true })).toBeVisible();
   expect(confirmations).toBe(1);
   await expectNoHorizontalOverflow(page);
+});
+
+test('desktop wallet scrolls inside its column without covering the controls', async ({ page }) => {
+  await signedIn(page);
+  const { cards } = await financeFixtures(page);
+  cards.cards.push(
+    { ...cards.cards[0]!, id: '00000000-0000-4000-8000-000000000840', name: 'Mercado Pago' },
+    { ...cards.cards[0]!, id: '00000000-0000-4000-8000-000000000841', name: 'C6' },
+  );
+  await page.setViewportSize({ width: 1440, height: 850 });
+  await page.goto('/cards?month=2026-11');
+  const wallet = page.getByRole('group', { name: 'Escolher cartão' });
+  const toolbar = page.locator('.card-wallet-column .card-bill-toolbar');
+  await expect(wallet.getByRole('button', { name: 'C6', exact: true })).toBeAttached();
+  await expect(wallet).toHaveCSS('position', 'static');
+  await expect(wallet).toHaveCSS('scroll-snap-type', /^y(?: proximity)?$/);
+  expect(await wallet.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true);
+  await wallet.getByRole('button', { name: 'C6', exact: true }).click();
+  await expect(wallet.getByRole('button', { name: 'C6', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await toolbar.scrollIntoViewIfNeeded();
+  expect((await wallet.boundingBox())!.y + (await wallet.boundingBox())!.height).toBeLessThan(
+    (await toolbar.boundingBox())!.y,
+  );
 });

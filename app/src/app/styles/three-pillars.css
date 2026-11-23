@@ -1619,6 +1619,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   min-width: 0;
   gap: 8px;
   color: var(--text-secondary);
@@ -1627,12 +1628,10 @@
 }
 :root[data-ui='bento'] body .page-content .planning-page .budget-progress-footer > span,
 :root[data-ui='bento'] body .page-content .planning-page .budget-progress-footer > strong {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 :root[data-ui='bento'] body .page-content .planning-page .budget-progress-footer > strong {
+  margin-inline-start: auto;
   text-align: right;
 }
 :root[data-ui='bento'] body .page-content .planning-page .budget-group-content {
@@ -1642,6 +1641,7 @@
 }
 :root[data-ui='bento'] body .page-content .planning-page .budget-group-content .budget-line {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 8px;
   min-width: 0;
   padding: 10px 0;
@@ -1675,7 +1675,7 @@
   white-space: nowrap;
 }
 :root[data-ui='bento'] body .page-content .planning-page .budget-line .budget-progress-footer {
-  font-size: 10px;
+  font-size: var(--text-meta);
 }
 :root[data-ui='bento'] body .page-content .planning-page .planning-future-commitments li {
   min-width: 0;
@@ -2017,6 +2017,35 @@
   align-self: start;
   font-size: clamp(1.125rem, 2.4vw, 1.75rem);
   line-height: 1.2;
+}
+@media (min-width: 1024px) {
+  :root[data-ui='bento'] body .page-content .cards-page .card-detail {
+    container: bill-detail / inline-size;
+  }
+  :root[data-ui='bento'] body .page-content .cards-page .card-bill-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  :root[data-ui='bento'] body .page-content .cards-page .card-bill-stats > div {
+    padding-inline: 8px;
+  }
+  :root[data-ui='bento'] body .page-content .cards-page .card-bill-stats strong {
+    font-size: 1.125rem;
+    font-weight: 700;
+    overflow-wrap: normal;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+}
+@container bill-detail (min-width: 38rem) {
+  :root[data-ui='bento'] body .page-content .cards-page .card-bill-stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1280px) {
+  :root[data-ui='bento'] body .page-content .cards-page .card-bill-stats strong {
+    font-size: 1.25rem;
+  }
 }
 @media (max-width: 600px) {
   :root[data-ui='bento'] body .page-content .cards-page .card-hud-tiles {

@@ -2,7 +2,6 @@ import { IconAction } from '../../shared/ui/icon-action';
 import { CalendarDays as EmptyStateIcon } from 'lucide-react';
 import { Select } from '../../shared/ui/controls/select';
 import { MonthPicker } from '../../shared/ui/controls/month-picker';
-import type { ReactNode } from 'react';
 import { Tooltip } from '../../shared/ui/tooltip';
 import { useNotifications } from '../../shared/feedback/notification-provider';
 import { PageHeader } from '../../shared/ui/page-header';
@@ -27,7 +26,7 @@ const statusLabel = {
   settled: 'Concluído',
   skipped: 'Dispensado',
 };
-export function CommitmentsPage({ navigation }: { navigation?: ReactNode }) {
+export function CommitmentsPage() {
   const [params, setParams] = useSearchParams();
   const current = dateToday().slice(0, 7);
   const month = validMonth(params.get('month')) ? params.get('month')! : current;
@@ -84,7 +83,7 @@ export function CommitmentsPage({ navigation }: { navigation?: ReactNode }) {
         </Link>
         <strong>Compromissos</strong>
       </div>
-      <PageHeader compact title={<>Contas e recebimentos</>} navigation={navigation}>
+      <PageHeader compact title={<>Contas e recebimentos</>}>
         <div className="month-navigation">
           <Tooltip text="Mês anterior dos compromissos">
             <button

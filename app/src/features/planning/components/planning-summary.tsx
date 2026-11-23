@@ -9,7 +9,6 @@ import { shiftMonth } from '../../../shared/formatting/month';
 const display = (value: number | null) => (value === null ? 'Não definido' : money(value));
 export function PlanningSummary({
   plan,
-  navigation,
   onEditPlan,
   commitments,
   month,
@@ -17,7 +16,6 @@ export function PlanningSummary({
   periodActions,
 }: {
   plan: MonthlyPlan;
-  navigation?: ReactNode;
   onEditPlan?: () => void;
   commitments?: ReactNode;
   month: string;
@@ -188,7 +186,6 @@ export function PlanningSummary({
           )}
         </article>
         {commitments}
-        {navigation && <div className="summary-navigation">{navigation}</div>}
       </section>
     </>
   );

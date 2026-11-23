@@ -443,3 +443,12 @@ body .toggle-field input[role='switch']:checked {
 .toggle-field input[role='switch']:checked::before {
   justify-self: end;
 }
+
+.finance-fields {
+  display: grid;
+  gap: 1.25rem;
+  min-width: 0;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}

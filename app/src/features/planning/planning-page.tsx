@@ -1,7 +1,6 @@
 import { PageHeader } from '../../shared/ui/page-header';
 import { PlanningCardBills } from './components/planning-card-bills';
 import { ActionMenu } from '../../shared/ui/action-menu';
-import type { ReactNode } from 'react';
 import { useNotifications } from '../../shared/feedback/notification-provider';
 import { BenefitPlanningNotice } from './components/benefit-planning-notice';
 import { CommitmentsPage } from './commitments-page';
@@ -20,26 +19,13 @@ import './planning.css';
 export function PlanningPage() {
   const [params] = useSearchParams();
   const view = params.get('view') === 'commitments' ? 'commitments' : 'budget';
-  const navigation =
-    view === 'commitments' ? (
-      <Link
-        className="text-button"
-        to={`/planning${params.get('month') ? '?month=' + params.get('month') : ''}`}
-      >
-        ← Voltar ao planejamento
-      </Link>
-    ) : undefined;
   return (
     <div className="planning-workspace">
-      {view === 'commitments' ? (
-        <CommitmentsPage navigation={navigation} />
-      ) : (
-        <MonthlyBudgetPage navigation={navigation} />
-      )}
+      {view === 'commitments' ? <CommitmentsPage /> : <MonthlyBudgetPage />}
     </div>
   );
 }
-function MonthlyBudgetPage({ navigation }: { navigation?: ReactNode }) {
+function MonthlyBudgetPage() {
   const [params, setParams] = useSearchParams();
   const requestedMonth = params.get('month');
   const month = validMonth(requestedMonth) ? requestedMonth : dateToday().slice(0, 7);
@@ -72,7 +58,6 @@ function MonthlyBudgetPage({ navigation }: { navigation?: ReactNode }) {
                 setMonth(value);
                 setMessage('');
               }}
-              navigation={navigation}
               onEditPlan={() => setDialog('edit')}
               commitments={<PlanningCardBills plan={plan} />}
               periodActions={

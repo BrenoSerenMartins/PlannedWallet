@@ -182,9 +182,9 @@ body .planning-toolbar .planning-status {
   align-items: center;
   gap: 10px;
   min-height: 44px;
-  padding: 8px 12px;
+  padding: var(--compact-padding);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--surface-soft);
   color: var(--text);
   font-size: 12px;

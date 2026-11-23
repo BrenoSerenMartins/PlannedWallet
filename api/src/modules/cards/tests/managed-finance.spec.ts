@@ -1825,6 +1825,7 @@ it('persists alert preferences, read/dismiss state and condition deduplication s
   const p = {
     dueDays: 7,
     budgetPercent: 90,
+    budgetEarly: false,
     bills: false,
     budgets: false,
     negativeBalance: false,
@@ -2313,4 +2314,42 @@ it('requires explicit confirmation to replace a workspace import default and cle
   expect((await run(() => categories.list(true))).some((c) => c.workspaceImportDefault)).toBe(
     false,
   );
+});
+
+it('has independent early and limit budget alerts and keeps dismissed thresholds quiet', async () => {
+  let actual = 850;
+  const service = new AlertsService(
+    db.service,
+    cards,
+    goals,
+    {
+      summary: async () => ({
+        lines: [
+          { categoryId: null, name: 'Teste de orçamento', type: 'expense', planned: 1000, actual },
+        ],
+      }),
+    },
+    commitments,
+  );
+  const prefs = {
+    dueDays: 3,
+    budgetPercent: 85,
+    budgetEarly: false,
+    budgets: true,
+    bills: false,
+    negativeBalance: false,
+    goals: false,
+  };
+  expect((await run(() => service.save(prefs))).items).toHaveLength(0);
+  const early = (await run(() => service.save({ ...prefs, budgetEarly: true }))).items[0];
+  expect(early.title).toContain('faltam até 15%');
+  await run(() => service.action(early.id, 'dismiss'));
+  actual = 1000;
+  const limit = (await run(() => service.sync())).items[0];
+  expect(limit.title).toContain('limite do orçamento atingido');
+  expect(limit.id).not.toBe(early.id);
+  actual = 900;
+  expect((await run(() => service.sync())).items).toHaveLength(0);
+  actual = 1100;
+  expect((await run(() => service.sync())).items[0].id).toBe(limit.id);
 });

@@ -1757,6 +1757,8 @@ export interface components {
       budgetPercent: number;
       bills: boolean;
       budgets: boolean;
+      /** @default false */
+      budgetEarly: boolean;
       negativeBalance: boolean;
       goals: boolean;
     };

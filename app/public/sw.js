@@ -68,13 +68,20 @@ self.addEventListener('fetch', (event) => {
 });
 
 self.addEventListener('notificationclick', (event) => {
-  if (event.notification.tag !== 'invoice-imported') return;
+  const budget = event.notification.tag.startsWith('budget-alert:');
+  if (!budget && event.notification.tag !== 'invoice-imported') return;
   event.notification.close();
   event.waitUntil(
     (async () => {
       const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-      if (windows[0]) await windows[0].focus();
-      else await self.clients.openWindow('/cards');
+      if (windows[0]) {
+        const client = budget
+          ? ((await windows[0].navigate('/planning')) ?? windows[0])
+          : windows[0];
+        await client.focus();
+      } else {
+        await self.clients.openWindow(budget ? '/planning' : '/cards');
+      }
     })(),
   );
 });

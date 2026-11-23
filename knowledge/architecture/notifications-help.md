@@ -21,3 +21,9 @@ Use help for available money versus monthly result, planning scope and benefit m
 Browser regressions cover floating feedback without layout shift, manual dismissal/history recovery, timeout pause, workspace isolation including a late request, keyboard/Escape handling and touch help with single-tap actions. Playwright discovers 105 scenarios; execution remains blocked by this environment's local server/Chromium permissions. Domain/database verification passes 206 tests in 30 suites. Final code checks are recorded alongside the implementation; browser discovery is not a browser pass.
 
 Implementation checks: lint is clean, type checking and production builds pass, and the frontend credential scan passes. Mounted live regions provide separate polite/assertive announcements without repeating the visual toast content. Tooltip integration adds no package dependency. This change requires no database migration.
+
+### Alertas de orçamento
+
+O orçamento mensal da categoria é o limite. O alerta de limite começa ligado. O aviso antecipado começa desligado e, quando ativado, usa uma margem configurável (20% por padrão). As duas opções são independentes. Uma despesa que já alcança o limite gera apenas o aviso de limite, e cada faixa usa um identificador por categoria e mês.
+
+O PWA pode enviar o aviso ao sistema do celular quando sincroniza a central e as notificações do dispositivo estão autorizadas. A mensagem nativa omite valores e categorias. Tocar nela abre o Planejamento. A sincronização depende do app em execução. O servidor não envia Web Push com o app fechado.

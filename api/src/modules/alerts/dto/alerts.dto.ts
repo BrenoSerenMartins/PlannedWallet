@@ -1,10 +1,14 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsInt, Min, Max, IsIn } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsBoolean, IsInt, Min, Max, IsIn, ValidateIf } from 'class-validator';
 export class AlertPreferencesDto {
   @ApiProperty({ type: Number }) @IsInt() @Min(0) @Max(30) dueDays!: number;
   @ApiProperty({ type: Number }) @IsInt() @Min(1) @Max(100) budgetPercent!: number;
   @ApiProperty({ type: Boolean }) @IsBoolean() bills!: boolean;
   @ApiProperty({ type: Boolean }) @IsBoolean() budgets!: boolean;
+  @ApiPropertyOptional({ type: Boolean, default: false })
+  @ValidateIf((_, value) => value !== undefined)
+  @IsBoolean()
+  budgetEarly?: boolean;
   @ApiProperty({ type: Boolean }) @IsBoolean() negativeBalance!: boolean;
   @ApiProperty({ type: Boolean }) @IsBoolean() goals!: boolean;
 }

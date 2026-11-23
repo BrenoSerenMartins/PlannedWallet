@@ -39,3 +39,30 @@ export async function notifyDevice() {
     // The in-app notification remains available when the platform cannot display a banner.
   }
 }
+
+const budgetDeliveryKey = 'plannedwallet:delivered-budget-alerts';
+const deliveringBudgetAlerts = new Set<string>();
+
+export async function notifyBudgetOnDevice(id: string) {
+  try {
+    if (!deviceNotificationsEnabled() || deliveringBudgetAlerts.has(id)) return;
+    const delivered: string[] = JSON.parse(localStorage.getItem(budgetDeliveryKey) ?? '[]');
+    if (delivered.includes(id)) return;
+    deliveringBudgetAlerts.add(id);
+    try {
+      const registration = await navigator.serviceWorker.getRegistration();
+      if (!registration) return;
+      await registration.showNotification('PlannedWallet', {
+        body: 'Você tem um aviso de orçamento. Abra o Planejamento para conferir.',
+        icon: '/icon-192.png?v=4',
+        tag: `budget-alert:${id}`,
+      });
+      const latest: string[] = JSON.parse(localStorage.getItem(budgetDeliveryKey) ?? '[]');
+      localStorage.setItem(budgetDeliveryKey, JSON.stringify([...latest.slice(-299), id]));
+    } finally {
+      deliveringBudgetAlerts.delete(id);
+    }
+  } catch {
+    // The alert remains in the in-app inbox if notification delivery is unavailable.
+  }
+}

@@ -2423,18 +2423,18 @@ for (const width of [360, 390, 768, 1440]) {
     await expect(page.locator('.hero-balance')).toHaveText('R$ 59,12');
     await expect(page.getByRole('region', { name: 'Saldos atuais' })).toContainText('R$ 230,00');
     await expect(page.getByRole('region', { name: 'Saldos atuais' })).toContainText('R$ 0,20');
-    await page.locator('.bento-month-details>summary').click();
+    await expect(page.getByText('Resultado e composição do mês')).toHaveCount(0);
     await expect(page.getByRole('link', { name: 'Ver movimentos do período' })).toContainText(
       'R$ 2.250,00',
     );
-    await expect(page.locator('.month-metric.result')).toContainText('R$ 2.250,00');
-    await expect(page.locator('.month-metric.expense')).toContainText('R$ 500,00');
+    await expect(page.locator('.result-kpi')).toContainText('R$ 2.250,00');
+    await expect(page.locator('.expense-kpi')).toContainText('R$ 500,00');
     await expect(page.locator('.expense-groups')).toHaveCount(0);
     await page.getByRole('button', { name: 'Ver contas', exact: true }).click();
     await expect(page.locator('.balance-hero .account-line')).toHaveCount(3);
     await page.getByRole('button', { name: 'Ocultar valores', exact: true }).click();
     await expect(page.locator('.hero-balance')).toHaveText('••••••');
-    await expect(page.locator('.bento-month-details')).not.toContainText('R$');
+    await expect(page.locator('.home-month-column')).not.toContainText('R$');
     await expect(page.locator('.balance-hero .account-overview')).not.toContainText('R$');
     await page.getByRole('button', { name: 'Mostrar valores', exact: true }).click();
     await fillControl(page.getByLabel('Mês da visão geral'), '2026-08');
@@ -4650,8 +4650,8 @@ for (const width of [390, 1440]) {
       '/accounts',
     );
     await expectNoHorizontalOverflow(page);
-    await page.goto('/?month=2026-12');
-    await page.locator('.bento-month-details>summary').click();
+    await page.goto('/analytics?month=2026-12');
+    await page.getByText('Resultado e disponibilidade do mês', { exact: true }).click();
     const panel = page.getByRole('region', { name: 'Disponível no período', exact: true });
     await panel.getByText('Detalhes', { exact: true }).click();
     await expect(

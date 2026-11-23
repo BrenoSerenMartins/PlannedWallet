@@ -1,4 +1,6 @@
-import { useState, useSyncExternalStore } from 'react';
+import { ToggleField } from '../ui/controls/toggle-field';
+import { notifyBudgetOnDevice } from './device-notifications';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { request } from '../api/client';
@@ -15,13 +17,19 @@ function subscribe(fn: () => void) {
 }
 export function useFinancialAlerts() {
   const workspace = useSyncExternalStore(subscribe, getRequestWorkspace, () => null);
-  return useQuery({
+  const query = useQuery({
     queryKey: ['financial-alerts', workspace],
     queryFn: () => request<Summary>('/alerts/sync', { method: 'POST' }),
     enabled: !!workspace,
     staleTime: 60000,
     retry: false,
   });
+  useEffect(() => {
+    for (const alert of query.data?.items ?? []) {
+      if (alert.kind === 'budget' && !alert.readAt) void notifyBudgetOnDevice(alert.id);
+    }
+  }, [query.data]);
+  return query;
 }
 export function FinancialAlerts({
   query,
@@ -111,7 +119,6 @@ function AlertPreferences({ initial }: { initial: Preferences }) {
       {(
         [
           ['bills', 'Faturas próximas ou vencidas'],
-          ['budgets', 'Limite do orçamento'],
           ['negativeBalance', 'Previsão de saldo negativo'],
           ['goals', 'Metas com prazo ou cobertura insuficiente'],
         ] as const
@@ -135,16 +142,34 @@ function AlertPreferences({ initial }: { initial: Preferences }) {
           onChange={(e) => setP({ ...p, dueDays: Number(e.target.value) })}
         />
       </label>
-      <label>
-        Alertar ao atingir o orçamento (%)
-        <input
-          type="number"
-          min={1}
-          max={100}
-          value={p.budgetPercent}
-          onChange={(e) => setP({ ...p, budgetPercent: Number(e.target.value) })}
-        />
-      </label>
+      <ToggleField checked={p.budgets} onChange={(budgets) => setP({ ...p, budgets })}>
+        Avisar ao atingir o limite do orçamento
+      </ToggleField>
+      <ToggleField
+        checked={p.budgetEarly ?? false}
+        onChange={(budgetEarly) =>
+          setP({ ...p, budgetEarly, budgetPercent: p.budgetPercent === 100 ? 80 : p.budgetPercent })
+        }
+      >
+        Avisar antes de atingir o limite
+      </ToggleField>
+      {p.budgetEarly && (
+        <label>
+          Avisar quando faltar (%)
+          <input
+            type="number"
+            required
+            min={1}
+            max={99}
+            value={100 - p.budgetPercent}
+            onChange={(e) => setP({ ...p, budgetPercent: 100 - Number(e.target.value) })}
+          />
+        </label>
+      )}
+      <p className="field-help">
+        Para receber avisos no celular, ative as notificações do dispositivo em{' '}
+        <Link to="/settings">Ajustes → Aparência</Link>.
+      </p>
     </FinanceForm>
   );
 }

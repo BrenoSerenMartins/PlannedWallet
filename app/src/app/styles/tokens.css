@@ -29,6 +29,10 @@
   --radius-sm: 9px;
   --radius-md: 14px;
   --radius-lg: 20px;
+  --compact-padding-inline: clamp(8px, 1.25vw, 12px);
+  --compact-padding-block: 6px;
+  --compact-padding: var(--compact-padding-block) var(--compact-padding-inline);
+  --compact-gap: 8px;
   --space-page: clamp(20px, 4vw, 48px);
   --focus-ring: color-mix(in srgb, var(--accent) 70%, transparent);
   color-scheme: light;

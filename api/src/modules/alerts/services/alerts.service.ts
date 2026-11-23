@@ -14,7 +14,8 @@ import {
 import type { AlertPreferencesDto } from '../dto/alerts.dto.js';
 const defaults: AlertPreferencesDto = {
   dueDays: 3,
-  budgetPercent: 100,
+  budgetPercent: 80,
+  budgetEarly: false,
   bills: true,
   budgets: true,
   negativeBalance: true,
@@ -31,15 +32,24 @@ export class AlertsService {
   ) {}
   async preferences() {
     const [p] = await this.db.query(
-      'SELECT due_days AS "dueDays",budget_percent AS "budgetPercent",bills,budgets,negative_balance AS "negativeBalance",goals FROM wallet.alert_preferences WHERE user_id=$1 AND workspace_id=wallet.current_workspace_id()',
+      'SELECT due_days AS "dueDays",budget_percent AS "budgetPercent",bills,budgets,budget_early AS "budgetEarly",negative_balance AS "negativeBalance",goals FROM wallet.alert_preferences WHERE user_id=$1 AND workspace_id=wallet.current_workspace_id()',
       [this.db.actorId],
     );
     return (p as AlertPreferencesDto | undefined) ?? defaults;
   }
   async save(p: AlertPreferencesDto) {
     await this.db.query(
-      'INSERT INTO wallet.alert_preferences(user_id,due_days,budget_percent,bills,budgets,negative_balance,goals) VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT(user_id,workspace_id) DO UPDATE SET due_days=EXCLUDED.due_days,budget_percent=EXCLUDED.budget_percent,bills=EXCLUDED.bills,budgets=EXCLUDED.budgets,negative_balance=EXCLUDED.negative_balance,goals=EXCLUDED.goals',
-      [this.db.actorId, p.dueDays, p.budgetPercent, p.bills, p.budgets, p.negativeBalance, p.goals],
+      'INSERT INTO wallet.alert_preferences(user_id,due_days,budget_percent,bills,budgets,negative_balance,goals,budget_early) VALUES($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT(user_id,workspace_id) DO UPDATE SET due_days=EXCLUDED.due_days,budget_percent=EXCLUDED.budget_percent,bills=EXCLUDED.bills,budgets=EXCLUDED.budgets,negative_balance=EXCLUDED.negative_balance,goals=EXCLUDED.goals,budget_early=EXCLUDED.budget_early',
+      [
+        this.db.actorId,
+        p.dueDays,
+        p.budgetPercent,
+        p.bills,
+        p.budgets,
+        p.negativeBalance,
+        p.goals,
+        p.budgetEarly ?? false,
+      ],
     );
     return this.sync();
   }
@@ -73,20 +83,23 @@ export class AlertsService {
           title: `${b.description} ${b.dueDate < today ? 'está vencida' : `vence em ${b.dueDate.split('-').reverse().join('/')}`}.`,
           href: `/cards?card=${b.cardId}&month=${b.billMonth}`,
         });
-    if (p.budgets)
-      for (const l of (await this.planning.summary(month)).lines)
-        if (
-          l.type === 'expense' &&
-          l.planned !== null &&
-          l.actual > 0 &&
-          (l.planned === 0 || l.actual * 100 >= l.planned * p.budgetPercent)
-        )
-          active.push({
-            key: `budget:${month}:${l.categoryId ?? 'other'}`,
-            kind: 'budget',
-            title: `${l.name}: ${l.actual > l.planned ? 'orçamento excedido' : `atingiu ${p.budgetPercent}% do orçamento`}.`,
-            href: `/planning?month=${month}`,
-          });
+    if (p.budgets || p.budgetEarly)
+      for (const line of (await this.planning.summary(month)).lines) {
+        if (line.type !== 'expense' || line.planned === null || line.actual <= 0) continue;
+        const reached = line.actual >= line.planned;
+        const early =
+          !reached &&
+          p.budgetEarly &&
+          p.budgetPercent < 100 &&
+          line.actual * 100 >= line.planned * p.budgetPercent;
+        if (!(reached ? p.budgets : early)) continue;
+        active.push({
+          key: `budget:${month}:${line.categoryId ?? 'other'}:${reached ? 'limit' : 'early'}`,
+          kind: 'budget',
+          title: `${line.name}: ${reached ? (line.actual > line.planned ? 'orçamento excedido' : 'limite do orçamento atingido') : `faltam até ${100 - p.budgetPercent}% para o limite`}.`,
+          href: `/planning?month=${month}`,
+        });
+      }
     if (p.negativeBalance)
       for (const a of (await this.commitments.summary(month)).projection)
         if (a.projected < 0)
@@ -111,7 +124,7 @@ export class AlertsService {
     // The condition key persists across visits: dismissed/read alerts do not reopen while unchanged.
     for (const a of active)
       await this.db.query(
-        'INSERT INTO wallet.financial_alerts(id,user_id,origin_key,kind,title,href) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(user_id,workspace_id,origin_key) DO UPDATE SET title=EXCLUDED.title,href=EXCLUDED.href,updated_at=clock_timestamp(),read_at=CASE WHEN wallet.financial_alerts.resolved_at IS NOT NULL THEN NULL ELSE wallet.financial_alerts.read_at END,dismissed_at=CASE WHEN wallet.financial_alerts.resolved_at IS NOT NULL THEN NULL ELSE wallet.financial_alerts.dismissed_at END,resolved_at=NULL',
+        `INSERT INTO wallet.financial_alerts(id,user_id,origin_key,kind,title,href) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(user_id,workspace_id,origin_key) DO UPDATE SET title=EXCLUDED.title,href=EXCLUDED.href,updated_at=clock_timestamp(),read_at=CASE WHEN wallet.financial_alerts.resolved_at IS NOT NULL AND EXCLUDED.kind<>'budget' THEN NULL ELSE wallet.financial_alerts.read_at END,dismissed_at=CASE WHEN wallet.financial_alerts.resolved_at IS NOT NULL AND EXCLUDED.kind<>'budget' THEN NULL ELSE wallet.financial_alerts.dismissed_at END,resolved_at=NULL`,
         [randomUUID(), this.db.actorId, a.key, a.kind, a.title, a.href],
       );
     await this.db.query(

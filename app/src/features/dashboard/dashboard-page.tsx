@@ -11,6 +11,7 @@ import {
   Target,
   ChevronDown,
   Wallet,
+  Scale,
 } from 'lucide-react';
 import { useAuth } from '../auth/auth-provider';
 import { useFinancialVisibility } from '../../shared/privacy/financial-visibility';
@@ -24,7 +25,6 @@ import { RecentMovements } from './components/recent-movements';
 import { FinanceOverview } from './components/finance-overview';
 import { CashflowForecast } from '../planning/components/cashflow-forecast';
 import { CashflowTrend } from './components/cashflow-trend';
-import { MonthOverview } from './components/month-overview';
 import '../planning/commitments.css';
 import './dashboard.css';
 import './bento-dashboard.css';
@@ -284,6 +284,30 @@ export function DashboardPage() {
                   </svg>
                 )}
               </Link>
+              <Link
+                to={transactionsLink()}
+                className="bento-soft-card bento-kpi result-kpi"
+                aria-label="Ver movimentos do período"
+              >
+                <span className="kpi-icon result">
+                  <Scale size={20} aria-hidden="true" />
+                </span>
+                <span className="kpi-label">Resultado do mês</span>
+                <strong
+                  className={
+                    totals.actualResult < 0
+                      ? 'negative-text'
+                      : totals.actualResult > 0
+                        ? 'positive-text'
+                        : ''
+                  }
+                >
+                  {display(totals.actualResult)}
+                </strong>
+                {totals.plannedResult != null && (
+                  <span className="metric-footnote">Previsto {display(totals.plannedResult)}</span>
+                )}
+              </Link>
             </>
           )
         )}
@@ -308,17 +332,6 @@ export function DashboardPage() {
           <ArrowUpRight size={18} />
         </Link>
       )}
-      <details className="bento-soft-card bento-month-details">
-        <summary>
-          Resultado e composição do mês <ChevronDown size={16} />
-        </summary>
-        <MonthOverview
-          plan={plan.data}
-          planState={plan.isPending ? 'pending' : plan.isError ? 'error' : 'ready'}
-          visible={visible}
-          link={transactionsLink}
-        />
-      </details>
       <div className="home-upcoming-column">
         <div className="bento-wide bento-forecast">
           <CashflowForecast visible={visible} compact />

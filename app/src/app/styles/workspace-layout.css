@@ -185,7 +185,7 @@
   flex: 0 0 auto;
   border-radius: var(--radius-pill);
   border: var(--border-subtle);
-  padding: 8px 12px;
+  padding: var(--compact-padding);
   white-space: nowrap;
 }
 :root[data-ui='bento'] body .page-content .category-group-tabs > button[aria-selected='true'] {
@@ -583,9 +583,6 @@
   :root[data-ui='bento'] body .page-content .bento-dashboard > .bento-welcome {
     display: flex;
     grid-area: 1 / 1 / 2 / -1;
-  }
-  :root[data-ui='bento'] body .page-content .bento-dashboard > .bento-month-details {
-    grid-area: 4 / 1 / 5 / -1;
   }
   :root[data-ui='bento']
     body

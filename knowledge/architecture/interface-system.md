@@ -65,3 +65,7 @@ No mobile, Ajustes fica no menu Mais e o conteúdo reserva a altura da dock e a 
 ### Carteira vertical de cartões
 
 Em telas a partir de 851 px, o seletor de cartões rola dentro de uma área de altura limitada, com encaixe vertical por proximidade. A carteira segue o fluxo da página e mantém os controles abaixo visíveis. Selecionar um cartão fora da área visível ajusta apenas a rolagem interna. Em telas menores, o carrossel continua horizontal. O teste de regressão usa três cartões para verificar a seleção e a separação entre a carteira e a barra de ações.
+
+### Resumo mensal na Home
+
+Seu mês mostra Entradas, Saídas e Resultado do mês diretamente. Métricas mantém a composição e o detalhamento do saldo no período. Benefícios e Reservas usam caixas baixas com cantos do token de raio médio. O padding responsivo `--compact-padding` também serve para o botão Ver contas, as abas de classificação e os filtros compactos.

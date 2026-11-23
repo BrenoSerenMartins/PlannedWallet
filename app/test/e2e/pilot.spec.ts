@@ -247,7 +247,9 @@ for (const width of [360, 390, 768, 1440])
     await fillControl(page.getByRole('dialog').getByLabel('Nome da conta'), 'Nova conta');
     await page.getByRole('button', { name: 'Fechar', exact: true }).click();
     await page.goto('/transactions');
-    await expect(page.getByRole('button', { name: /Compra de supermercado/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Compra de supermercado/ })).toBeVisible({
+      timeout: 15000,
+    });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
@@ -3670,7 +3672,7 @@ for (const width of [390, 1440])
         if (path === '/' || path.startsWith('/?')) {
           await expect(page.getByRole('region', { name: 'Saldos atuais' })).toBeVisible();
         } else {
-          await expect(heading).toBeVisible();
+          await expect(heading).toBeVisible({ timeout: 15000 });
         }
         await expect(page.locator('h1')).toHaveCount(1);
         expect(

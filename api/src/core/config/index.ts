@@ -6,6 +6,7 @@ export class Configuration {
   readonly port = Number(process.env.PORT ?? 8083);
   readonly supabaseUrl = (process.env.SUPABASE_URL ?? '').trim();
   readonly publishableKey = (process.env.SUPABASE_PUBLISHABLE_KEY ?? '').trim();
+  readonly appDataKey = (process.env.APP_DATA_KEY_BASE64 ?? '').trim();
   readonly financialDataKek = (process.env.FINANCIAL_DATA_KEK_BASE64 ?? '').trim();
   readonly databaseUrl = runtimeConnectionString(process.env.RUNTIME_DATABASE_URL ?? '');
   readonly ssl =

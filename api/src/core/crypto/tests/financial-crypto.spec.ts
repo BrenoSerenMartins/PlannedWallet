@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { FinancialCryptoService } from '../financial-crypto.js';
 
-function cryptoHarness(ownerId = 'owner-a') {
+function cryptoHarness(ownerId = 'owner-a', appDataKey?: string) {
   const keys = new Map<number, object>();
   const db = {
     userId: ownerId,
@@ -20,7 +20,7 @@ function cryptoHarness(ownerId = 'owner-a') {
       throw new Error(`Unexpected query: ${sql}`);
     },
   };
-  const config = { financialDataKek: Buffer.alloc(32, 7).toString('base64') };
+  const config = { appDataKey, financialDataKek: Buffer.alloc(32, 7).toString('base64') };
   return { service: new FinancialCryptoService(db as never, config as never), db };
 }
 
@@ -33,6 +33,16 @@ describe('financial envelope encryption', () => {
       amount: 12345,
     });
     await expect(service.decrypt('workspace-b', 'invoice', 'record-a', sealed)).rejects.toThrow();
+  });
+
+  it('encrypts new payloads with the application key and isolates workspaces', async () => {
+    const { service } = cryptoHarness('owner-a', Buffer.alloc(32, 8).toString('base64'));
+    const envelope = await service.encrypt('workspace-a', 'invoice', 'record-a', 12345);
+    expect(envelope.v).toBe(2);
+    await expect(service.decrypt('workspace-a', 'invoice', 'record-a', envelope)).resolves.toBe(
+      12345,
+    );
+    await expect(service.decrypt('workspace-b', 'invoice', 'record-a', envelope)).rejects.toThrow();
   });
 
   it('rejects tampered ciphertext', async () => {

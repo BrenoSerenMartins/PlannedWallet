@@ -49,7 +49,7 @@ export class ImportReprocessingService {
     const account = await this.accounts.find(first.account_id, true);
     const batch = await this.imports.get(id, true);
     await this.validateSource(id, version, source?.buffer);
-    if (!['mercado_pago', 'alelo', 'banco_do_brasil'].includes(account.institution))
+    if (!['mercado_pago', 'alelo', 'banco_do_brasil', 'c6'].includes(account.institution))
       throw new UnprocessableEntityException('O arquivo pertence ao importador Mercado Pago.');
     const previous = await this.repository.items(id);
     const statement: ParsedStatement = source?.statement ?? {

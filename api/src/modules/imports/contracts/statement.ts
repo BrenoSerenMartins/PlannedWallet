@@ -14,8 +14,8 @@ export interface StatementRow {
   metadata?: SettlementMetadata;
 }
 export interface ParsedStatement {
-  institution?: 'mercado_pago' | 'alelo' | 'banco_do_brasil';
-  sourceFormat?: 'pdf' | 'csv' | 'xlsx';
+  institution?: 'mercado_pago' | 'alelo' | 'banco_do_brasil' | 'c6';
+  sourceFormat?: 'pdf' | 'csv' | 'xlsx' | 'ofx';
   reportType?: 'account_statement' | 'settlement' | 'benefit_statement';
   openingBalance: number | null;
   closingBalance: number | null;

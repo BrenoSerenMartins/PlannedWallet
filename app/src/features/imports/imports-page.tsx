@@ -59,7 +59,7 @@ export function ImportsPage() {
   const [detected, setDetected] = useState<
     | {
         kind: 'account_statement';
-        institution: 'mercado_pago' | 'alelo' | 'banco_do_brasil';
+        institution: 'mercado_pago' | 'alelo' | 'banco_do_brasil' | 'c6';
         reportType: string;
         itemCount: number;
         sourceFormat: string;
@@ -210,7 +210,9 @@ export function ImportsPage() {
             ? 'Alelo Alimentação'
             : result.institution === 'banco_do_brasil'
               ? 'Banco do Brasil'
-              : 'Mercado Pago',
+              : result.institution === 'c6'
+                ? 'C6 Bank'
+                : 'Mercado Pago',
         );
       } else {
         setDestination(destinationId ?? '__auto__');
@@ -249,11 +251,11 @@ export function ImportsPage() {
       };
     if (
       source?.kind === 'account_statement' &&
-      ['mercado_pago', 'alelo', 'banco_do_brasil'].includes(source.institution ?? '')
+      ['mercado_pago', 'alelo', 'banco_do_brasil', 'c6'].includes(source.institution ?? '')
     )
       known = {
         kind: 'account_statement',
-        institution: source.institution as 'mercado_pago' | 'alelo' | 'banco_do_brasil',
+        institution: source.institution as 'mercado_pago' | 'alelo' | 'banco_do_brasil' | 'c6',
         reportType: 'account_statement',
         itemCount: source.itemCount,
         sourceFormat: source.sourceFormat,
@@ -474,7 +476,9 @@ export function ImportsPage() {
                           />
                         </label>
                         <label>
-                          Senha do PDF (se houver)
+                          {selectedFile?.name.toLowerCase().endsWith('.pdf')
+                            ? 'Senha do PDF (se houver)'
+                            : 'Senha do arquivo'}
                           <input
                             type="password"
                             autoComplete="off"
@@ -499,7 +503,7 @@ export function ImportsPage() {
                       type="file"
                       multiple
                       disabled={busy || detecting}
-                      accept="application/pdf,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.pdf,.csv,.xlsx"
+                      accept="application/pdf,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.pdf,.csv,.xlsx,.zip,.ofx"
                       hidden
                       onChange={(e) => {
                         const files = Array.from(e.target.files ?? []);
@@ -686,7 +690,7 @@ export function ImportsPage() {
                         <p role="status" className="field-help">
                           {detected.kind === 'card_invoice'
                             ? `Fatura de cartão${detected.institution ? ' ' + invoiceIssuers[detected.institution] : ''} · ${detected.summaryOnly ? 'Resumo identificado' : detected.itemCount + ' compras reconhecidas'}`
-                            : `${detected.institution === 'alelo' ? 'Alelo Alimentação' : detected.institution === 'banco_do_brasil' ? 'Banco do Brasil' : 'Mercado Pago'} · ${detected.itemCount} movimentos identificados`}
+                            : `${detected.institution === 'alelo' ? 'Alelo Alimentação' : detected.institution === 'banco_do_brasil' ? 'Banco do Brasil' : detected.institution === 'c6' ? 'C6 Bank' : 'Mercado Pago'} · ${detected.itemCount} movimentos identificados`}
                         </p>
                         {detected.kind === 'card_invoice' ? (
                           <>

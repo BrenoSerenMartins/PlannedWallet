@@ -82,7 +82,12 @@ export class ImportsService {
     this.activeExtractions.add(userId);
     try {
       let lastError: unknown;
-      for (const institution of ['alelo', 'mercado_pago', 'banco_do_brasil']) {
+      const c6File = /(?:^extrato-da-sua-conta-[0-9A-Z]{26}\.(?:pdf|xlsx)$|\.(?:zip|ofx)$)/i.test(
+        fileName,
+      );
+      for (const institution of c6File
+        ? ['c6']
+        : ['alelo', 'mercado_pago', 'banco_do_brasil', 'c6']) {
         try {
           const statement = await extractInstitutionStatement(institution, buffer, fileName, {
             password,
@@ -107,6 +112,13 @@ export class ImportsService {
         } catch (error) {
           lastError = error;
         }
+      }
+      if (c6File || (lastError instanceof Error && /^Arquivo protegido/i.test(lastError.message))) {
+        if (lastError instanceof Error && /^PDF protegido/i.test(lastError.message))
+          throw new UnprocessableEntityException(
+            `${lastError.message} Para extratos C6, use os 6 primeiros dígitos do CPF.`,
+          );
+        throw lastError;
       }
       try {
         const invoice = await readCardInvoice(buffer, fileName, billMonth, password, cpf);
@@ -160,7 +172,7 @@ export class ImportsService {
   }
   async sourceAccount(accountId: string) {
     const account = await this.accounts.find(accountId);
-    if (!['mercado_pago', 'alelo', 'banco_do_brasil'].includes(account.institution))
+    if (!['mercado_pago', 'alelo', 'banco_do_brasil', 'c6'].includes(account.institution))
       throw new UnprocessableEntityException('Esta instituição ainda não possui importador.');
     return account;
   }
@@ -314,8 +326,10 @@ export class ImportsService {
     const account = await this.accounts.find(accountId, true);
     if (
       (statement.reportType === 'benefit_statement') !== (account.institution === 'alelo') ||
-      !['alelo', 'mercado_pago', 'banco_do_brasil'].includes(account.institution) ||
-      (account.institution === 'banco_do_brasil') !== (statement.institution === 'banco_do_brasil')
+      !['alelo', 'mercado_pago', 'banco_do_brasil', 'c6'].includes(account.institution) ||
+      (account.institution === 'banco_do_brasil') !==
+        (statement.institution === 'banco_do_brasil') ||
+      (account.institution === 'c6') !== (statement.institution === 'c6')
     )
       throw new UnprocessableEntityException('O arquivo não corresponde à instituição da conta.');
     if (account.institution === 'alelo' && account.type !== 'benefit_food')

@@ -105,7 +105,7 @@ export class AccountsService implements AccountReads {
       !SUPPORTED_ACCOUNT_INSTITUTIONS.some((institution) => institution === input.institution)
     )
       throw new UnprocessableEntityException(
-        'Escolha uma instituição disponível: Mercado Pago ou Alelo.',
+        'Escolha uma instituição disponível: Mercado Pago, Alelo, Banco do Brasil ou C6 Bank.',
       );
     if (
       (account.institution !== input.institution || account.type !== input.type) &&

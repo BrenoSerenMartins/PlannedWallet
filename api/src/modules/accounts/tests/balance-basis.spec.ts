@@ -790,7 +790,7 @@ it('preserves legacy institutions restored from backups and prevents changing to
         String(renamed.version),
       ),
     ),
-  ).rejects.toThrow('Mercado Pago ou Alelo');
+  ).rejects.toThrow('Escolha uma instituição disponível');
   const supported = await account('Mapped bank');
   await expect(
     run(() =>
@@ -800,7 +800,7 @@ it('preserves legacy institutions restored from backups and prevents changing to
         String(supported.version),
       ),
     ),
-  ).rejects.toThrow('Mercado Pago ou Alelo');
+  ).rejects.toThrow('Escolha uma instituição disponível');
 });
 
 it('serves dashboard and account reads in a read-only request without upgrading or locking balance references', async () => {

@@ -5373,7 +5373,7 @@
           },
           "institution": {
             "type": "string",
-            "enum": ["mercado_pago", "alelo", "banco_do_brasil"]
+            "enum": ["mercado_pago", "alelo", "banco_do_brasil", "c6"]
           },
           "type": {
             "type": "string",

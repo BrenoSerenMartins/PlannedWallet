@@ -9,3 +9,8 @@ for (const file of ['tabular-worker.mjs', 'read-tabular-file.mjs'])
     'src/modules/imports/parsers/files/' + file,
     'dist/modules/imports/parsers/files/' + file,
   );
+await mkdir('dist/modules/imports/parsers/c6', { recursive: true });
+await cp(
+  'src/modules/imports/parsers/c6/c6-container-worker.mjs',
+  'dist/modules/imports/parsers/c6/c6-container-worker.mjs',
+);

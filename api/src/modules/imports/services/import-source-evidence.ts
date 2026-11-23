@@ -12,11 +12,13 @@ export function importSourceEvidence(
   return {
     ...(institution !== 'mercado_pago' ? { institution } : {}),
     ruleVersion:
-      institution === 'banco_do_brasil'
-        ? 'banco-do-brasil/account-csv/1'
-        : reportType === 'settlement'
-          ? 'mercado-pago/edi/4'
-          : 'mercado-pago/account/2',
+      institution === 'c6'
+        ? 'c6/account/1'
+        : institution === 'banco_do_brasil'
+          ? 'banco-do-brasil/account-csv/1'
+          : reportType === 'settlement'
+            ? 'mercado-pago/edi/4'
+            : 'mercado-pago/account/2',
     reportType,
     description: item.description,
     ...(item.metadata?.storeId ? { storeId: item.metadata.storeId } : {}),

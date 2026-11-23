@@ -56,7 +56,7 @@ interface InvoicePreview {
 export function sourceForm(file: File, password = '', cpf = '') {
   const form = new FormData();
   form.set('file', file);
-  if (file.name.toLowerCase().endsWith('.pdf')) {
+  if (/\.(pdf|zip|xlsx)$/i.test(file.name)) {
     if (password) form.set('password', password);
     if (cpf) form.set('cpf', cpf);
   }

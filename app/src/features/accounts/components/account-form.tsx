@@ -22,7 +22,7 @@ export function AccountForm({ onSaved, account }: { onSaved: () => void; account
     account?.benefitCreditMonth ?? 'received',
   );
   const legacyInstitution =
-    account && !['mercado_pago', 'alelo', 'banco_do_brasil'].includes(account.institution);
+    account && !['mercado_pago', 'alelo', 'banco_do_brasil', 'c6'].includes(account.institution);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   async function save(event: FormEvent) {
@@ -74,6 +74,7 @@ export function AccountForm({ onSaved, account }: { onSaved: () => void; account
             }}
           >
             <option value="banco_do_brasil">Banco do Brasil</option>
+            <option value="c6">C6 Bank</option>
             <option value="alelo">Alelo</option>
             <option value="mercado_pago">Mercado Pago</option>
             {legacyInstitution && (
@@ -151,7 +152,7 @@ export function AccountForm({ onSaved, account }: { onSaved: () => void; account
       </details>
       <p className="field-help">
         {legacyInstitution
-          ? 'Esta conta anterior foi preservada com seu histórico. Novas contas estão disponíveis para Mercado Pago, Alelo e Banco do Brasil.'
+          ? 'Esta conta anterior foi preservada com seu histórico. Novas contas estão disponíveis para Mercado Pago, Alelo, Banco do Brasil e C6 Bank.'
           : institution === 'alelo'
             ? 'Benefício não é limite de crédito nem dinheiro livre. A importação validada é para Alimentação. Importe seu histórico e use Corrigir saldo se precisar registrar uma diferença.'
             : 'Importe seu histórico em qualquer ordem ou adicione movimentos manualmente. Se precisar ajustar o valor registrado, use Corrigir saldo na conta.'}

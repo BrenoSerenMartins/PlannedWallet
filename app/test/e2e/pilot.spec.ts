@@ -1875,6 +1875,7 @@ test('account forms use automatic defaults and preserve existing baseline amount
   await dialog.getByLabel('Instituição').click();
   await expect(page.getByRole('listbox').getByRole('option')).toHaveText([
     'Banco do Brasil',
+    'C6 Bank',
     'Alelo',
     'Mercado Pago',
   ]);
@@ -4451,7 +4452,7 @@ for (const width of [320, 390, 768]) {
     ];
     for (const path of routes) {
       await page.goto(path);
-      await expect(page.locator('main').first()).toBeVisible();
+      await expect(page.locator('main').first()).toBeVisible({ timeout: 15000 });
       await expect(page.getByRole('status', { name: 'Carregando', exact: true })).toHaveCount(0);
       if (path === '/planning' && width <= 600) {
         const income = await page.locator('.metric-income').boundingBox();

@@ -398,3 +398,9 @@ Batch invoices requiring replacement or ambiguous reconciliation open individual
 New invoice envelopes use `APP_DATA_KEY_BASE64` when configured. Existing envelopes remain readable. The administrative tool `node --env-file=.env.local scripts/rewrap-financial-keys.mjs` verifies the migration in a rolled-back transaction. After deploying the compatible API and providing both secrets securely to the tool, add `--apply` to rewrap the legacy data keys. Preserving those data keys preserves file fingerprints and existing ciphertext. Keep the legacy master available for restoring backups taken before the rewrap.
 
 Invoice payload protection covers the parsed source. Confirmed ledger entries, balances, planning and derived totals still require a separate storage migration. Move sensitive PostgreSQL arithmetic, comparisons and aggregation into the authorized backend before dropping plaintext columns, and include staging, exports, backups and historical copies in the rollout.
+
+### C6 account statements
+
+The C6 account importer handles the personalized CSV/XLSX table and BRL OFX, including a ZIP containing a single CSV or OFX. The input password is passed only to the isolated reader. For C6 exports the UI explains that the password is the first six CPF digits. A protected batch can retry the same files and pass its credentials through upload. The parser does not infer opening or closing balances from partial exports. The OFX reader preserves FITID and uses posting dates.
+
+A local encrypted ZIP/OFX was verified with 109 movements. The provided encrypted CSV, XLSX and PDF samples had no movements. Synthetic CSV tests cover positive and negative values. The PDF reader identifies the personalized layout and reports empty exports. Importing movements from C6 PDFs requires a sample containing movements.

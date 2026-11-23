@@ -30,6 +30,7 @@ export function AutomaticImportBatch({
 }) {
   const [password, setPassword] = useState('');
   const [cpf, setCpf] = useState('');
+  const protectedBatch = batch.rows.some((row) => needsPdfPassword(row.message));
   const ready = batch.rows.filter((row) => row.status === 'ready').length;
   return (
     <section className="panel automatic-import-batch" aria-label="Importação automática em lote">
@@ -40,11 +41,11 @@ export function AutomaticImportBatch({
         <h2>Selecione seus arquivos</h2>
         <p>Envie extratos de conta e faturas de cartão, um por vez ou juntos no mesmo lote.</p>
       </div>
-      {batch.rows.some((row) => needsPdfPassword(row.message)) && (
+      {protectedBatch && (
         <>
           <p>
-            Para usar a mesma senha nos PDFs protegidos, informe os dados e selecione os arquivos de
-            novo. Você também pode revisar cada arquivo protegido separadamente.
+            Para usar a mesma senha nos arquivos protegidos, informe os dados e selecione os
+            arquivos de novo. Você também pode revisar cada arquivo protegido separadamente.
           </p>
           <label>
             CPF do titular para PDFs protegidos (opcional)
@@ -59,7 +60,7 @@ export function AutomaticImportBatch({
             />
           </label>
           <label>
-            Senha dos PDFs do lote (opcional)
+            Senha dos arquivos do lote (C6: 6 primeiros dígitos do CPF)
             <input
               type="password"
               autoComplete="off"
@@ -82,6 +83,23 @@ export function AutomaticImportBatch({
         >
           Selecionar arquivos
         </Button>
+        {protectedBatch && (
+          <Button
+            type="button"
+            disabled={batch.busy || (!password && !cpf)}
+            onClick={() => {
+              void batch.analyze(
+                batch.rows.map((row) => row.file),
+                password,
+                cpf,
+              );
+              setPassword('');
+              setCpf('');
+            }}
+          >
+            Tentar novamente com a senha
+          </Button>
+        )}
         {ready > 0 && (
           <Button disabled={batch.busy} onClick={() => void batch.confirm()}>
             Importar {ready} arquivo(s) identificado(s)
@@ -94,7 +112,7 @@ export function AutomaticImportBatch({
         )}
       </div>
       <p className="field-help">
-        PDF com texto, CSV ou XLSX · até 20 arquivos
+        PDF com texto, CSV, XLSX, OFX ou ZIP · até 20 arquivos
         <br />
         10 MB por arquivo · 100 MB por lote
       </p>

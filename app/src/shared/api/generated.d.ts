@@ -2302,7 +2302,7 @@ export interface components {
       benefitCreditMonth?: 'received' | 'following';
       name: string;
       /** @enum {string} */
-      institution: 'mercado_pago' | 'alelo' | 'banco_do_brasil';
+      institution: 'mercado_pago' | 'alelo' | 'banco_do_brasil' | 'c6';
       /** @enum {string} */
       type: 'checking' | 'savings' | 'cash' | 'reserve' | 'benefit_food' | 'benefit_meal';
       /** @deprecated */

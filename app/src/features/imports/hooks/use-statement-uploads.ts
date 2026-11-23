@@ -51,7 +51,7 @@ export function useStatementUploads(onComplete: (rows: StatementUpload[]) => voi
         const form = new FormData();
         form.set('accountId', accountId);
         form.set('file', files[index]);
-        if (files[index].name.toLowerCase().endsWith('.pdf')) {
+        if (/\.(pdf|zip|xlsx)$/i.test(files[index].name)) {
           if (credentials.password) form.set('password', credentials.password);
           if (credentials.cpf) form.set('cpf', credentials.cpf);
         }

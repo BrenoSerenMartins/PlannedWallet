@@ -1,3 +1,3 @@
 export function needsPdfPassword(message: string | null | undefined) {
-  return /^PDF protegido\b/i.test(message ?? '');
+  return /^(?:PDF|Arquivo) protegido\b/i.test(message ?? '');
 }

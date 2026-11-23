@@ -1,3 +1,4 @@
+import { extractC6Statement } from '../parsers/c6/statement.parser.js';
 import type { PdfCredentials } from '../../../core/financial-files/pdf-passwords.js';
 import { parseBancoDoBrasilCsv } from '../parsers/banco-do-brasil/account-csv.parser.js';
 import { UnprocessableEntityException } from '@nestjs/common';
@@ -15,6 +16,7 @@ export async function extractInstitutionStatement(
   filename: string,
   credentials?: PdfCredentials,
 ) {
+  if (institution === 'c6') return extractC6Statement(buffer, filename, credentials);
   if (institution === 'banco_do_brasil' && filename.toLowerCase().endsWith('.csv'))
     return parseBancoDoBrasilCsv(buffer);
   if (institution === 'mercado_pago')
@@ -30,7 +32,7 @@ export async function extractInstitutionStatement(
   );
 }
 export function mapInstitutionStatement(statement: ParsedStatement) {
-  if (statement.institution === 'banco_do_brasil')
+  if (statement.institution === 'banco_do_brasil' || statement.institution === 'c6')
     return statement.items.map((item) => ({
       ...item,
       transactionType: item.amount > 0 ? ('income' as const) : ('expense' as const),
@@ -40,8 +42,12 @@ export function mapInstitutionStatement(statement: ParsedStatement) {
     : mapMercadoPago(statement);
 }
 export function statementMapperVersion(statement: ParsedStatement) {
+  if (statement.institution === 'c6') return `c6/account-${statement.sourceFormat}/1`;
   if (statement.institution === 'banco_do_brasil') return 'banco-do-brasil/account-csv/1';
   return statement.reportType === 'benefit_statement'
     ? 'alelo/food-pdf/1'
-    : mercadoPagoMapperVersion(statement.sourceFormat ?? 'pdf', statement.reportType);
+    : mercadoPagoMapperVersion(
+        statement.sourceFormat === 'ofx' ? 'pdf' : (statement.sourceFormat ?? 'pdf'),
+        statement.reportType,
+      );
 }

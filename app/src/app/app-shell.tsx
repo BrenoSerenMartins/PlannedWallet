@@ -6,9 +6,11 @@ import { createPortal } from 'react-dom';
 import { productName } from '../shared/brand';
 import { NotificationCenter } from '../shared/feedback/notification-center';
 import { useNotifications } from '../shared/feedback/notification-provider';
+import { Select } from '../shared/ui/controls/select';
+import { CreateWorkspaceForm } from '../features/workspaces/components/create-workspace-form';
 import { useWorkspace } from '../features/workspaces/workspace-provider';
 import { Suspense, useEffect, useRef, useState } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   CreditCard,
   ChartNoAxesCombined,
@@ -16,8 +18,8 @@ import {
   CalendarDays,
   FolderTree,
   ArrowDownUp,
+  ArrowUpRight,
   ChevronRight,
-  ChevronDown,
   House,
   Landmark,
   Settings,
@@ -56,6 +58,7 @@ const navigation = [
     Icon: UsersRound,
   },
   { to: '/settings', label: 'Ajustes', mobile: 'Ajustes', Icon: Settings },
+  { to: '/workspaces', label: 'Gerenciar espaços', mobile: 'Espaços', Icon: FolderTree },
 ];
 const primaryPaths = ['/', '/planning', '/cards', '/transactions', '/imports'];
 export function AppShell() {
@@ -70,25 +73,30 @@ function ShellContent() {
   const { session } = useAuth();
   const notices = useNotifications();
   const wasOnline = useRef(navigator.onLine);
-  const { active } = useWorkspace();
+  const { active, workspaces, select } = useWorkspace();
+  const navigate = useNavigate();
   const location = useLocation();
+  const home = location.pathname === '/';
   const firstName =
-    session?.user.user_metadata?.full_name?.split(' ')[0] ??
-    session?.user.email?.split('@')[0] ??
-    'Você';
+    String(
+      session?.user.user_metadata?.full_name ??
+        session?.user.email?.split('@')[0]?.split(/[._-]/)[0] ??
+        'você',
+    )
+      .trim()
+      .split(/\s+/)[0] || 'você';
   const currentNav = [...navigation]
     .filter((item) => location.pathname.startsWith(item.to))
     .sort((a, b) => b.to.length - a.to.length)[0];
-  const mobileTitle =
-    location.pathname === '/'
-      ? `Olá, ${firstName}`
-      : location.pathname.startsWith('/planning')
-        ? 'Planejamento'
-        : location.pathname.startsWith('/cards')
-          ? 'Cartões'
-          : location.pathname.startsWith('/transactions')
-            ? 'Extrato'
-            : (currentNav?.mobile ?? 'PlannedWallet');
+  const mobileTitle = home
+    ? `Olá, ${firstName}`
+    : location.pathname.startsWith('/planning')
+      ? 'Planejamento'
+      : location.pathname.startsWith('/cards')
+        ? 'Cartões'
+        : location.pathname.startsWith('/transactions')
+          ? 'Extrato'
+          : (currentNav?.mobile ?? 'PlannedWallet');
   const [arriving, setArriving] = useState(() => {
     try {
       return sessionStorage.getItem('plannedwallet:entered') !== 'yes';
@@ -104,6 +112,7 @@ function ShellContent() {
     }
   }, []);
   const [more, setMore] = useState(false);
+  const [creatingWorkspace, setCreatingWorkspace] = useState(false);
   const menuTrigger = useRef<HTMLButtonElement | null>(null);
   const [online, setOnline] = useState(navigator.onLine);
   const [update, setUpdate] = useState<ServiceWorker | null>(null);
@@ -182,6 +191,41 @@ function ShellContent() {
     session?.user.user_metadata?.full_name?.split(' ')[0] ??
     session?.user.email?.split('@')[0] ??
     'Você';
+  const workspaceSwitcher = (
+    <div className="workspace-switcher">
+      <span className="space-menu-avatar" aria-hidden="true">
+        {active?.name.slice(0, 1).toLocaleUpperCase() ?? '·'}
+      </span>
+      <Select
+        aria-label="Espaço ativo"
+        aria-description={active?.name}
+        value={active?.id ?? ''}
+        onChange={(event) => {
+          if (event.target.value === 'new-workspace') {
+            setCreatingWorkspace(true);
+            return;
+          }
+          if (event.target.value === active?.id) return;
+          select(event.target.value);
+          navigate('/');
+        }}
+      >
+        {!active && (
+          <option value="" disabled>
+            Escolher espaço
+          </option>
+        )}
+        {workspaces.map((workspace) => (
+          <option key={workspace.id} value={workspace.id}>
+            {workspace.name}
+          </option>
+        ))}
+        <option value="new-workspace" disabled={!online}>
+          + Novo espaço
+        </option>
+      </Select>
+    </div>
+  );
   return (
     <div
       className={`app-shell premium-app${arriving ? ' app-entry' : ''}`}
@@ -195,22 +239,7 @@ function ShellContent() {
         <NavLink to="/" className="sidebar-brand" aria-label={`${productName} — início`}>
           <Logo />
         </NavLink>
-        <button
-          type="button"
-          className={`header-more header-space-menu ${navigation.filter((n) => !primaryPaths.includes(n.to) && n.to !== '/settings').some((n) => location.pathname.startsWith(n.to)) ? 'active' : ''}`}
-          onClick={(event) => {
-            menuTrigger.current = event.currentTarget;
-            setMore(true);
-          }}
-          aria-haspopup="dialog"
-          aria-label={`Menu do espaço: ${active?.name ?? 'Seu espaço'}`}
-        >
-          <span className="space-menu-avatar" aria-hidden="true">
-            {active?.name.slice(0, 1).toLocaleUpperCase() ?? '·'}
-          </span>
-          <span>{active?.name ?? 'Seu espaço'}</span>
-          <ChevronDown size={14} />
-        </button>
+        {workspaceSwitcher}
         <nav aria-label="Navegação principal">
           {[
             { title: 'Principal', paths: [...primaryPaths, '/accounts'] },
@@ -225,7 +254,7 @@ function ShellContent() {
                 '/recognition',
               ],
             },
-            { title: 'Sistema', paths: ['/settings'] },
+            { title: 'Sistema', paths: ['/settings', '/workspaces'] },
           ].map(({ title, paths }) => (
             <section key={title}>
               <h2>{title}</h2>
@@ -247,13 +276,22 @@ function ShellContent() {
           <NavLink to="/" className="header-brand" aria-label={`${productName} — início`}>
             <Logo />
           </NavLink>
-          <div className="mobile-header-title">
+          <div className={home ? 'mobile-header-title home-header-title' : 'mobile-header-title'}>
             <NavLink to="/" className="mobile-header-mark" aria-label="PlannedWallet — início">
               <BrandSymbol />
             </NavLink>
-            <strong>{mobileTitle}</strong>
+            {home ? (
+              <h1 aria-label="Visão geral">{mobileTitle}</h1>
+            ) : (
+              <strong>{mobileTitle}</strong>
+            )}
           </div>
           <div className="header-actions">
+            {home && (
+              <NavLink to="/analytics" className="home-header-overview">
+                Seu dinheiro, em perspectiva <ArrowUpRight size={15} aria-hidden="true" />
+              </NavLink>
+            )}
             <button
               className="icon-button visibility-button"
               aria-label={visible ? 'Ocultar valores' : 'Mostrar valores'}
@@ -270,22 +308,7 @@ function ShellContent() {
                 <WifiOff size={16} />
               </span>
             )}
-            <button
-              type="button"
-              className={`header-more header-space-menu ${navigation.filter((n) => !primaryPaths.includes(n.to) && n.to !== '/settings').some((n) => location.pathname.startsWith(n.to)) ? 'active' : ''}`}
-              onClick={(event) => {
-                menuTrigger.current = event.currentTarget;
-                setMore(true);
-              }}
-              aria-haspopup="dialog"
-              aria-label={`Menu do espaço: ${active?.name ?? 'Seu espaço'}`}
-            >
-              <span className="space-menu-avatar" aria-hidden="true">
-                {active?.name.slice(0, 1).toLocaleUpperCase() ?? '·'}
-              </span>
-              <span>{active?.name ?? 'Seu espaço'}</span>
-              <ChevronDown size={14} />
-            </button>
+            {workspaceSwitcher}
           </div>
         </header>
         <main id="main-content" className="page-content">
@@ -322,6 +345,9 @@ function ShellContent() {
         </nav>,
         document.body,
       )}
+      <Modal open={creatingWorkspace} onOpenChange={setCreatingWorkspace} title="Um novo espaço">
+        {creatingWorkspace && <CreateWorkspaceForm onCreated={() => setCreatingWorkspace(false)} />}
+      </Modal>
       <Modal
         open={more}
         onOpenChange={setMore}

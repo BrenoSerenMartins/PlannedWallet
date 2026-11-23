@@ -5,57 +5,6 @@
   gap: 20px;
   align-items: start;
 }
-.bento-welcome {
-  grid-column: 1/-1;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 8px;
-}
-.welcome-person {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-}
-.welcome-person > div > span {
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-:root[data-ui='bento'] .bento-welcome h1 {
-  font-size: 24px;
-  font-weight: 600;
-  letter-spacing: -0.8px;
-  line-height: 1.3;
-}
-.greeting-dot {
-  color: var(--gold-primary);
-}
-.welcome-avatar {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  background: var(--gold-muted);
-  border: 1.5px solid var(--gold-primary);
-  font-size: 17px;
-  color: var(--gold-soft);
-}
-.welcome-controls {
-  display: none;
-  align-items: center;
-  gap: 8px;
-}
-.welcome-overview-link {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--text-secondary);
-  font-size: 12px;
-}
 :root[data-ui='bento'] .balance-hero {
   grid-column: 1/8;
   grid-row: 2/4;
@@ -750,12 +699,6 @@
   padding: 0 0 16px;
 }
 @media (max-width: 1050px) {
-  .welcome-controls {
-    display: flex;
-  }
-  .welcome-overview-link {
-    display: none;
-  }
   :root[data-ui='bento'] body .bento-dashboard {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
@@ -816,28 +759,6 @@
   }
 }
 @media (max-width: 600px) {
-  :root[data-ui='bento'] .bento-welcome h1 {
-    font-size: 20px;
-  }
-  .welcome-person > div > span {
-    font-size: 11px;
-  }
-  .welcome-avatar {
-    width: 40px;
-    height: 40px;
-  }
-  .welcome-controls > .icon-button,
-  :root[data-ui='bento'] .welcome-controls .notification-trigger {
-    background: var(--grad-card);
-    border: var(--border-subtle);
-    box-shadow: var(--shadow-soft);
-    border-radius: 50%;
-    min-width: 44px;
-    min-height: 44px;
-  }
-  .bento-welcome {
-    margin-bottom: 6px;
-  }
   .hero-topline {
     align-items: start;
   }
@@ -933,18 +854,6 @@
   }
 }
 @media (max-width: 360px) {
-  .welcome-controls {
-    gap: 3px;
-  }
-  .welcome-person {
-    gap: 8px;
-  }
-  .welcome-person > div > span {
-    max-width: 110px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
   .hero-result-badge {
     max-width: 118px;
   }
@@ -976,7 +885,6 @@
     .bento-dashboard
     > :is(
       .balance-hero,
-      .bento-welcome,
       .quick-actions,
       .bento-period,
       .cashflow-trend,

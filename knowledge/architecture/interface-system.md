@@ -69,3 +69,9 @@ Em telas a partir de 851 px, o seletor de cartões rola dentro de uma área de a
 ### Resumo mensal na Home
 
 Seu mês mostra Entradas, Saídas e Resultado do mês diretamente. Métricas mantém a composição e o detalhamento do saldo no período. Benefícios e Reservas usam caixas baixas com cantos do token de raio médio. O padding responsivo `--compact-padding` também serve para o botão Ver contas, as abas de classificação e os filtros compactos.
+
+### Cabeçalho da Home e seletor de espaços
+
+No desktop, a saudação da Home fica na mesma linha de Métricas, privacidade e notificações. A área principal segue em uma coluna: saldo, filtro do mês e indicadores. Os atalhos rápidos ficam no mobile.
+
+O seletor de espaços usa o mesmo controle na barra lateral e no topo mobile. Ele lista os espaços e oferece Novo espaço, que abre o formulário existente e seleciona o espaço criado. O gerenciamento fica em Sistema no desktop e em Mais no mobile.

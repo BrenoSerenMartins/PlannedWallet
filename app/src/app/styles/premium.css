@@ -315,11 +315,6 @@
   margin: 0 auto;
   width: 100%;
 }
-@media (min-width: 1051px) {
-  :root[data-ui='bento'] body .bento-dashboard > .bento-welcome {
-    display: none;
-  }
-}
 :root[data-ui='bento'] body .page-content :is(h1.contextual-page-title, .page-heading h1) {
   font-size: 26px;
   letter-spacing: -0.8px;
@@ -699,57 +694,6 @@
   }
   :root[data-ui='bento'] body .page-content .bento-dashboard {
     padding-bottom: 112px;
-  }
-  :root[data-ui='bento'] body .page-content .bento-dashboard > .bento-welcome {
-    margin: 0;
-    min-height: 48px;
-  }
-  :root[data-ui='bento'] body .welcome-brand-mark {
-    width: 36px;
-    height: 36px;
-    display: grid;
-    place-items: center;
-    flex: 0 0 36px;
-    border-radius: 12px;
-    background: var(--bg-elevated);
-    color: var(--gold-primary);
-  }
-  :root[data-ui='bento'] body .welcome-brand-mark svg {
-    width: 24px;
-    height: 24px;
-  }
-  :root[data-ui='bento'] body .bento-welcome h1 {
-    font-size: 15px;
-    font-weight: 600;
-    letter-spacing: -0.2px;
-  }
-  :root[data-ui='bento'] body .welcome-person {
-    gap: 9px;
-  }
-  :root[data-ui='bento'] body .welcome-controls {
-    gap: 6px;
-  }
-  :root[data-ui='bento'] body .welcome-controls > .icon-button,
-  :root[data-ui='bento'] body .welcome-controls .notification-trigger {
-    width: 38px;
-    height: 38px;
-    min-width: 38px;
-    min-height: 38px;
-  }
-  :root[data-ui='bento'] body .welcome-controls .mobile-workspace-pill {
-    display: flex;
-    align-items: center;
-    gap: 3px;
-    height: 36px;
-    padding: 0 8px;
-    border-radius: 999px;
-    background: var(--bg-elevated);
-    color: var(--text-primary);
-    font-size: 11px;
-  }
-  :root[data-ui='bento'] body .welcome-controls .mobile-workspace-pill > span {
-    color: var(--gold-primary);
-    font-weight: 700;
   }
   :root[data-ui='bento'] body .balance-hero {
     grid-row: auto;

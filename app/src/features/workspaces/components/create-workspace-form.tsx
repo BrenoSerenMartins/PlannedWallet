@@ -10,7 +10,7 @@ const colors = [
   { value: 'amber', label: 'Âmbar' },
   { value: 'rose', label: 'Rosa' },
 ];
-export function CreateWorkspaceForm() {
+export function CreateWorkspaceForm({ onCreated }: { onCreated?: () => void }) {
   const { create } = useWorkspace();
   const navigate = useNavigate();
   const [name, setName] = useState('');
@@ -24,6 +24,7 @@ export function CreateWorkspaceForm() {
     setError('');
     try {
       await create({ name: name.trim(), description, color });
+      onCreated?.();
       navigate('/');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Não foi possível criar o espaço.');

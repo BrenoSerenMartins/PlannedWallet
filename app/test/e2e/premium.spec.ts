@@ -258,7 +258,7 @@ test('quick transfer opens the existing transfer flow and menus retain all desti
     /selected/,
   );
   await page.keyboard.press('Escape');
-  await page.getByRole('button', { name: /Menu do espaço/ }).click();
+  await page.getByRole('button', { name: 'Abrir mais funções', exact: true }).click();
   for (const name of [
     'Contas',
     'Planejamento',

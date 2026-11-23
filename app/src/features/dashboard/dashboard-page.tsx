@@ -1,4 +1,3 @@
-import { PageHeader } from '../../shared/ui/page-header';
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
@@ -13,7 +12,6 @@ import {
   Wallet,
   Scale,
 } from 'lucide-react';
-import { useAuth } from '../auth/auth-provider';
 import { useFinancialVisibility } from '../../shared/privacy/financial-visibility';
 import { ErrorState, Loading } from '../../shared/ui/primitives';
 import { MonthPicker } from '../../shared/ui/controls/month-picker';
@@ -29,17 +27,11 @@ import '../planning/commitments.css';
 import './dashboard.css';
 import './bento-dashboard.css';
 export function DashboardPage() {
-  const { session } = useAuth();
   const { visible } = useFinancialVisibility();
   const [params, setParams] = useSearchParams(),
     [details, setDetails] = useState(false);
   const month = validMonth(params.get('month')) ? params.get('month')! : dateToday().slice(0, 7);
   const { snapshot, summary, movements, plan, transactionsLink } = useDashboard(month);
-  const name = String(
-    session?.user.user_metadata?.full_name ??
-      session?.user.email?.split('@')[0]?.split(/[._-]/)[0] ??
-      'você',
-  ).split(' ')[0];
   const display = (v: number | undefined) =>
     !visible ? '••••••' : v == null ? 'Não disponível' : money(v);
   const totals = plan.data?.totals,
@@ -66,11 +58,6 @@ export function DashboardPage() {
   };
   return (
     <div className="page-enter dashboard-page bento-dashboard">
-      <PageHeader route className="bento-welcome" titleLabel="Visão geral" title={`Olá, ${name}`}>
-        <Link to="/analytics" className="welcome-overview-link">
-          Seu dinheiro, em perspectiva <ArrowUpRight size={15} />
-        </Link>
-      </PageHeader>
       <div className="home-balance-column">
         <section
           className="bento-hero-gold balance-hero current-balances"

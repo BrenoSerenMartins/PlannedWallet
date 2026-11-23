@@ -182,13 +182,18 @@ function historyFixture(month: string, count: number) {
   };
 }
 async function appMenuTrigger(page: Page) {
-  return page.getByRole('button', { name: /^Menu do espaço:/ });
+  return page.getByRole('button', { name: 'Abrir mais funções', exact: true });
 }
 async function openAppMenu(page: Page) {
   const menu = page.getByRole('dialog', { name: 'Menu do espaço' });
   if (!(await menu.isVisible())) await (await appMenuTrigger(page)).click();
 }
 async function openWorkspaceSwitcher(page: Page) {
+  const management = page.getByRole('link', { name: 'Gerenciar espaços', exact: true });
+  if ((page.viewportSize()?.width ?? 0) >= 1024) {
+    await management.click();
+    return;
+  }
   await openAppMenu(page);
   await page
     .getByRole('dialog', { name: 'Menu do espaço' })
@@ -203,7 +208,7 @@ async function chooseTheme(page: Page, theme: string) {
   }
   const returnUrl = page.url();
   let settings = page.getByRole('link', { name: 'Ajustes', exact: true });
-  if (!(await settings.isVisible())) {
+  if ((page.viewportSize()?.width ?? 0) < 1024) {
     await openAppMenu(page);
     settings = page
       .getByRole('dialog', { name: 'Menu do espaço' })
@@ -276,38 +281,47 @@ for (const width of [360, 390, 768, 1440])
     await page.screenshot({ path: `/tmp/plannedwallet-dashboard-${width}.png`, fullPage: true });
   });
 
-test('workspace cards open a space and creation uses its scope', async ({ page }) => {
-  await signedIn(page);
-  await page.route('**/v1/workspaces', async (route) => {
-    if (route.request().method() === 'POST') {
-      const body = route.request().postDataJSON();
-      return route.fulfill({
-        json: { id: '55555555-5555-4555-8555-555555555555', ...body, isDefault: false },
-      });
+for (const width of [390, 1440])
+  test(`workspace cards open a space and creation uses its scope at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await signedIn(page);
+    await page.route('**/v1/workspaces', async (route) => {
+      if (route.request().method() === 'POST') {
+        const body = route.request().postDataJSON();
+        return route.fulfill({
+          json: { id: '55555555-5555-4555-8555-555555555555', ...body, isDefault: false },
+        });
+      }
+      return route.fulfill({ json: [workspace] });
+    });
+    await page.goto('/workspaces');
+    await expect(page.getByRole('heading', { name: 'Seus espaços' })).toBeVisible();
+    await page.getByRole('link', { name: 'Abrir espaço Pessoal' }).click();
+    await expect(page.getByRole('region', { name: 'Saldos atuais', exact: true })).toBeVisible();
+    if (width < 1024) {
+      await chooseSelect(page.getByRole('combobox', { name: 'Espaço ativo' }), 'new-workspace');
+      await expect(page.getByRole('dialog', { name: 'Um novo espaço' })).toBeVisible();
+    } else {
+      await openWorkspaceSwitcher(page);
+      await page.getByRole('button', { name: 'Criar espaço', exact: true }).click();
     }
-    return route.fulfill({ json: [workspace] });
+    await fillControl(page.getByLabel('Nome do espaço'), 'Meu negócio');
+    await page.getByRole('button', { name: 'Azul', exact: true }).click();
+    const selectedRequest = page.waitForRequest(
+      (request) =>
+        request.url().includes('/v1/dashboard') &&
+        request.headers()['x-workspace-id'] === '55555555-5555-4555-8555-555555555555',
+    );
+    await page.getByRole('button', { name: 'Criar e abrir espaço' }).click();
+    await selectedRequest;
+    await expect(page.getByRole('region', { name: 'Saldos atuais', exact: true })).toBeVisible();
+    const scope = await page.evaluate(() =>
+      localStorage.getItem('plannedwallet-workspace:11111111-1111-4111-8111-111111111111'),
+    );
+    expect(scope).toBe('55555555-5555-4555-8555-555555555555');
   });
-  await page.goto('/workspaces');
-  await expect(page.getByRole('heading', { name: 'Seus espaços' })).toBeVisible();
-  await page.getByRole('link', { name: 'Abrir espaço Pessoal' }).click();
-  await expect(page.getByRole('region', { name: 'Saldos atuais', exact: true })).toBeVisible();
-  await openWorkspaceSwitcher(page);
-  await page.getByRole('button', { name: 'Criar espaço', exact: true }).click();
-  await fillControl(page.getByLabel('Nome do espaço'), 'Meu negócio');
-  await page.getByRole('button', { name: 'Azul', exact: true }).click();
-  const selectedRequest = page.waitForRequest(
-    (request) =>
-      request.url().includes('/v1/dashboard') &&
-      request.headers()['x-workspace-id'] === '55555555-5555-4555-8555-555555555555',
-  );
-  await page.getByRole('button', { name: 'Criar e abrir espaço' }).click();
-  await selectedRequest;
-  await expect(page.getByRole('region', { name: 'Saldos atuais', exact: true })).toBeVisible();
-  const scope = await page.evaluate(() =>
-    localStorage.getItem('plannedwallet-workspace:11111111-1111-4111-8111-111111111111'),
-  );
-  expect(scope).toBe('55555555-5555-4555-8555-555555555555');
-});
 
 const planningIncomeId = '66666666-6666-4666-8666-666666666666';
 const planningExpenseId = '77777777-7777-4777-8777-777777777777';
@@ -678,7 +692,7 @@ test('leaving the upload screen stops subsequent submissions', async ({ page }) 
   await page.getByRole('button', { name: /Importar 2 arquivo/ }).click();
   await expect.poll(() => requests).toBe(1);
   let settings = page.getByRole('link', { name: 'Ajustes', exact: true });
-  if (!(await settings.isVisible())) {
+  if ((page.viewportSize()?.width ?? 0) < 1024) {
     await openAppMenu(page);
     settings = page
       .getByRole('dialog', { name: 'Menu do espaço' })
@@ -2457,9 +2471,11 @@ for (const width of [360, 390, 768, 1440]) {
     await expectControlValue(await movementFilterControl(page, 'De'), '2026-09-01');
     await expectControlValue(await movementFilterControl(page, 'Até'), '2026-09-30');
     await page.goBack();
-    await page
-      .getByRole('navigation', { name: 'Ações rápidas' })
-      .getByRole('link', { name: 'Planejar', exact: true })
+    const navigation = page.getByRole('navigation', {
+      name: width >= 1024 ? 'Navegação principal' : 'Ações rápidas',
+    });
+    await navigation
+      .getByRole('link', { name: width >= 1024 ? 'Planejamento' : 'Planejar', exact: true })
       .click();
     await fillControl(page.getByLabel('Mês do planejamento'), '2026-09');
     await expectControlValue(page.getByLabel('Mês do planejamento'), '2026-09');
@@ -2504,6 +2520,18 @@ for (const width of [390, 1440]) {
     await signedIn(page);
     await page.setViewportSize({ width, height: 1000 });
     await page.goto('/');
+    if (width >= 1024) {
+      const switcher = page.getByRole('combobox', { name: 'Espaço ativo' });
+      await switcher.focus();
+      await page.keyboard.press('Enter');
+      const list = page.getByRole('listbox');
+      await expect(list.getByRole('option', { name: workspace.name })).toBeVisible();
+      await expect(page.getByRole('dialog', { name: 'Menu do espaço' })).toHaveCount(0);
+      await page.keyboard.press('Escape');
+      await expect(list).toHaveCount(0);
+      await expect(switcher).toBeFocused();
+      return;
+    }
     const trigger = await appMenuTrigger(page);
     await trigger.focus();
     await page.keyboard.press('Enter');
@@ -3776,11 +3804,7 @@ test('account filters explain empty results and keep account and card workspaces
   });
   await expect(page.getByRole('heading', { level: 1, name: 'Cartões e faturas' })).toBeVisible();
   await test.step('Return to balances from the accounts navigation', async () => {
-    await openAppMenu(page);
-    await page
-      .getByRole('dialog', { name: 'Menu do espaço' })
-      .getByRole('link', { name: 'Contas', exact: true })
-      .click();
+    await navigation.getByRole('link', { name: 'Contas', exact: true }).click();
     await expect(page).toHaveURL(/\/accounts(?:\?|$)/);
   });
   await expect(page.locator('.account-record')).toHaveCount(1);
@@ -3855,7 +3879,14 @@ test('settings retain the chosen section on reload and offer labelled theme prev
   await expect(page.locator('.settings-shortcut')).toHaveCount(0);
   await page.getByRole('button', { name: 'Conta', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Sair da conta', exact: true })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Gerenciar espaços', exact: true })).toHaveCount(0);
+  await expect(
+    page.getByRole('main').getByRole('link', { name: 'Gerenciar espaços', exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page
+      .getByRole('navigation', { name: 'Navegação principal' })
+      .getByRole('link', { name: 'Gerenciar espaços', exact: true }),
+  ).toBeVisible();
 });
 
 async function saveAccountForFeedback(page: Page, clock = false, spaces?: (typeof workspace)[]) {
@@ -3929,11 +3960,10 @@ test('notification history is cleared when switching financial spaces', async ({
     isDefault: false,
   };
   await saveAccountForFeedback(page, false, [workspace, other]);
-  await openWorkspaceSwitcher(page);
-  await page.getByRole('link', { name: 'Abrir espaço Outro', exact: true }).click();
+  await chooseSelect(page.getByRole('combobox', { name: 'Espaço ativo' }), other.id);
   await expect(page).toHaveURL('/');
   await expect(
-    page.getByRole('button', { name: 'Menu do espaço: Outro', exact: true }),
+    page.getByRole('combobox', { name: 'Espaço ativo' }).filter({ hasText: 'Outro' }),
   ).toBeVisible();
   await page.getByRole('button', { name: 'Abrir notificações', exact: true }).click();
   const notifications = page.getByRole('dialog', { name: 'Notificações', exact: true });
@@ -4015,7 +4045,7 @@ test('an operation completing after a space switch cannot add feedback to the ne
   await page.getByRole('link', { name: 'Abrir espaço Outro', exact: true }).click();
   await expect(page).toHaveURL('/');
   await expect(
-    page.getByRole('button', { name: 'Menu do espaço: Outro', exact: true }),
+    page.getByRole('combobox', { name: 'Espaço ativo' }).filter({ hasText: 'Outro' }),
   ).toBeVisible();
   const response = page.waitForResponse(
     (r) => r.request().method() === 'PATCH' && r.url().endsWith(`/accounts/${account.id}`),

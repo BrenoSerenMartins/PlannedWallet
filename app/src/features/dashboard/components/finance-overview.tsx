@@ -14,7 +14,7 @@ export function FinanceOverview({ visible }: { visible: boolean }) {
   const value = (n: number) => (visible ? money(n) : '••••••');
   if (query.isError) return <ErrorState error={query.error} retry={() => void query.refetch()} />;
   return (
-    <section className="finance-overview-links" aria-label="Cartões e patrimônio">
+    <div className="finance-overview-links">
       <Link className="panel" to="/cards">
         <span>
           Dívida dos cartões <ArrowUpRight size={14} aria-hidden="true" />
@@ -36,6 +36,6 @@ export function FinanceOverview({ visible }: { visible: boolean }) {
         <strong>{query.isPending ? '…' : value(query.data.netWorth)}</strong>
         <small>Ativos menos dívidas</small>
       </Link>
-    </section>
+    </div>
   );
 }

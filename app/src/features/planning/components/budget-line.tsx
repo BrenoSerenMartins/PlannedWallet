@@ -19,9 +19,11 @@ export function BudgetLine({ line, type }: { line: PlanningLine; type: 'income' 
           {money(line.actual)}
         </strong>
       </div>
-      <div className="budget-progress" aria-hidden="true">
-        <i style={{ width: `${progress}%` }} />
-      </div>
+      {line.planned !== null && (
+        <div className="budget-progress" aria-hidden="true">
+          <i style={{ width: `${progress}%` }} />
+        </div>
+      )}
       <div className="budget-progress-footer">
         <span>{line.planned === null ? 'Sem previsão' : `Previsto: ${money(line.planned)}`}</span>
         <strong

@@ -61,12 +61,14 @@ export function BudgetSection({
                     <small>Realizado</small>
                     {money(totals.actual)}
                   </strong>
-                  <span
-                    className={`budget-progress${exceeded ? ' is-exceeded' : ''}`}
-                    aria-hidden="true"
-                  >
-                    <i style={{ width: `${progress}%` }} />
-                  </span>
+                  {totals.planned !== null && (
+                    <span
+                      className={`budget-progress${exceeded ? ' is-exceeded' : ''}`}
+                      aria-hidden="true"
+                    >
+                      <i style={{ width: `${progress}%` }} />
+                    </span>
+                  )}
                   <span className="budget-progress-footer">
                     <span>
                       {totals.planned === null

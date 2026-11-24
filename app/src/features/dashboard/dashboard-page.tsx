@@ -323,9 +323,10 @@ export function DashboardPage() {
         <div className="bento-wide bento-forecast">
           <CashflowForecast visible={visible} compact />
         </div>
-        <div className="bento-wide bento-finance">
+        <section className="bento-wide bento-finance" aria-labelledby="home-finance-heading">
+          <h2 id="home-finance-heading">Cartões e patrimônio</h2>
           <FinanceOverview visible={visible} />
-        </div>
+        </section>
       </div>
     </div>
   );

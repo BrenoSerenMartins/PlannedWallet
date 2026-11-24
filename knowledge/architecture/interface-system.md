@@ -72,6 +72,8 @@ Seu mês mostra Entradas, Saídas e Resultado do mês diretamente. Métricas man
 
 ### Cabeçalho da Home e seletor de espaços
 
-No desktop, a saudação da Home fica na mesma linha de Métricas, privacidade e notificações. A área principal segue em uma coluna: saldo, filtro do mês, Entradas e Saídas lado a lado e Resultado em largura total. Os indicadores do mês compartilham altura mínima, padding e raio com os cards de dívida, investimentos e patrimônio. Os atalhos rápidos ficam no mobile.
+No desktop, a saudação da Home fica na mesma linha de Métricas, privacidade e notificações. A área principal segue em uma coluna: saldo, filtro do mês, Entradas e Saídas lado a lado, seguidas por Resultado e Fluxo financeiro na mesma linha. Os indicadores do mês compartilham altura mínima, padding e raio com os cards de dívida, investimentos e patrimônio. Os atalhos rápidos ficam no mobile.
 
 O seletor de espaços usa o mesmo controle na barra lateral e no topo mobile. Ele lista os espaços e oferece Novo espaço, que abre o formulário existente e seleciona o espaço criado. O gerenciamento fica em Sistema no desktop e em Mais no mobile.
+
+A Home agrupa os indicadores patrimoniais sob o título Cartões e patrimônio, com uma única distância entre seções. No Planejamento, os cards de Receitas e Despesas seguem a geometria da Home. As seções de categorias ficam empilhadas, e os grupos e subcategorias alinham realizado, previsto e diferença em colunas no desktop. Barras de progresso aparecem quando há previsão.

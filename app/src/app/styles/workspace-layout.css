@@ -387,7 +387,7 @@
   :root[data-ui='bento'] body .page-content .page-header p {
     font-size: 13px;
   }
-  :root[data-ui='bento'] body .page-content :is(.planning-sections, .analytics-grid) {
+  :root[data-ui='bento'] body .page-content .analytics-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
@@ -432,17 +432,8 @@
 
 @media (min-width: 1024px) {
   :root[data-ui='bento'] body .page-content .bento-dashboard {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
-  }
-  :root[data-ui='bento']
-    body
-    .page-content
-    .bento-dashboard
-    > :is(.home-balance-column, .home-month-column, .home-activity-column, .home-upcoming-column) {
-    display: grid;
-    gap: 12px;
-    min-width: 0;
   }
   :root[data-ui='bento']
     body
@@ -453,14 +444,16 @@
     grid-area: auto / 1 / auto / -1;
     min-width: 0;
   }
-  .home-month-column {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  :root[data-ui='bento'] body .page-content .bento-dashboard .home-month-column > .income-kpi {
+  :root[data-ui='bento'] body .page-content .bento-dashboard .home-month-column > .income-kpi,
+  :root[data-ui='bento'] body .page-content .bento-dashboard .home-month-column > .result-kpi {
     grid-column: 1;
   }
-  :root[data-ui='bento'] body .page-content .bento-dashboard .home-month-column > .expense-kpi {
+  :root[data-ui='bento'] body .page-content .bento-dashboard .home-month-column > .expense-kpi,
+  :root[data-ui='bento'] body .page-content .bento-dashboard:has(.result-kpi) .cashflow-trend {
     grid-column: 2;
+  }
+  :root[data-ui='bento'] body .page-content .bento-dashboard :is(.result-kpi, .cashflow-trend) {
+    align-self: stretch;
   }
   :root[data-ui='bento'] body .page-content .bento-dashboard .quick-actions {
     display: none;
@@ -468,8 +461,11 @@
   :root[data-ui='bento']
     body
     .page-content
-    .bento-dashboard
-    :is(.home-month-column > .bento-kpi, .finance-overview-links > a) {
+    :is(
+      .bento-dashboard .home-month-column > .bento-kpi,
+      .bento-dashboard .finance-overview-links > a,
+      .planning-page .planning-monthly-pair > .planning-metric
+    ) {
     min-block-size: 136px;
     padding: 22px;
     border-radius: var(--radius-lg);

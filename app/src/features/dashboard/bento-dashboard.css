@@ -526,10 +526,26 @@
   color: var(--text-secondary);
   margin-top: 4px;
 }
+.bento-dashboard .bento-finance {
+  display: grid;
+  gap: 12px;
+}
+
+.bento-dashboard .bento-finance > h2 {
+  margin: 0;
+  font-size: var(--text-section);
+  font-weight: 600;
+}
+
+:root[data-ui='bento'] body .bento-dashboard .bento-forecast > .cashflow-forecast {
+  margin-block: 0;
+}
+
 :root[data-ui='bento'] body .bento-dashboard .finance-overview-links {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
+  margin-block: 0;
 }
 :root[data-ui='bento'] body .bento-dashboard .finance-overview-links > a {
   padding: 22px;
